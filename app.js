@@ -722,6 +722,82 @@ function renderDashboard() {
     html += '</div>';
     html += '</div>';
 
+    // DM Tools section (only for DM)
+    if (isDM()) {
+        html += '<div class="dm-tools">';
+        html += '<h2 class="section-title">DM Tools</h2>';
+
+        // Initiative Tracker
+        html += '<div class="dm-tool-card">';
+        html += '<h3>Initiative Tracker</h3>';
+
+        var initData = JSON.parse(localStorage.getItem('dw_initiative') || '{"entries":[],"currentTurn":0,"round":1}');
+        var entries = initData.entries || [];
+        var currentTurn = initData.currentTurn || 0;
+        var initRound = initData.round || 1;
+
+        html += '<div class="init-header">';
+        html += '<span class="init-round">Ronde ' + initRound + '</span>';
+        if (entries.length > 0) {
+            html += '<button class="btn btn-sm btn-primary" data-action="next-turn">Volgende Beurt &rarr;</button>';
+        }
+        html += '</div>';
+
+        // Initiative list
+        html += '<div class="init-list">';
+        for (var ii = 0; ii < entries.length; ii++) {
+            var entry = entries[ii];
+            var isCurrent = ii === currentTurn;
+            html += '<div class="init-entry' + (isCurrent ? ' current' : '') + '">';
+            html += '<span class="init-roll">' + entry.initiative + '</span>';
+            html += '<span class="init-name">' + escapeHtml(entry.name) + '</span>';
+            if (entry.charId) {
+                var ecfg = loadCharConfig(entry.charId);
+                if (ecfg) html += '<span class="init-class">' + classDisplayName(ecfg.className) + '</span>';
+            }
+            html += '<button class="init-remove" data-action="remove-init" data-init-idx="' + ii + '">&times;</button>';
+            html += '</div>';
+        }
+        html += '</div>';
+
+        // Add to initiative
+        html += '<div class="init-add">';
+        html += '<select class="edit-input" id="init-char" style="flex:1;">';
+        html += '<option value="">Kies karakter/NPC...</option>';
+        var iCharIds = getCharacterIds();
+        for (var ici = 0; ici < iCharIds.length; ici++) {
+            var iccfg = loadCharConfig(iCharIds[ici]);
+            if (iccfg) html += '<option value="' + iCharIds[ici] + '">' + escapeHtml(iccfg.name) + '</option>';
+        }
+        html += '<option value="custom">NPC / Monster</option>';
+        html += '</select>';
+        html += '<input type="text" class="edit-input" id="init-custom-name" placeholder="NPC naam" style="display:none;flex:1;">';
+        html += '<input type="number" class="edit-input" id="init-roll" placeholder="Init" style="width:60px;">';
+        html += '<button class="btn btn-sm btn-primary" data-action="add-init">+</button>';
+        html += '</div>';
+
+        // Clear initiative
+        if (entries.length > 0) {
+            html += '<button class="btn btn-ghost btn-sm" data-action="clear-init" style="margin-top:0.5rem;">Initiative resetten</button>';
+        }
+
+        html += '</div>'; // dm-tool-card
+
+        // Quick Dice Roller
+        html += '<div class="dm-tool-card">';
+        html += '<h3>Dice Roller</h3>';
+        html += '<div class="dice-buttons">';
+        var dice = [4, 6, 8, 10, 12, 20, 100];
+        for (var di = 0; di < dice.length; di++) {
+            html += '<button class="dice-btn" data-action="roll-dice" data-die="' + dice[di] + '">d' + dice[di] + '</button>';
+        }
+        html += '</div>';
+        html += '<div class="dice-result" id="dice-result"></div>';
+        html += '</div>'; // dm-tool-card
+
+        html += '</div>'; // dm-tools
+    }
+
     html += '</div>';
     return html;
 }
@@ -2271,12 +2347,29 @@ function renderLoreParty() {
 
 function renderNotes() {
     var userId = currentUserId();
-    var savedNotes = localStorage.getItem('dw_notes_' + userId) || '';
+    var personalNotes = localStorage.getItem('dw_notes_' + userId) || '';
+    var sharedNotes = localStorage.getItem('dw_notes_shared') || '';
+
+    var activeNotesTab = localStorage.getItem('dw_notes_tab') || 'personal';
 
     var html = '<div class="notes-page">';
     html += '<h1>Notities</h1>';
-    html += '<p class="block-note">Je persoonlijke sessie-notities. Automatisch opgeslagen.</p>';
-    html += '<textarea class="notes-textarea" data-action="save-notes" placeholder="Schrijf je notities hier...">' + escapeHtml(savedNotes) + '</textarea>';
+
+    // Tabs
+    html += '<div class="notes-tabs">';
+    html += '<button class="notes-tab' + (activeNotesTab === 'personal' ? ' active' : '') + '" data-action="notes-tab" data-tab="personal">Persoonlijk</button>';
+    html += '<button class="notes-tab' + (activeNotesTab === 'shared' ? ' active' : '') + '" data-action="notes-tab" data-tab="shared">Party Notities</button>';
+    html += '</div>';
+
+    if (activeNotesTab === 'shared') {
+        html += '<p class="text-dim" style="margin-bottom:0.75rem;font-size:0.8rem;">Iedereen kan party notities bewerken. Ideaal voor gedeelde informatie, NPC namen, quest logs.</p>';
+        html += '<textarea class="notes-textarea" data-notes-type="shared" placeholder="Gedeelde party notities...">' + escapeHtml(sharedNotes) + '</textarea>';
+    } else {
+        html += '<p class="text-dim" style="margin-bottom:0.75rem;font-size:0.8rem;">Alleen jij kunt je persoonlijke notities zien.</p>';
+        html += '<textarea class="notes-textarea" data-notes-type="personal" placeholder="Je persoonlijke notities...">' + escapeHtml(personalNotes) + '</textarea>';
+    }
+
+    html += '<p class="text-dim" style="font-size:0.7rem;margin-top:0.5rem;">Notities worden automatisch opgeslagen.</p>';
     html += '</div>';
     return html;
 }
@@ -3342,6 +3435,86 @@ function bindPageEvents(route) {
             return;
         }
 
+        // Notes tab switch
+        if (target.matches('[data-action="notes-tab"]')) {
+            localStorage.setItem('dw_notes_tab', target.dataset.tab);
+            renderApp();
+            return;
+        }
+
+        // Add to initiative
+        if (target.matches('[data-action="add-init"]')) {
+            var charSelect = document.getElementById('init-char');
+            var customName = document.getElementById('init-custom-name');
+            var rollInput = document.getElementById('init-roll');
+            if (!rollInput || !rollInput.value) return;
+
+            var initData = JSON.parse(localStorage.getItem('dw_initiative') || '{"entries":[],"currentTurn":0,"round":1}');
+            var iName = '';
+            var iCharId = null;
+
+            if (charSelect && charSelect.value === 'custom') {
+                iName = customName ? customName.value.trim() : 'NPC';
+            } else if (charSelect && charSelect.value) {
+                iCharId = charSelect.value;
+                var icfg = loadCharConfig(iCharId);
+                iName = icfg ? icfg.name : iCharId;
+            }
+
+            if (!iName) return;
+
+            initData.entries.push({ name: iName, charId: iCharId, initiative: parseInt(rollInput.value) || 0 });
+            initData.entries.sort(function(a, b) { return b.initiative - a.initiative; });
+            localStorage.setItem('dw_initiative', JSON.stringify(initData));
+            renderApp();
+            return;
+        }
+
+        // Next turn
+        if (target.matches('[data-action="next-turn"]')) {
+            var initData = JSON.parse(localStorage.getItem('dw_initiative') || '{"entries":[],"currentTurn":0,"round":1}');
+            if (initData.entries.length > 0) {
+                initData.currentTurn = (initData.currentTurn + 1) % initData.entries.length;
+                if (initData.currentTurn === 0) initData.round++;
+            }
+            localStorage.setItem('dw_initiative', JSON.stringify(initData));
+            renderApp();
+            return;
+        }
+
+        // Remove from initiative
+        if (target.matches('[data-action="remove-init"]')) {
+            var ridx = parseInt(target.dataset.initIdx);
+            var initData = JSON.parse(localStorage.getItem('dw_initiative') || '{"entries":[],"currentTurn":0,"round":1}');
+            if (!isNaN(ridx)) {
+                initData.entries.splice(ridx, 1);
+                if (initData.currentTurn >= initData.entries.length) initData.currentTurn = 0;
+            }
+            localStorage.setItem('dw_initiative', JSON.stringify(initData));
+            renderApp();
+            return;
+        }
+
+        // Clear initiative
+        if (target.matches('[data-action="clear-init"]')) {
+            localStorage.setItem('dw_initiative', JSON.stringify({entries:[], currentTurn:0, round:1}));
+            renderApp();
+            return;
+        }
+
+        // Dice roller
+        if (target.matches('[data-action="roll-dice"]')) {
+            var die = parseInt(target.dataset.die);
+            var result = Math.floor(Math.random() * die) + 1;
+            var resultEl = document.getElementById('dice-result');
+            if (resultEl) {
+                resultEl.innerHTML = '<span class="dice-roll-value">' + result + '</span><span class="dice-roll-label">d' + die + '</span>';
+                resultEl.classList.add('dice-animate');
+                setTimeout(function() { resultEl.classList.remove('dice-animate'); }, 300);
+            }
+            return;
+        }
+
         // --- Character Sheet Events ---
         if (charId && config && state) {
             // Tab switching
@@ -4197,6 +4370,13 @@ function bindPageEvents(route) {
     app.onchange = function(e) {
         var target = e.target;
 
+        // Show custom NPC name when "custom" selected in initiative
+        if (target.matches('#init-char')) {
+            var customField = document.getElementById('init-custom-name');
+            if (customField) customField.style.display = target.value === 'custom' ? 'block' : 'none';
+            return;
+        }
+
         // Import character file
         if (target.matches('[data-action="import-char"]')) {
             if (!charId || !canEdit(charId)) return;
@@ -4335,10 +4515,15 @@ function bindPageEvents(route) {
         }
 
         // Notes auto-save
-        if (target.matches('.notes-textarea') || target.matches('[data-action="save-notes"]')) {
-            var uid = currentUserId();
-            if (uid) {
-                localStorage.setItem('dw_notes_' + uid, target.value);
+        if (target.matches('.notes-textarea')) {
+            var type = target.dataset.notesType;
+            if (type === 'shared') {
+                localStorage.setItem('dw_notes_shared', target.value);
+            } else {
+                var uid = currentUserId();
+                if (uid) {
+                    localStorage.setItem('dw_notes_' + uid, target.value);
+                }
             }
         }
 

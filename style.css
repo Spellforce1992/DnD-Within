@@ -4421,3 +4421,273 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--a
 @media (max-width: 480px) {
     .dash-nav-cards { grid-template-columns: 1fr; }
 }
+
+/* Notes Page */
+.notes-page { max-width: 800px; margin: 0 auto; padding: 2rem; }
+.notes-tabs { display: flex; gap: 0.25rem; margin-bottom: 1rem; background: var(--bg-block); border-radius: var(--radius); padding: 0.25rem; width: fit-content; }
+.notes-tab { padding: 0.5rem 1.25rem; background: none; border: none; border-radius: var(--radius-sm); color: var(--text-dim); cursor: pointer; font-size: 0.85rem; font-family: inherit; transition: all 0.2s; }
+.notes-tab.active { background: var(--accent); color: var(--bg-dark); font-weight: 700; }
+.notes-textarea { width: 100%; min-height: 400px; padding: 1rem; background: var(--bg-block); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text-main); font-size: 0.9rem; font-family: inherit; line-height: 1.7; resize: vertical; }
+.notes-textarea:focus { border-color: var(--accent); outline: none; }
+
+/* DM Tools */
+.dm-tools { margin-top: 2rem; }
+.dm-tool-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem; }
+.dm-tool-card h3 { color: var(--text-bright); font-size: 1rem; margin-bottom: 1rem; }
+
+/* Initiative Tracker */
+.init-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+.init-round { font-size: 0.85rem; color: var(--accent); font-weight: 700; }
+.init-list { display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: 0.75rem; }
+.init-entry { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0.75rem; background: var(--bg-block); border-radius: var(--radius-sm); border-left: 3px solid transparent; transition: all 0.2s; }
+.init-entry.current { border-left-color: var(--accent); background: rgba(34,211,238,0.05); }
+.init-roll { font-size: 1.1rem; font-weight: 800; color: var(--gold); min-width: 30px; text-align: center; }
+.init-name { flex: 1; color: var(--text-bright); font-weight: 600; }
+.init-class { font-size: 0.75rem; color: var(--text-dim); }
+.init-remove { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 1rem; opacity: 0.4; transition: all 0.2s; }
+.init-remove:hover { color: var(--danger); opacity: 1; }
+.init-add { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+
+/* Dice Roller */
+.dice-buttons { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+.dice-btn { padding: 0.5rem 0.9rem; background: var(--bg-block); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-main); cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s; font-family: inherit; }
+.dice-btn:hover { border-color: var(--accent); color: var(--accent); }
+.dice-result { min-height: 50px; display: flex; align-items: center; gap: 0.5rem; }
+.dice-roll-value { font-size: 2rem; font-weight: 800; color: var(--gold); }
+.dice-roll-label { font-size: 0.85rem; color: var(--text-dim); }
+.dice-animate { animation: diceRoll 0.3s ease-out; }
+@keyframes diceRoll { 0% { transform: scale(0.8); opacity: 0.5; } 50% { transform: scale(1.2); } 100% { transform: scale(1); opacity: 1; } }
+
+/* =============================================================
+   FINAL VISUAL POLISH — Missing classes & consistency fixes
+   ============================================================= */
+
+/* ===== TAB CONTENT WRAPPERS ===== */
+.tab-combat,
+.tab-spells,
+.tab-inventory {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* ===== TIMELINE EVENT TYPE COLORS (dynamic classes from ev.type) ===== */
+.timeline-event.timeline-discovery::before,
+.timeline-event.timeline-discovery .timeline-marker { background: var(--success); box-shadow: 0 0 8px rgba(74, 222, 128, 0.3); }
+.timeline-event.timeline-social::before,
+.timeline-event.timeline-social .timeline-marker { background: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
+.timeline-event.timeline-combat::before,
+.timeline-event.timeline-combat .timeline-marker { background: var(--danger); box-shadow: 0 0 8px rgba(239, 68, 68, 0.3); }
+.timeline-event.timeline-danger::before,
+.timeline-event.timeline-danger .timeline-marker { background: var(--danger); box-shadow: 0 0 8px rgba(239, 68, 68, 0.3); }
+.timeline-event.timeline-magic::before,
+.timeline-event.timeline-magic .timeline-marker { background: #a855f7; box-shadow: 0 0 8px rgba(168, 85, 247, 0.3); }
+.timeline-event.timeline-quest::before,
+.timeline-event.timeline-quest .timeline-marker { background: var(--gold); box-shadow: 0 0 8px rgba(240, 192, 64, 0.3); }
+
+/* Dashboard recent events — discovery, social, combat variants */
+.dash-recent-event.timeline-discovery { border-left-color: var(--success); }
+.dash-recent-event.timeline-social { border-left-color: var(--accent); }
+.dash-recent-event.timeline-combat { border-left-color: var(--danger); }
+
+/* ===== LORE PAGE H1 ===== */
+.lore-page > h1,
+.lore-header h1 {
+    font-size: 1.8rem;
+    color: var(--text-bright);
+    margin-bottom: 0.5rem;
+}
+
+/* ===== ABILITY EDIT MODE CLASS ===== */
+.ability.edit-mode {
+    cursor: pointer;
+}
+
+/* ===== CHAR NAME DISPLAY (separate span inside h1) ===== */
+.char-name-display {
+    font-size: inherit;
+    font-weight: inherit;
+    color: inherit;
+}
+
+/* ===== CONSISTENT h3 WITHIN SHEET BLOCKS ===== */
+.sheet-block h3 {
+    font-size: 1rem;
+    color: var(--text-bright);
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+/* ===== SHEET BLOCK > h3 SUBCLASS / SECTION HEADERS ===== */
+.sheet-block > h3 {
+    font-size: 1rem;
+    color: var(--accent);
+    margin-top: 1.25rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+}
+
+/* ===== CONSISTENT p WITHIN SHEET BLOCKS ===== */
+.sheet-block p {
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+/* ===== PAGE GLOBAL h1 CONSISTENCY ===== */
+.dashboard h1 {
+    color: var(--text-bright);
+}
+
+/* ===== BANNER & PORTRAIT PLACEHOLDERS ===== */
+.char-banner .banner-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: var(--text-dim);
+    opacity: 0.3;
+    background: linear-gradient(135deg, var(--bg-block), var(--bg-elevated));
+}
+
+.char-portrait .portrait-placeholder {
+    font-size: 2.5rem;
+    color: var(--text-dim);
+    opacity: 0.3;
+}
+
+/* ===== SELECT ELEMENTS (match dark theme) ===== */
+select.edit-input {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238a8a9a' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.6rem center;
+    padding-right: 2rem;
+    cursor: pointer;
+}
+
+select.edit-input option {
+    background: var(--bg-card);
+    color: var(--text-main);
+}
+
+/* ===== NAV LOGO ACCENT (redundant safety rule) ===== */
+.nav-logo .logo-accent {
+    color: var(--accent);
+    transition: color 0.3s;
+}
+
+/* ===== FADEUP ON ALL PAGES ===== */
+.dashboard,
+.character-page,
+.maps-page,
+.timeline-page,
+.lore-page,
+.notes-page {
+    animation: fadeUp 0.4s ease-out;
+}
+
+/* ===== HP INPUT FOCUS RING ===== */
+.hp-input:focus {
+    box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+/* ===== NOTES TEXTAREA FOCUS RING ===== */
+.notes-textarea:focus {
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+/* ===== TIMELINE SESSION LABEL ===== */
+.timeline-session {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--accent);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.15rem;
+}
+
+/* ===== LEVEL-UP MODAL SUB-PICKERS ===== */
+.levelup-asi-add {
+    /* Inherits from .asi-ability-btn — no extra styles needed, selector exists for JS querySelectorAll */
+}
+
+.levelup-feat-pick {
+    /* Inherits from .feat-card — no extra styles needed, selector exists for JS querySelectorAll */
+}
+
+.levelup-feat-pick.selected {
+    border-color: var(--accent);
+    background: var(--accent-glow);
+    color: var(--accent);
+    font-weight: 600;
+}
+
+/* ===== DM TOOLS MOBILE ===== */
+@media (max-width: 700px) {
+    .dm-tools {
+        margin-top: 1.5rem;
+    }
+
+    .dm-tool-card {
+        padding: 1rem;
+    }
+
+    .init-add {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .dice-buttons {
+        justify-content: center;
+    }
+
+    .dice-result {
+        justify-content: center;
+    }
+
+    /* Lore editor responsive */
+    .lore-editor .edit-textarea {
+        min-height: 200px;
+    }
+
+    .lore-header {
+        flex-direction: column;
+        gap: 0.75rem;
+        align-items: flex-start;
+    }
+
+    .lore-article {
+        padding: 1.25rem;
+    }
+
+    .lore-article h1 {
+        font-size: 1.4rem;
+    }
+
+    /* Map viewer responsive */
+    .map-breadcrumb {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .maps-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    /* Login form responsive */
+    .login-title {
+        font-size: 1.6rem;
+    }
+
+    .login-logo {
+        font-size: 2.5rem;
+    }
+}
