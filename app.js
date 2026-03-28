@@ -1832,36 +1832,167 @@ function renderTabInventory(charId, config, state) {
 // Section 20: Maps Page
 // ============================================================
 
-function renderMaps() {
-    var html = '<div class="maps-page">';
-    html += '<h1>Kaarten van Valoria</h1>';
-    html += '<p class="block-note">Kaarten komen binnenkort.</p>';
+var activeDimension = 0;
+var activeMapId = null;
+var mapZoom = 1;
+var mapPanX = 0;
+var mapPanY = 0;
+var addingPin = false;
 
-    // Map upload area for DM
-    if (isDM()) {
-        html += '<div class="map-upload-area">';
-        html += '<label class="btn btn-primary">&#128247; Kaart uploaden<input type="file" accept="image/*" data-action="upload-map" style="display:none"></label>';
-        html += '</div>';
+function getMapsData() {
+    var saved = localStorage.getItem('dw_maps');
+    if (saved) {
+        try { return JSON.parse(saved); } catch(e) {}
     }
-
-    // Show stored maps
-    var mapCount = parseInt(localStorage.getItem('dw_map_count') || '0');
-    if (mapCount > 0) {
-        html += '<div class="maps-grid">';
-        for (var i = 0; i < mapCount; i++) {
-            var mapData = localStorage.getItem('dw_map_' + i);
-            var mapName = localStorage.getItem('dw_map_name_' + i) || 'Kaart ' + (i + 1);
-            if (mapData) {
-                html += '<div class="map-card">';
-                html += '<img class="map-img" src="' + mapData + '" alt="' + escapeAttr(mapName) + '">';
-                html += '<span class="map-name">' + escapeHtml(mapName) + '</span>';
-                html += '</div>';
+    return {
+        dimensions: [
+            {
+                id: 'valoria',
+                name: 'Valoria',
+                maps: [
+                    { id: 'world', name: 'Wereldkaart', image: null, isRoot: true, pins: [] }
+                ]
             }
+        ]
+    };
+}
+
+function saveMapsData(data) {
+    localStorage.setItem('dw_maps', JSON.stringify(data));
+}
+
+function renderMaps() {
+    var data = getMapsData();
+    var dims = data.dimensions || [];
+    if (activeDimension >= dims.length) activeDimension = 0;
+    var dim = dims[activeDimension] || { maps: [] };
+
+    var html = '<div class="maps-page">';
+
+    // Dimension tabs at top
+    html += '<div class="maps-header">';
+    html += '<h1>Kaarten</h1>';
+    html += '<div class="dimension-tabs">';
+    for (var d = 0; d < dims.length; d++) {
+        var activeClass = d === activeDimension ? ' active' : '';
+        html += '<button class="dimension-tab' + activeClass + '" data-action="select-dimension" data-dim="' + d + '">' + escapeHtml(dims[d].name) + '</button>';
+    }
+    if (isDM()) {
+        html += '<button class="dimension-tab dimension-add" data-action="add-dimension">+</button>';
+    }
+    html += '</div>';
+    html += '</div>';
+
+    if (activeMapId) {
+        // MAP VIEWER MODE
+        var map = null;
+        for (var mi = 0; mi < dim.maps.length; mi++) {
+            if (dim.maps[mi].id === activeMapId) { map = dim.maps[mi]; break; }
+        }
+
+        if (!map) {
+            activeMapId = null;
+            return renderMaps();
+        }
+
+        // Breadcrumb / back button
+        html += '<div class="map-breadcrumb">';
+        html += '<button class="btn btn-ghost btn-sm" data-action="map-back">&larr; Alle kaarten</button>';
+        html += '<span class="map-title">' + escapeHtml(map.name) + '</span>';
+        if (isDM()) {
+            html += '<button class="btn btn-ghost btn-sm" data-action="add-pin">+ Pin toevoegen</button>';
+            html += '<label class="btn btn-ghost btn-sm">Afbeelding wijzigen<input type="file" accept="image/*" data-action="update-map-image" data-map-id="' + map.id + '" style="display:none"></label>';
         }
         html += '</div>';
+
+        // Map viewer
+        html += '<div class="map-viewer" id="map-viewer">';
+        html += '<div class="map-canvas" id="map-canvas" style="transform: scale(' + mapZoom + ') translate(' + mapPanX + 'px, ' + mapPanY + 'px);">';
+
+        if (map.image) {
+            html += '<img src="' + map.image + '" alt="' + escapeAttr(map.name) + '" class="map-image" draggable="false">';
+        } else {
+            html += '<div class="map-placeholder">';
+            if (isDM()) {
+                html += '<label class="map-upload-prompt">Klik om een kaartafbeelding te uploaden<input type="file" accept="image/*" data-action="update-map-image" data-map-id="' + map.id + '" style="display:none"></label>';
+            } else {
+                html += '<p>De DM heeft nog geen afbeelding toegevoegd.</p>';
+            }
+            html += '</div>';
+        }
+
+        // Render pins
+        var pins = map.pins || [];
+        for (var pi = 0; pi < pins.length; pi++) {
+            var pin = pins[pi];
+            var pinClass = pin.targetMap ? 'map-pin has-link' : 'map-pin';
+            html += '<div class="' + pinClass + '" style="left:' + pin.x + '%;top:' + pin.y + '%;" data-pin-idx="' + pi + '"';
+            if (pin.targetMap) {
+                html += ' data-action="goto-map" data-target="' + pin.targetMap + '"';
+            }
+            html += '>';
+            html += '<div class="pin-dot"></div>';
+            html += '<span class="pin-label">' + escapeHtml(pin.label) + '</span>';
+            if (isDM()) {
+                html += '<button class="pin-delete" data-action="delete-pin" data-pin-idx="' + pi + '">&times;</button>';
+            }
+            html += '</div>';
+        }
+
+        html += '</div>'; // map-canvas
+
+        // Zoom controls
+        html += '<div class="map-zoom-controls">';
+        html += '<button class="zoom-btn" data-action="zoom-in">+</button>';
+        html += '<button class="zoom-btn" data-action="zoom-reset">&#8634;</button>';
+        html += '<button class="zoom-btn" data-action="zoom-out">&minus;</button>';
+        html += '</div>';
+
+        html += '</div>'; // map-viewer
+
+        // Pin adding mode indicator
+        if (addingPin) {
+            html += '<div class="pin-add-overlay">';
+            html += '<p>Klik op de kaart om een pin te plaatsen</p>';
+            html += '<button class="btn btn-ghost btn-sm" data-action="cancel-add-pin">Annuleren</button>';
+            html += '</div>';
+        }
+
+    } else {
+        // MAP GRID MODE
+        html += '<div class="maps-grid">';
+
+        var maps = dim.maps || [];
+        for (var gi = 0; gi < maps.length; gi++) {
+            var gm = maps[gi];
+            html += '<div class="map-card" data-action="open-map" data-map-id="' + gm.id + '">';
+            if (gm.image) {
+                html += '<img class="map-card-img" src="' + gm.image + '" alt="">';
+            } else {
+                html += '<div class="map-card-placeholder">&#128506;</div>';
+            }
+            html += '<div class="map-card-info">';
+            html += '<span class="map-card-name">' + escapeHtml(gm.name) + '</span>';
+            if (gm.isRoot) html += '<span class="map-card-badge">Hoofdkaart</span>';
+            html += '<span class="map-card-pins">' + (gm.pins ? gm.pins.length : 0) + ' pins</span>';
+            html += '</div>';
+            if (isDM()) {
+                html += '<button class="map-card-delete" data-action="delete-map" data-map-id="' + gm.id + '">&times;</button>';
+            }
+            html += '</div>';
+        }
+
+        if (isDM()) {
+            html += '<div class="map-card map-card-add" data-action="add-map">';
+            html += '<span class="map-card-add-icon">+</span>';
+            html += '<span class="map-card-name">Nieuwe Kaart</span>';
+            html += '</div>';
+        }
+
+        html += '</div>'; // maps-grid
     }
 
-    html += '</div>';
+    html += '</div>'; // maps-page
     return html;
 }
 
@@ -3858,6 +3989,167 @@ function bindPageEvents(route) {
             return;
         }
 
+        // --- Maps: dimension, map, pin handlers ---
+        // Dimension selection
+        if (target.matches('[data-action="select-dimension"]')) {
+            activeDimension = parseInt(target.dataset.dim) || 0;
+            activeMapId = null;
+            mapZoom = 1; mapPanX = 0; mapPanY = 0;
+            renderApp();
+            return;
+        }
+
+        // Add dimension
+        if (target.matches('[data-action="add-dimension"]')) {
+            var dimName = prompt('Naam van de dimensie:');
+            if (dimName && dimName.trim()) {
+                var mData = getMapsData();
+                mData.dimensions.push({ id: 'dim' + Date.now(), name: dimName.trim(), maps: [{ id: 'map' + Date.now(), name: 'Hoofdkaart', image: null, isRoot: true, pins: [] }] });
+                saveMapsData(mData);
+                activeDimension = mData.dimensions.length - 1;
+                renderApp();
+            }
+            return;
+        }
+
+        // Open map
+        if (target.matches('[data-action="open-map"]') || target.closest('[data-action="open-map"]')) {
+            var card = target.closest('[data-action="open-map"]') || target;
+            activeMapId = card.dataset.mapId;
+            mapZoom = 1; mapPanX = 0; mapPanY = 0;
+            renderApp();
+            return;
+        }
+
+        // Map back to grid
+        if (target.matches('[data-action="map-back"]')) {
+            activeMapId = null;
+            addingPin = false;
+            renderApp();
+            return;
+        }
+
+        // Add map
+        if (target.matches('[data-action="add-map"]') || target.closest('[data-action="add-map"]')) {
+            var mapName = prompt('Naam van de kaart:');
+            if (mapName && mapName.trim()) {
+                var mData = getMapsData();
+                var mDim = mData.dimensions[activeDimension];
+                if (mDim) {
+                    mDim.maps.push({ id: 'map' + Date.now(), name: mapName.trim(), image: null, isRoot: false, pins: [] });
+                    saveMapsData(mData);
+                    renderApp();
+                }
+            }
+            return;
+        }
+
+        // Delete map
+        if (target.matches('[data-action="delete-map"]')) {
+            e.stopPropagation();
+            var delMapId = target.dataset.mapId;
+            if (confirm('Kaart verwijderen?')) {
+                var mData = getMapsData();
+                var mDim = mData.dimensions[activeDimension];
+                if (mDim) {
+                    mDim.maps = mDim.maps.filter(function(m) { return m.id !== delMapId; });
+                    saveMapsData(mData);
+                    renderApp();
+                }
+            }
+            return;
+        }
+
+        // Goto linked map (pin click)
+        if (target.matches('[data-action="goto-map"]') || target.closest('[data-action="goto-map"]')) {
+            var gotoEl = target.closest('[data-action="goto-map"]') || target;
+            activeMapId = gotoEl.dataset.target;
+            mapZoom = 1; mapPanX = 0; mapPanY = 0;
+            renderApp();
+            return;
+        }
+
+        // Zoom controls
+        if (target.matches('[data-action="zoom-in"]')) { mapZoom = Math.min(mapZoom * 1.3, 5); renderApp(); return; }
+        if (target.matches('[data-action="zoom-out"]')) { mapZoom = Math.max(mapZoom / 1.3, 0.3); renderApp(); return; }
+        if (target.matches('[data-action="zoom-reset"]')) { mapZoom = 1; mapPanX = 0; mapPanY = 0; renderApp(); return; }
+
+        // Add pin mode
+        if (target.matches('[data-action="add-pin"]')) {
+            addingPin = true;
+            renderApp();
+            return;
+        }
+
+        if (target.matches('[data-action="cancel-add-pin"]')) {
+            addingPin = false;
+            renderApp();
+            return;
+        }
+
+        // Click on map to place pin (when in addingPin mode)
+        if (addingPin && (target.matches('.map-image') || target.matches('.map-canvas') || target.closest('.map-canvas'))) {
+            var viewer = document.getElementById('map-viewer');
+            var canvas = document.getElementById('map-canvas');
+            if (viewer && canvas) {
+                var rect = canvas.getBoundingClientRect();
+                var px = ((e.clientX - rect.left) / rect.width) * 100;
+                var py = ((e.clientY - rect.top) / rect.height) * 100;
+
+                var pinLabel = prompt('Label voor deze pin:');
+                if (pinLabel && pinLabel.trim()) {
+                    var mData = getMapsData();
+                    var mDim = mData.dimensions[activeDimension];
+                    var currentMap = null;
+                    for (var cmi = 0; cmi < mDim.maps.length; cmi++) {
+                        if (mDim.maps[cmi].id === activeMapId) { currentMap = mDim.maps[cmi]; break; }
+                    }
+
+                    if (currentMap) {
+                        var otherMaps = mDim.maps.filter(function(m) { return m.id !== activeMapId; });
+                        var targetMapId = null;
+
+                        if (otherMaps.length > 0) {
+                            var linkChoice = prompt('Link naar kaart? (leeg = geen link)\n' + otherMaps.map(function(m, i) { return (i+1) + '. ' + m.name; }).join('\n'));
+                            if (linkChoice && parseInt(linkChoice) > 0) {
+                                var linkIdx = parseInt(linkChoice) - 1;
+                                if (otherMaps[linkIdx]) targetMapId = otherMaps[linkIdx].id;
+                            }
+                        }
+
+                        currentMap.pins.push({
+                            id: 'pin' + Date.now(),
+                            x: Math.round(px * 10) / 10,
+                            y: Math.round(py * 10) / 10,
+                            label: pinLabel.trim(),
+                            targetMap: targetMapId
+                        });
+                        saveMapsData(mData);
+                    }
+                }
+                addingPin = false;
+                renderApp();
+            }
+            return;
+        }
+
+        // Delete pin
+        if (target.matches('[data-action="delete-pin"]')) {
+            e.stopPropagation();
+            var delPinIdx = parseInt(target.dataset.pinIdx);
+            var mData = getMapsData();
+            var mDim = mData.dimensions[activeDimension];
+            for (var dmi = 0; dmi < mDim.maps.length; dmi++) {
+                if (mDim.maps[dmi].id === activeMapId) {
+                    mDim.maps[dmi].pins.splice(delPinIdx, 1);
+                    saveMapsData(mData);
+                    renderApp();
+                    break;
+                }
+            }
+            return;
+        }
+
         // --- Lore handlers ---
         // Save lore article
         if (target.matches('[data-action="save-lore"]')) {
@@ -3961,22 +4253,47 @@ function bindPageEvents(route) {
             return;
         }
 
-        // Map upload
-        if (target.matches('[data-action="upload-map"]')) {
-            if (isDM() && target.files && target.files[0]) {
+        // Map image upload (new maps system)
+        if (target.matches('[data-action="update-map-image"]')) {
+            var mapFile = target.files && target.files[0];
+            var mapId = target.dataset.mapId;
+            if (mapFile && mapId) {
                 var mapReader = new FileReader();
                 mapReader.onload = function(ev) {
-                    var count = parseInt(localStorage.getItem('dw_map_count') || '0');
-                    try {
-                        localStorage.setItem('dw_map_' + count, ev.target.result);
-                        localStorage.setItem('dw_map_count', String(count + 1));
+                    var img = new Image();
+                    img.onload = function() {
+                        var cvs = document.createElement('canvas');
+                        var maxSize = 1200;
+                        var w = img.width, h = img.height;
+                        if (w > maxSize || h > maxSize) {
+                            if (w > h) { h = h * (maxSize / w); w = maxSize; }
+                            else { w = w * (maxSize / h); h = maxSize; }
+                        }
+                        cvs.width = w;
+                        cvs.height = h;
+                        cvs.getContext('2d').drawImage(img, 0, 0, w, h);
+                        var base64 = cvs.toDataURL('image/jpeg', 0.7);
+
+                        var mData = getMapsData();
+                        var mDim = mData.dimensions[activeDimension];
+                        for (var mi = 0; mi < mDim.maps.length; mi++) {
+                            if (mDim.maps[mi].id === mapId) {
+                                mDim.maps[mi].image = base64;
+                                break;
+                            }
+                        }
+                        try {
+                            saveMapsData(mData);
+                        } catch (err) {
+                            showWarning('Kaartafbeelding te groot om op te slaan.');
+                        }
                         renderApp();
-                    } catch (err) {
-                        showWarning('Kaart te groot om op te slaan.');
-                    }
+                    };
+                    img.src = ev.target.result;
                 };
-                mapReader.readAsDataURL(target.files[0]);
+                mapReader.readAsDataURL(mapFile);
             }
+            target.value = '';
             return;
         }
     };
