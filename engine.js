@@ -55,28 +55,11 @@ function getCalculatedAbilityScore(config, state, ability) {
 
 function getAbilityBreakdown(config, state, ability) {
     const base = config.baseAbilities[ability] || 10;
-    // Determine racial bonus based on Half-Elf rules
-    // Half-Elf: +2 CHA, then the two +1s are already baked into baseAbilities
-    // For display purposes, we show the standard array value vs what's in base
-    // The baseAbilities already include racial bonuses, so we need to deduce them
-    // Standard array: 15, 14, 13, 12, 10, 8
-    // Half-Elf racial: +2 CHA, +1 to two others (DEX and CON for both characters)
-    const standardArray = [15, 14, 13, 12, 10, 8];
 
-    // Determine which standard array value was assigned to this ability
-    let racialBonus = 0;
-    let baseWithoutRacial = base;
-
-    // For Ren: STR 10, DEX 16(15+1), CON 14(13+1), INT 14, WIS 12, CHA 10(8+2)
-    // For Saya: STR 8, DEX 15(14+1), CON 14(13+1), INT 12, WIS 10, CHA 17(15+2)
-    if (config.name === "Ren Ashvane") {
-        const racials = { str: 0, dex: 1, con: 1, int: 0, wis: 0, cha: 2 };
-        racialBonus = racials[ability] || 0;
-    } else if (config.name === "Saya Ashvane") {
-        const racials = { str: 0, dex: 1, con: 1, int: 0, wis: 0, cha: 2 };
-        racialBonus = racials[ability] || 0;
-    }
-    baseWithoutRacial = base - racialBonus;
+    // Background bonuses - check config or default to empty
+    const bgBonuses = config.backgroundBonuses || {};
+    let racialBonus = bgBonuses[ability] || 0;
+    let baseWithoutRacial = base - racialBonus;
 
     // ASI bonuses
     let asiTotal = 0;
@@ -131,27 +114,77 @@ function getHP(config, state) {
 }
 
 function getAC(config, state) {
-    const dexMod = getMod(getAbilityScore(config, state, 'dex'));
-    if (config.className === 'rogue') {
-        // Studded leather: 12 + DEX mod
+    var dexMod = getMod(getAbilityScore(config, state, 'dex'));
+    var className = config.className;
+
+    if (className === 'rogue') {
+        // Studded leather: 12 + DEX
         return 12 + dexMod;
     }
-    if (config.className === 'sorcerer') {
-        // Mage Armor prepared? 13 + DEX, otherwise 10 + DEX
-        if (state.prepared && state.prepared.includes('Mage Armor')) {
+    if (className === 'sorcerer' || className === 'wizard' || className === 'warlock') {
+        // Mage Armor if prepared: 13 + DEX, otherwise 10 + DEX
+        if (state.prepared && (state.prepared.includes('Mage Armor') || state.prepared.includes('Armor of Agathys'))) {
             return 13 + dexMod;
         }
         return 10 + dexMod;
     }
+    if (className === 'fighter' || className === 'paladin') {
+        // Chain mail: 16 (no DEX), or plate: 18
+        // Default to chain mail for now
+        return 16;
+    }
+    if (className === 'ranger') {
+        // Scale mail: 14 + DEX (max 2)
+        return 14 + Math.min(dexMod, 2);
+    }
+    if (className === 'druid') {
+        // Leather armor: 11 + DEX (druids don't wear metal)
+        return 11 + dexMod;
+    }
+    // Default: 10 + DEX
     return 10 + dexMod;
 }
 
-function getMaxPrepared(state, chaMod) {
-    return Math.max(1, chaMod + state.level);
+function getMaxPrepared(state, abilityMod, className) {
+    if (!className) className = 'sorcerer';
+    if (className === 'sorcerer' || className === 'wizard' || className === 'druid') {
+        return Math.max(1, abilityMod + state.level);
+    }
+    if (className === 'paladin') {
+        return Math.max(1, abilityMod + Math.floor(state.level / 2));
+    }
+    if (className === 'ranger') {
+        var known = { 2:2, 3:3, 4:3, 5:4, 6:4, 7:5, 8:5, 9:6, 10:6, 11:7, 12:7, 13:8, 14:8, 15:9, 16:9, 17:10, 18:10, 19:11, 20:11 };
+        return known[state.level] || 0;
+    }
+    if (className === 'warlock') {
+        var wknown = { 1:2, 2:3, 3:4, 4:5, 5:6, 6:7, 7:8, 8:9, 9:10, 10:10, 11:11, 12:11, 13:12, 14:12, 15:13, 16:13, 17:14, 18:14, 19:15, 20:15 };
+        return wknown[state.level] || 2;
+    }
+    return Math.max(1, abilityMod + state.level);
 }
 
-function getMaxCantrips(level) {
-    return DATA.sorcerer.cantripsKnown[level] || 4;
+function getMaxCantrips(level, className) {
+    if (!className) className = 'sorcerer';
+    var classData = DATA[className];
+    if (classData && classData.cantripsKnown) {
+        return classData.cantripsKnown[level] || 0;
+    }
+    return 0;
+}
+
+function getSpellcastingAbility(className) {
+    var map = { sorcerer: 'cha', wizard: 'int', druid: 'wis', paladin: 'cha', ranger: 'wis', warlock: 'cha' };
+    return map[className] || 'cha';
+}
+
+function getSpellSlots(className, level) {
+    if (className === 'warlock') return [];
+    var classData = DATA[className];
+    if (!classData) return [];
+    if (classData.spellSlots) return classData.spellSlots[level] || [];
+    if (classData.spellcasting === 'half') return DATA.halfCasterSlots[level] || [];
+    return [];
 }
 
 function formatMod(mod) {

@@ -161,6 +161,7 @@ var CHAR_DEFAULTS = {
         background: "wayfarer", alignment: "Chaotic Good", age: 19,
         accentColor: "#22d3ee",
         baseAbilities: { str: 10, dex: 16, con: 14, int: 14, wis: 12, cha: 10 },
+        backgroundBonuses: { str: 0, dex: 1, con: 1, int: 0, wis: 0, cha: 2 },
         defaultSkills: ["stealth", "sleight of hand", "perception", "acrobatics", "investigation", "athletics"],
         defaultExpertise: ["stealth", "sleight of hand"],
         weapons: [
@@ -212,6 +213,7 @@ var CHAR_DEFAULTS = {
         background: "wayfarer", alignment: "Chaotic Good", age: 19,
         accentColor: "#f472b6",
         baseAbilities: { str: 8, dex: 15, con: 14, int: 12, wis: 10, cha: 17 },
+        backgroundBonuses: { str: 0, dex: 1, con: 1, int: 0, wis: 0, cha: 2 },
         defaultSkills: ["deception", "persuasion", "arcana", "sleight of hand"],
         defaultCantrips: ["Fire Bolt", "Prestidigitation", "Minor Illusion", "Mage Hand"],
         defaultPrepared: ["Shield", "Mage Armor", "Chaos Bolt", "Disguise Self"],
@@ -257,6 +259,7 @@ var CHAR_DEFAULTS = {
         background: "guide", alignment: "Neutral Good", age: 25,
         accentColor: "#4ade80",
         baseAbilities: { str: 12, dex: 16, con: 14, int: 10, wis: 15, cha: 8 },
+        backgroundBonuses: { str: 0, dex: 1, con: 0, int: 0, wis: 2, cha: 0 },
         defaultSkills: ["perception", "stealth", "survival"],
         defaultExpertise: [],
         weapons: [
@@ -276,6 +279,7 @@ var CHAR_DEFAULTS = {
         background: "sage", alignment: "Neutral", age: 40,
         accentColor: "#818cf8",
         baseAbilities: { str: 8, dex: 14, con: 14, int: 17, wis: 12, cha: 10 },
+        backgroundBonuses: { str: 0, dex: 0, con: 1, int: 2, wis: 0, cha: 0 },
         defaultSkills: ["arcana", "history"],
         defaultExpertise: [],
         defaultCantrips: ["Fire Bolt", "Prestidigitation", "Mage Hand"],
@@ -294,6 +298,7 @@ var CHAR_DEFAULTS = {
         background: "soldier", alignment: "Lawful Good", age: 28,
         accentColor: "#fbbf24",
         baseAbilities: { str: 16, dex: 10, con: 14, int: 8, wis: 12, cha: 15 },
+        backgroundBonuses: { str: 2, dex: 0, con: 1, int: 0, wis: 0, cha: 0 },
         defaultSkills: ["athletics", "persuasion"],
         defaultExpertise: [],
         weapons: [
@@ -313,6 +318,7 @@ var CHAR_DEFAULTS = {
         background: "acolyte", alignment: "Neutral Good", age: 30,
         accentColor: "#34d399",
         baseAbilities: { str: 10, dex: 14, con: 14, int: 12, wis: 17, cha: 8 },
+        backgroundBonuses: { str: 0, dex: 0, con: 1, int: 0, wis: 2, cha: 0 },
         defaultSkills: ["nature", "perception"],
         defaultExpertise: [],
         defaultCantrips: ["Produce Flame", "Guidance", "Druidcraft"],
@@ -331,6 +337,7 @@ var CHAR_DEFAULTS = {
         background: "soldier", alignment: "Chaotic Neutral", age: 22,
         accentColor: "#f87171",
         baseAbilities: { str: 16, dex: 14, con: 15, int: 10, wis: 12, cha: 8 },
+        backgroundBonuses: { str: 2, dex: 0, con: 1, int: 0, wis: 0, cha: 0 },
         defaultSkills: ["athletics", "perception"],
         defaultExpertise: [],
         weapons: [
@@ -350,6 +357,7 @@ var CHAR_DEFAULTS = {
         background: "charlatan", alignment: "Chaotic Neutral", age: 26,
         accentColor: "#a78bfa",
         baseAbilities: { str: 8, dex: 14, con: 14, int: 12, wis: 10, cha: 17 },
+        backgroundBonuses: { str: 0, dex: 0, con: 1, int: 0, wis: 0, cha: 2 },
         defaultSkills: ["deception", "arcana"],
         defaultExpertise: [],
         defaultCantrips: ["Eldritch Blast", "Minor Illusion"],
@@ -1393,58 +1401,56 @@ function renderMetamagicHTML(charId, config, state) {
 // ============================================================
 
 function renderTabSpells(charId, config, state) {
-    if (!hasSpellcasting(config.className)) {
+    var className = config.className;
+    if (!hasSpellcasting(className)) {
         return '<div class="tab-spells"><p class="block-note">Dit karakter heeft geen spellcasting.</p></div>';
     }
 
-    // Currently full spell data only available for sorcerer in data.js
-    // Other classes show a placeholder
-    if (config.className !== 'sorcerer') {
-        return renderTabSpellsGeneric(charId, config, state);
-    }
-
-    return renderTabSpellsSorcerer(charId, config, state);
-}
-
-function renderTabSpellsGeneric(charId, config, state) {
-    var html = '<div class="tab-spells">';
-    html += '<div class="spell-header">';
-    html += '<p class="block-note">Spell management voor ' + classDisplayName(config.className) + ' wordt binnenkort toegevoegd.</p>';
-    html += '</div>';
-
-    // Show known cantrips and prepared spells from state
-    if (state.cantrips && state.cantrips.length > 0) {
-        html += '<h3 class="spell-level-header">Cantrips</h3>';
-        html += '<div class="spell-grid">';
-        for (var i = 0; i < state.cantrips.length; i++) {
-            html += '<span class="spell-toggle selected">' + escapeHtml(state.cantrips[i]) + '</span>';
-        }
-        html += '</div>';
-    }
-    if (state.prepared && state.prepared.length > 0) {
-        html += '<h3 class="spell-level-header">Voorbereide Spells</h3>';
-        html += '<div class="spell-grid">';
-        for (var j = 0; j < state.prepared.length; j++) {
-            html += '<span class="spell-toggle prepared">' + escapeHtml(state.prepared[j]) + '</span>';
-        }
-        html += '</div>';
-    }
-
-    html += '</div>';
-    return html;
-}
-
-function renderTabSpellsSorcerer(charId, config, state) {
-    var chaMod = getMod(getAbilityScore(config, state, 'cha'));
+    var spellAbility = getSpellcastingAbility(className);
+    var abilityMod = getMod(getAbilityScore(config, state, spellAbility));
     var profBonus = getProfBonus(state.level);
-    var spellDC = 8 + profBonus + chaMod;
-    var spellAttack = profBonus + chaMod;
-    var sorcPts = DATA.sorcerer.sorceryPoints[state.level] || 0;
-    var maxPrepared = getMaxPrepared(state, chaMod);
-    var maxCantrips = getMaxCantrips(state.level);
-    var maxSpellLevel = DATA.sorcerer.maxSpellLevel[state.level] || 1;
-    var spellSlots = DATA.sorcerer.spellSlots[state.level] || [];
+    var spellDC = 8 + profBonus + abilityMod;
+    var spellAttack = profBonus + abilityMod;
+    var maxPrepared = getMaxPrepared(state, abilityMod, className);
     var preparedCount = state.prepared.length;
+    var favorites = state.favorites || [];
+    var classData = DATA[className];
+    var spellList = (DATA.spells && DATA.spells[className]) ? DATA.spells[className] : {};
+    var hasCantrips = !!spellList[0];
+    var maxCantrips = hasCantrips ? getMaxCantrips(state.level, className) : 0;
+
+    // Determine spell slot info and max spell level
+    var isWarlock = (className === 'warlock');
+    var isHalfCaster = (classData && classData.spellcasting === 'half');
+    var spellcastingStart = (classData && classData.spellcastingStart) ? classData.spellcastingStart : 1;
+    var spellSlots = [];
+    var maxSpellLevel = 0;
+
+    if (isWarlock) {
+        var pactSlotLevel = DATA.warlock.pactSlotLevel[state.level] || 1;
+        var pactSlotCount = DATA.warlock.pactSlots[state.level] || 0;
+        maxSpellLevel = pactSlotLevel;
+    } else if (isHalfCaster) {
+        spellSlots = DATA.halfCasterSlots[state.level] || [];
+        for (var hi = spellSlots.length - 1; hi >= 0; hi--) {
+            if (spellSlots[hi] > 0) { maxSpellLevel = hi + 1; break; }
+        }
+    } else {
+        // Full caster (sorcerer, wizard, druid)
+        if (classData && classData.maxSpellLevel) {
+            maxSpellLevel = classData.maxSpellLevel[state.level] || 1;
+        }
+        spellSlots = getSpellSlots(className, state.level);
+    }
+
+    // Check if character is below spellcasting start level
+    if (state.level < spellcastingStart) {
+        return '<div class="tab-spells"><p class="block-note">' + classDisplayName(className) + ' krijgt spellcasting op level ' + spellcastingStart + '.</p></div>';
+    }
+
+    // Determine prepared/known label
+    var isPreparedCaster = (className === 'wizard' || className === 'druid' || className === 'paladin' || className === 'sorcerer');
+    var preparedLabel = isPreparedCaster ? 'Voorbereid' : 'Bekend';
 
     var html = '<div class="tab-spells">';
 
@@ -1452,45 +1458,80 @@ function renderTabSpellsSorcerer(charId, config, state) {
     html += '<div class="spell-header">';
     html += '<div class="spell-stat"><span class="label">Save DC</span><span class="value">' + spellDC + '</span></div>';
     html += '<div class="spell-stat"><span class="label">Attack</span><span class="value">' + formatMod(spellAttack) + '</span></div>';
-    html += '<div class="spell-stat"><span class="label">Sorc Pts</span><span class="value">' + sorcPts + '</span></div>';
-    html += '<div class="spell-stat prepared-counter"><span class="label">Voorbereid</span><span class="value">' + preparedCount + '/' + maxPrepared + '</span></div>';
+    // Sorcerer-specific: sorcery points
+    if (className === 'sorcerer') {
+        var sorcPts = DATA.sorcerer.sorceryPoints[state.level] || 0;
+        html += '<div class="spell-stat"><span class="label">Sorc Pts</span><span class="value">' + sorcPts + '</span></div>';
+    }
+    // Warlock-specific: pact slots
+    if (isWarlock) {
+        var wPactSlots = DATA.warlock.pactSlots[state.level] || 0;
+        var wPactLevel = DATA.warlock.pactSlotLevel[state.level] || 1;
+        html += '<div class="spell-stat"><span class="label">Pact Slots</span><span class="value">' + wPactSlots + ' (lvl ' + wPactLevel + ')</span></div>';
+    }
+    html += '<div class="spell-stat prepared-counter"><span class="label">' + preparedLabel + '</span><span class="value">' + preparedCount + '/' + maxPrepared + '</span></div>';
     html += '</div>';
+
+    // Warlock note about short rest recovery
+    if (isWarlock) {
+        html += '<p class="block-note" style="margin-bottom:0.5rem;opacity:0.7;">Pact Magic slots herstellen na een short rest.</p>';
+    }
 
     // Filter bar
     html += '<div class="spell-filter-bar">';
     html += '<button class="filter-btn' + (spellFilter === 'all' ? ' active' : '') + '" data-filter="all">Alle</button>';
-    html += '<button class="filter-btn' + (spellFilter === 'prepared' ? ' active' : '') + '" data-filter="prepared">Voorbereid</button>';
+    html += '<button class="filter-btn' + (spellFilter === 'prepared' ? ' active' : '') + '" data-filter="prepared">' + preparedLabel + '</button>';
     html += '<button class="filter-btn' + (spellFilter === 'favorites' ? ' active' : '') + '" data-filter="favorites">&#9733; Favorieten</button>';
     html += '</div>';
 
-    var favorites = state.favorites || [];
-
     // Cantrips (level 0)
-    var cantrips = (DATA.spells && DATA.spells.sorcerer && DATA.spells.sorcerer[0]) ? DATA.spells.sorcerer[0] : [];
-    html += '<h3 class="spell-level-header">Cantrips <span class="slots">altijd bekend &mdash; ' + state.cantrips.length + '/' + maxCantrips + '</span></h3>';
-    html += '<div class="spell-grid">';
-    for (var c = 0; c < cantrips.length; c++) {
-        var spell = cantrips[c];
-        var isSelected = state.cantrips.indexOf(spell.name) !== -1;
-        var isFav = favorites.indexOf(spell.name) !== -1;
-        if (spellFilter === 'prepared' && !isSelected) continue;
-        if (spellFilter === 'favorites' && !isFav) continue;
-        var cls = isSelected ? 'spell-toggle selected' : 'spell-toggle';
-        var starCls = isFav ? 'spell-star favorited' : 'spell-star';
-        html += '<button class="' + cls + '" data-spell="' + escapeAttr(spell.name) + '" data-level="0">';
-        html += '<span class="' + starCls + '" data-spell-star="' + escapeAttr(spell.name) + '">&#9733;</span> ';
-        html += escapeHtml(spell.name) + '</button>';
+    if (hasCantrips && maxCantrips > 0) {
+        var cantripList = spellList[0] || [];
+        html += '<h3 class="spell-level-header">Cantrips <span class="slots">altijd bekend &mdash; ' + state.cantrips.length + '/' + maxCantrips + '</span></h3>';
+        html += '<div class="spell-grid">';
+        for (var c = 0; c < cantripList.length; c++) {
+            var spell = cantripList[c];
+            var isSelected = state.cantrips.indexOf(spell.name) !== -1;
+            var isFav = favorites.indexOf(spell.name) !== -1;
+            if (spellFilter === 'prepared' && !isSelected) continue;
+            if (spellFilter === 'favorites' && !isFav) continue;
+            var cls = isSelected ? 'spell-toggle selected' : 'spell-toggle';
+            var starCls = isFav ? 'spell-star favorited' : 'spell-star';
+            html += '<button class="' + cls + '" data-spell="' + escapeAttr(spell.name) + '" data-level="0">';
+            html += '<span class="' + starCls + '" data-spell-star="' + escapeAttr(spell.name) + '">&#9733;</span> ';
+            html += escapeHtml(spell.name) + '</button>';
+        }
+        html += '</div>';
     }
-    html += '</div>';
 
-    // Spell levels 1 through maxSpellLevel
+    // Spell levels
     var levelNames = ['Cantrips', '1st Level', '2nd Level', '3rd Level', '4th Level', '5th Level', '6th Level', '7th Level', '8th Level', '9th Level'];
 
-    for (var lvl = 1; lvl <= maxSpellLevel; lvl++) {
-        var slots = spellSlots[lvl - 1] || 0;
-        var spells = (DATA.spells && DATA.spells.sorcerer && DATA.spells.sorcerer[lvl]) ? DATA.spells.sorcerer[lvl] : [];
+    // Determine max level to show based on available spell data
+    var dataMaxLevel = 0;
+    for (var dl = 9; dl >= 1; dl--) {
+        if (spellList[dl] && spellList[dl].length > 0) { dataMaxLevel = dl; break; }
+    }
+    var displayMaxLevel = Math.min(maxSpellLevel, dataMaxLevel);
 
-        html += '<h3 class="spell-level-header">' + levelNames[lvl] + ' <span class="slots">' + slots + ' slots</span></h3>';
+    for (var lvl = 1; lvl <= displayMaxLevel; lvl++) {
+        var slotCount = 0;
+        var slotLabel = '';
+        if (isWarlock) {
+            // Warlock: pact slots only apply at or below pact slot level
+            if (lvl <= pactSlotLevel) {
+                slotLabel = '(pact slots op level ' + pactSlotLevel + ')';
+            } else {
+                slotLabel = '0 slots';
+            }
+        } else {
+            slotCount = spellSlots[lvl - 1] || 0;
+            slotLabel = slotCount + ' slots';
+        }
+
+        var spells = spellList[lvl] || [];
+
+        html += '<h3 class="spell-level-header">' + levelNames[lvl] + ' <span class="slots">' + slotLabel + '</span></h3>';
         html += '<div class="spell-grid">';
         for (var s = 0; s < spells.length; s++) {
             var sp = spells[s];
@@ -1507,7 +1548,7 @@ function renderTabSpellsSorcerer(charId, config, state) {
         html += '</div>';
     }
 
-    if (maxSpellLevel < 9) {
+    if (displayMaxLevel < 9 && displayMaxLevel < maxSpellLevel) {
         html += '<p class="block-note" style="margin-top:1rem;opacity:0.5;">Hogere spell levels worden beschikbaar bij hogere levels.</p>';
     }
 
@@ -1873,16 +1914,19 @@ function removeTooltipPopup() {
 
 function showSpellTooltip(spellName, anchorEl) {
     var spellData = null;
-    if (DATA.spells && DATA.spells.sorcerer) {
-        for (var lvl = 0; lvl <= 9; lvl++) {
-            var spells = DATA.spells.sorcerer[lvl] || [];
-            for (var i = 0; i < spells.length; i++) {
-                if (spells[i].name === spellName) {
-                    spellData = spells[i];
-                    break;
+    if (DATA.spells) {
+        var classNames = Object.keys(DATA.spells);
+        for (var cn = 0; cn < classNames.length && !spellData; cn++) {
+            var classList = DATA.spells[classNames[cn]];
+            for (var lvl = 0; lvl <= 9 && !spellData; lvl++) {
+                var spells = classList[lvl] || [];
+                for (var i = 0; i < spells.length; i++) {
+                    if (spells[i].name === spellName) {
+                        spellData = spells[i];
+                        break;
+                    }
                 }
             }
-            if (spellData) break;
         }
     }
     if (!spellData) return;
@@ -1977,6 +2021,446 @@ function importCharacter(charId, file, callback) {
         }
     };
     reader.readAsText(file);
+}
+
+// ============================================================
+// Section 25b: Level-Up Wizard Modal
+// ============================================================
+
+function showLevelUpModal(charId, config, state) {
+    var newLevel = state.level + 1;
+    if (newLevel > 20) return;
+
+    var classData = DATA[config.className];
+    if (!classData) return;
+
+    // Remove any existing level-up modal
+    var existing = document.getElementById('levelup-modal');
+    if (existing) existing.remove();
+
+    var profBonus = getProfBonus(newLevel);
+    var oldProfBonus = getProfBonus(state.level);
+    var conMod = getMod(getAbilityScore(config, state, 'con'));
+    var hitDie = classData.hitDie || 8;
+    var avgHP = Math.floor(hitDie / 2) + 1;
+    var hpGain = avgHP + conMod;
+
+    // Gather class features
+    var classFeatures = classData.features[newLevel] || [];
+    var subFeatures = [];
+    var subData = classData.subclasses && classData.subclasses[config.subclass];
+    if (subData && subData.features && subData.features[newLevel]) {
+        subFeatures = subData.features[newLevel];
+    }
+
+    // Check if ASI level
+    var isASI = (classData.asiLevels || []).indexOf(newLevel) !== -1;
+
+    // Check if subclass selection level (level 3 typically, or subclass.level)
+    var needsSubclass = false;
+    if (classData.subclasses && !config.subclass) {
+        var subclassKeys = Object.keys(classData.subclasses);
+        for (var sk = 0; sk < subclassKeys.length; sk++) {
+            var sub = classData.subclasses[subclassKeys[sk]];
+            if (sub.level === newLevel) {
+                needsSubclass = true;
+                break;
+            }
+        }
+    }
+
+    // Spell slot changes
+    var oldSlots = null;
+    var newSlots = null;
+    var spellSlotChanges = [];
+    if (classData.spellcasting === 'full' && classData.spellSlots) {
+        oldSlots = classData.spellSlots[state.level] || [];
+        newSlots = classData.spellSlots[newLevel] || [];
+    } else if (classData.spellcasting === 'half') {
+        oldSlots = DATA.halfCasterSlots[state.level] || [];
+        newSlots = DATA.halfCasterSlots[newLevel] || [];
+    } else if (classData.spellcasting === 'pact') {
+        var oldPactSlots = classData.pactSlots[state.level] || 0;
+        var newPactSlots = classData.pactSlots[newLevel] || 0;
+        var oldPactLevel = classData.pactSlotLevel[state.level] || 1;
+        var newPactLevel = classData.pactSlotLevel[newLevel] || 1;
+        if (newPactSlots > oldPactSlots || newPactLevel > oldPactLevel) {
+            spellSlotChanges.push('Pact Slots: ' + oldPactSlots + ' \u00d7 ' + ordinal(oldPactLevel) + ' level \u2192 ' + newPactSlots + ' \u00d7 ' + ordinal(newPactLevel) + ' level');
+        }
+    }
+    if (oldSlots && newSlots) {
+        for (var si = 0; si < newSlots.length; si++) {
+            var oldCount = oldSlots[si] || 0;
+            var newCount = newSlots[si] || 0;
+            if (newCount > oldCount) {
+                spellSlotChanges.push(ordinal(si + 1) + ' level: ' + oldCount + ' \u2192 ' + newCount);
+            }
+        }
+    }
+
+    // New cantrip available?
+    var newCantrip = false;
+    if (classData.cantripsKnown) {
+        var oldCantripMax = classData.cantripsKnown[state.level] || 0;
+        var newCantripMax = classData.cantripsKnown[newLevel] || 0;
+        if (newCantripMax > oldCantripMax) {
+            newCantrip = true;
+        }
+    }
+
+    // Metamagic (sorcerer levels 10, 17)
+    var newMetamagic = false;
+    if (config.className === 'sorcerer' && (newLevel === 10 || newLevel === 17)) {
+        newMetamagic = true;
+    }
+
+    // ---- Build modal HTML ----
+    var accentColor = config.accentColor || 'var(--accent)';
+    var html = '<div class="levelup-overlay" id="levelup-modal">';
+    html += '<div class="levelup-card">';
+
+    // Header
+    html += '<div class="levelup-header">';
+    html += '<h2 style="color:' + accentColor + '">Level Up!</h2>';
+    html += '<p class="levelup-subtitle">Level ' + state.level + ' \u2192 Level ' + newLevel + '</p>';
+    html += '</div>';
+
+    // --- HP gain ---
+    html += '<div class="levelup-section">';
+    html += '<h3>\u2764\uFE0F Hit Points</h3>';
+    html += '<p style="font-size:1.1rem;color:var(--text-bright)">+' + hpGain + ' HP</p>';
+    html += '<p>d' + hitDie + ' gemiddeld (' + avgHP + ') + CON mod (' + formatMod(conMod) + ')</p>';
+    html += '<div style="display:flex;align-items:center;gap:0.75rem;margin-top:0.5rem;">';
+    html += '<button class="levelup-choice" data-action="levelup-roll-hp">Handmatig rollen</button>';
+    html += '<span id="levelup-hp-result" style="color:var(--text-bright);font-weight:600;"></span>';
+    html += '<input type="hidden" id="levelup-hp-value" value="' + hpGain + '">';
+    html += '</div>';
+    html += '</div>';
+
+    // --- Prof bonus change ---
+    if (profBonus > oldProfBonus) {
+        html += '<div class="levelup-section">';
+        html += '<h3>Proficiency Bonus</h3>';
+        html += '<p style="font-size:1.1rem;color:var(--text-bright)">+' + oldProfBonus + ' \u2192 +' + profBonus + '</p>';
+        html += '</div>';
+    }
+
+    // --- New features ---
+    if (classFeatures.length > 0 || subFeatures.length > 0) {
+        html += '<div class="levelup-section">';
+        html += '<h3>Nieuwe Features</h3>';
+        for (var fi = 0; fi < classFeatures.length; fi++) {
+            html += '<div class="levelup-feature">';
+            html += '<h4>' + escapeHtml(classFeatures[fi].name) + '</h4>';
+            html += '<p>' + escapeHtml(classFeatures[fi].desc) + '</p>';
+            html += '</div>';
+        }
+        for (var sfi = 0; sfi < subFeatures.length; sfi++) {
+            html += '<div class="levelup-feature" style="border-left:3px solid ' + accentColor + '">';
+            html += '<h4>' + escapeHtml(subFeatures[sfi].name) + ' <span style="font-size:0.7rem;background:' + accentColor + ';color:var(--bg-dark);padding:0.1rem 0.4rem;border-radius:100px;font-weight:700;vertical-align:middle;">Subclass</span></h4>';
+            html += '<p>' + escapeHtml(subFeatures[sfi].desc) + '</p>';
+            html += '</div>';
+        }
+        html += '</div>';
+    }
+
+    // --- Subclass selection ---
+    if (needsSubclass) {
+        html += '<div class="levelup-section">';
+        html += '<h3>Subclass Kiezen</h3>';
+        html += '<p>Kies je subclass:</p>';
+        html += '<div class="levelup-choices" id="levelup-subclass-choices">';
+        var subKeys = Object.keys(classData.subclasses);
+        for (var sck = 0; sck < subKeys.length; sck++) {
+            var subOpt = classData.subclasses[subKeys[sck]];
+            html += '<button class="levelup-choice" data-subclass="' + escapeAttr(subKeys[sck]) + '">' + escapeHtml(subOpt.name) + '</button>';
+        }
+        html += '</div>';
+        html += '<input type="hidden" id="levelup-subclass-value" value="">';
+        html += '</div>';
+    }
+
+    // --- ASI / Feat ---
+    if (isASI) {
+        html += '<div class="levelup-section">';
+        html += '<h3>Ability Score Improvement</h3>';
+        html += '<p>Kies een verbetering:</p>';
+        html += '<div class="levelup-choices">';
+        html += '<button class="levelup-choice" data-action="levelup-asi" data-asi-mode="asi-two">+2 op 1 ability</button>';
+        html += '<button class="levelup-choice" data-action="levelup-asi" data-asi-mode="asi-split">+1 op 2 abilities</button>';
+        html += '<button class="levelup-choice" data-action="levelup-asi" data-asi-mode="feat">Feat kiezen</button>';
+        html += '</div>';
+        html += '<div id="levelup-asi-detail"></div>';
+        html += '<input type="hidden" id="levelup-asi-value" value="">';
+        html += '</div>';
+    }
+
+    // --- Sneak Attack (Rogue) ---
+    if (config.className === 'rogue' && DATA.rogue.sneakAttack) {
+        var oldSA = DATA.rogue.sneakAttack[state.level] || '1d6';
+        var newSA = DATA.rogue.sneakAttack[newLevel] || oldSA;
+        if (newSA !== oldSA) {
+            html += '<div class="levelup-section">';
+            html += '<h3>Sneak Attack</h3>';
+            html += '<p style="font-size:1.1rem;color:var(--text-bright)">' + oldSA + ' \u2192 ' + newSA + '</p>';
+            html += '</div>';
+        }
+    }
+
+    // --- Sorcery Points (Sorcerer) ---
+    if (config.className === 'sorcerer' && DATA.sorcerer.sorceryPoints) {
+        var oldSP = DATA.sorcerer.sorceryPoints[state.level] || 0;
+        var newSP = DATA.sorcerer.sorceryPoints[newLevel] || 0;
+        if (newSP > oldSP) {
+            html += '<div class="levelup-section">';
+            html += '<h3>Sorcery Points</h3>';
+            html += '<p style="font-size:1.1rem;color:var(--text-bright)">' + oldSP + ' \u2192 ' + newSP + '</p>';
+            html += '</div>';
+        }
+    }
+
+    // --- Spell slot changes ---
+    if (spellSlotChanges.length > 0) {
+        html += '<div class="levelup-section">';
+        html += '<h3>Spell Slots</h3>';
+        for (var ssc = 0; ssc < spellSlotChanges.length; ssc++) {
+            html += '<p style="color:var(--text-bright)">' + escapeHtml(spellSlotChanges[ssc]) + '</p>';
+        }
+        html += '</div>';
+    }
+
+    // --- New cantrip ---
+    if (newCantrip) {
+        html += '<div class="levelup-section">';
+        html += '<h3>Nieuwe Cantrip</h3>';
+        html += '<p>Je kunt een extra cantrip kiezen bij je spell lijst.</p>';
+        html += '</div>';
+    }
+
+    // --- New metamagic ---
+    if (newMetamagic) {
+        html += '<div class="levelup-section">';
+        html += '<h3>Nieuwe Metamagic</h3>';
+        html += '<p>Je kunt een extra Metamagic optie kiezen bij je class features.</p>';
+        html += '</div>';
+    }
+
+    // --- Actions ---
+    html += '<div class="levelup-actions">';
+    html += '<button class="wizard-btn wizard-btn-primary" data-action="confirm-levelup">Bevestig Level Up</button>';
+    html += '<button class="wizard-btn wizard-btn-secondary" data-action="cancel-levelup">Annuleren</button>';
+    html += '</div>';
+
+    html += '</div></div>';
+
+    document.body.insertAdjacentHTML('beforeend', html);
+
+    // ---- Event bindings ----
+    var modal = document.getElementById('levelup-modal');
+    if (!modal) return;
+
+    // Track ASI choice state
+    var asiChoice = null;
+
+    modal.addEventListener('click', function(e) {
+        var tgt = e.target;
+
+        // Close on overlay click
+        if (tgt === modal) {
+            modal.remove();
+            return;
+        }
+
+        // Cancel
+        if (tgt.dataset.action === 'cancel-levelup') {
+            modal.remove();
+            return;
+        }
+
+        // Manual HP roll
+        if (tgt.dataset.action === 'levelup-roll-hp') {
+            var rolled = Math.floor(Math.random() * hitDie) + 1;
+            var rolledHP = rolled + conMod;
+            var resultEl = document.getElementById('levelup-hp-result');
+            var valueEl = document.getElementById('levelup-hp-value');
+            if (resultEl) resultEl.textContent = 'Gerolled: ' + rolled + ' + CON ' + formatMod(conMod) + ' = ' + rolledHP + ' HP';
+            if (valueEl) valueEl.value = rolledHP;
+            tgt.textContent = 'Opnieuw rollen';
+            return;
+        }
+
+        // Subclass selection
+        if (tgt.dataset.subclass) {
+            var subChoices = modal.querySelectorAll('[data-subclass]');
+            for (var sc = 0; sc < subChoices.length; sc++) {
+                subChoices[sc].classList.remove('selected');
+            }
+            tgt.classList.add('selected');
+            var subInput = document.getElementById('levelup-subclass-value');
+            if (subInput) subInput.value = tgt.dataset.subclass;
+            return;
+        }
+
+        // ASI mode selection
+        if (tgt.dataset.action === 'levelup-asi') {
+            var asiMode = tgt.dataset.asiMode;
+            var asiBtns = modal.querySelectorAll('[data-action="levelup-asi"]');
+            for (var ab = 0; ab < asiBtns.length; ab++) {
+                asiBtns[ab].classList.remove('selected');
+            }
+            tgt.classList.add('selected');
+
+            if (asiMode === 'feat') {
+                renderLevelUpFeatPicker(modal, config, state, newLevel, function(choice) {
+                    asiChoice = choice;
+                });
+            } else {
+                renderLevelUpASIPicker(modal, config, state, newLevel, asiMode, function(choice) {
+                    asiChoice = choice;
+                });
+            }
+            return;
+        }
+
+        // Confirm level up
+        if (tgt.dataset.action === 'confirm-levelup') {
+            // Validate required choices
+            if (needsSubclass) {
+                var subVal = document.getElementById('levelup-subclass-value');
+                if (!subVal || !subVal.value) {
+                    showWarning('Kies eerst een subclass.');
+                    return;
+                }
+            }
+            if (isASI && !asiChoice) {
+                showWarning('Kies eerst een ASI of feat.');
+                return;
+            }
+
+            // Apply level up
+            state.level = newLevel;
+
+            // Apply subclass (note: this is stored in config, but since configs are defaults
+            // we store it in state for custom chars; for default chars it's already set)
+            if (needsSubclass) {
+                var subValue = document.getElementById('levelup-subclass-value');
+                if (subValue && subValue.value) {
+                    config.subclass = subValue.value;
+                    // Save updated config for custom chars
+                    var customConfigKey = 'dw_charconfig_' + charId;
+                    var existingConfig = localStorage.getItem(customConfigKey);
+                    if (existingConfig) {
+                        var parsedConfig = JSON.parse(existingConfig);
+                        parsedConfig.subclass = subValue.value;
+                        localStorage.setItem(customConfigKey, JSON.stringify(parsedConfig));
+                    }
+                }
+            }
+
+            // Apply ASI choice
+            if (isASI && asiChoice) {
+                if (!state.asiChoices) state.asiChoices = {};
+                state.asiChoices[newLevel] = asiChoice;
+            }
+
+            saveCharState(charId, state);
+            modal.remove();
+            renderApp();
+            return;
+        }
+    });
+}
+
+function ordinal(n) {
+    if (n === 1) return '1st';
+    if (n === 2) return '2nd';
+    if (n === 3) return '3rd';
+    return n + 'th';
+}
+
+function renderLevelUpASIPicker(modal, config, state, level, mode, onChoice) {
+    var detailEl = document.getElementById('levelup-asi-detail');
+    if (!detailEl) return;
+
+    var abilities = getAllAbilityScores(config, state);
+    var abNames = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+    var abLabels = { str: 'STR', dex: 'DEX', con: 'CON', int: 'INT', wis: 'WIS', cha: 'CHA' };
+
+    var selected = {};
+    var maxPoints = 2;
+    var maxPerAbility = mode === 'asi-two' ? 2 : 1;
+
+    function render() {
+        var totalSpent = 0;
+        var selKeys = Object.keys(selected);
+        for (var sk = 0; sk < selKeys.length; sk++) totalSpent += selected[selKeys[sk]];
+
+        var html = '<div class="asi-panel" style="margin-top:0.75rem;">';
+        html += '<p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:0.5rem;">Punten over: ' + (maxPoints - totalSpent) + '</p>';
+        html += '<div class="asi-ability-picker">';
+        for (var i = 0; i < abNames.length; i++) {
+            var ab = abNames[i];
+            var current = abilities[ab];
+            var added = selected[ab] || 0;
+            var canAdd = (current + added) < 20 && added < maxPerAbility && totalSpent < maxPoints;
+            html += '<div class="asi-ability-row">';
+            html += '<span>' + abLabels[ab] + ' (' + current + (added > 0 ? ' +' + added : '') + ')</span>';
+            html += '<button class="asi-ability-btn levelup-asi-add" data-ab="' + ab + '"' + (canAdd ? '' : ' disabled') + '>+1</button>';
+            html += '</div>';
+        }
+        html += '</div>';
+        if (totalSpent === maxPoints) {
+            onChoice({ type: 'asi', abilities: Object.assign({}, selected) });
+            html += '<p style="color:var(--accent);font-size:0.85rem;margin-top:0.5rem;">ASI geselecteerd!</p>';
+        }
+        html += '</div>';
+        detailEl.innerHTML = html;
+
+        // Bind +1 buttons
+        var addBtns = detailEl.querySelectorAll('.levelup-asi-add');
+        for (var b = 0; b < addBtns.length; b++) {
+            addBtns[b].addEventListener('click', function(e) {
+                e.stopPropagation();
+                var aab = this.dataset.ab;
+                selected[aab] = (selected[aab] || 0) + 1;
+                render();
+            });
+        }
+    }
+
+    render();
+}
+
+function renderLevelUpFeatPicker(modal, config, state, level, onChoice) {
+    var detailEl = document.getElementById('levelup-asi-detail');
+    if (!detailEl) return;
+
+    var abilities = getAllAbilityScores(config, state);
+    var feats = DATA.feats || [];
+
+    var html = '<div class="feat-grid" style="margin-top:0.75rem;">';
+    for (var i = 0; i < feats.length; i++) {
+        var feat = feats[i];
+        var meetsPrereq = checkPrerequisite(feat, abilities, config);
+        var cls = meetsPrereq ? 'feat-card' : 'feat-card unavailable';
+        html += '<button class="' + cls + ' levelup-feat-pick" data-feat="' + escapeAttr(feat.name) + '"' + (meetsPrereq ? '' : ' disabled') + ' title="' + escapeAttr(feat.desc || '') + '">';
+        html += '<strong>' + escapeHtml(feat.name) + '</strong>';
+        html += '</button>';
+    }
+    html += '</div>';
+    detailEl.innerHTML = html;
+
+    var cards = detailEl.querySelectorAll('.levelup-feat-pick:not(.unavailable)');
+    for (var c = 0; c < cards.length; c++) {
+        cards[c].addEventListener('click', function(e) {
+            e.stopPropagation();
+            // Deselect all
+            var all = detailEl.querySelectorAll('.levelup-feat-pick');
+            for (var a = 0; a < all.length; a++) all[a].classList.remove('selected');
+            this.classList.add('selected');
+            onChoice({ type: 'feat', feat: this.dataset.feat });
+        });
+    }
 }
 
 function showResetModal(charId, config, state) {
@@ -2200,7 +2684,7 @@ function toggleCantrip(charId, config, state, spellName) {
     if (idx >= 0) {
         state.cantrips.splice(idx, 1);
     } else {
-        var maxCantrips = getMaxCantrips(state.level);
+        var maxCantrips = getMaxCantrips(state.level, config.className);
         if (state.cantrips.length >= maxCantrips) {
             showWarning('Maximum aantal cantrips bereikt (' + maxCantrips + '). Verwijder er eerst een.');
             return;
@@ -2216,10 +2700,12 @@ function togglePrepared(charId, config, state, spellName) {
     if (idx >= 0) {
         state.prepared.splice(idx, 1);
     } else {
-        var chaMod = getMod(getAbilityScore(config, state, 'cha'));
-        var maxPrepared = getMaxPrepared(state, chaMod);
+        var spellAbility = getSpellcastingAbility(config.className);
+        var abilityMod = getMod(getAbilityScore(config, state, spellAbility));
+        var maxPrepared = getMaxPrepared(state, abilityMod, config.className);
         if (state.prepared.length >= maxPrepared) {
-            showWarning('Maximum aantal voorbereide spells bereikt (' + maxPrepared + '). Verwijder er eerst een.');
+            var label = (config.className === 'ranger' || config.className === 'warlock') ? 'bekende' : 'voorbereide';
+            showWarning('Maximum aantal ' + label + ' spells bereikt (' + maxPrepared + '). Verwijder er eerst een.');
             return;
         }
         state.prepared.push(spellName);
@@ -2251,38 +2737,30 @@ function cleanupLevelDown(config, state) {
     var lvl = state.level;
     delete state.asiChoices[lvl];
 
-    if (config.className === 'sorcerer') {
-        var newMaxCantrips = getMaxCantrips(lvl - 1);
+    if (hasSpellcasting(config.className)) {
+        var cn = config.className;
+        var newMaxCantrips = getMaxCantrips(lvl - 1, cn);
         while (state.cantrips.length > newMaxCantrips) {
             state.cantrips.pop();
         }
 
-        var chaMod = getMod(getAbilityScore(config, state, 'cha'));
-        var newMaxPrepared = Math.max(1, chaMod + (lvl - 1));
+        var spAbility = getSpellcastingAbility(cn);
+        var abMod = getMod(getAbilityScore(config, state, spAbility));
+        var newMaxPrepared = getMaxPrepared({ level: lvl - 1 }, abMod, cn);
         while (state.prepared.length > newMaxPrepared) {
             state.prepared.pop();
         }
 
-        var newMaxSpellLevel = DATA.sorcerer.maxSpellLevel[lvl - 1] || 1;
-        state.prepared = state.prepared.filter(function(spellName) {
-            for (var sl = 1; sl <= 9; sl++) {
-                var spells = (DATA.spells && DATA.spells.sorcerer && DATA.spells.sorcerer[sl]) ? DATA.spells.sorcerer[sl] : [];
-                for (var s = 0; s < spells.length; s++) {
-                    if (spells[s].name === spellName) {
-                        return sl <= newMaxSpellLevel;
-                    }
-                }
+        // Sorcerer-specific metamagic cleanup
+        if (cn === 'sorcerer') {
+            if (lvl - 1 < 2) state.metamagic = [];
+            var maxMM = 0;
+            if (lvl - 1 >= 2) maxMM = 2;
+            if (lvl - 1 >= 10) maxMM = 3;
+            if (lvl - 1 >= 17) maxMM = 4;
+            while (state.metamagic.length > maxMM) {
+                state.metamagic.pop();
             }
-            return true;
-        });
-
-        if (lvl - 1 < 2) state.metamagic = [];
-        var maxMM = 0;
-        if (lvl - 1 >= 2) maxMM = 2;
-        if (lvl - 1 >= 10) maxMM = 3;
-        if (lvl - 1 >= 17) maxMM = 4;
-        while (state.metamagic.length > maxMM) {
-            state.metamagic.pop();
         }
     }
 
@@ -2495,9 +2973,7 @@ function bindPageEvents(route) {
             // Level up
             if (target.matches('[data-action="level-up"]')) {
                 if (state.level < 20 && canEdit(charId)) {
-                    state.level++;
-                    saveCharState(charId, state);
-                    renderApp();
+                    showLevelUpModal(charId, config, state);
                 }
                 return;
             }

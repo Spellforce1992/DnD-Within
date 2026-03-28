@@ -344,7 +344,21 @@ const DATA = {
             hunter: {
                 name: "Hunter",
                 level: 3,
-                features: {}
+                features: {
+                    3: [
+                        { name: "Hunter's Prey", desc: "Kies één optie: Colossus Slayer (+1d8 damage 1x/beurt tegen gewonde targets), Giant Killer (reaction aanval tegen Large+ creatures die je missen), of Horde Breaker (1 extra aanval per beurt tegen een ander target binnen 5ft)." },
+                        { name: "Hunter's Lore", desc: "Je kunt als actie een creature bestuderen. Je leert of het immuniteiten, resistances, of vulnerabilities heeft." }
+                    ],
+                    7: [
+                        { name: "Defensive Tactics", desc: "Kies één optie: Escape the Horde (opportunity attacks tegen jou hebben disadvantage), Multiattack Defense (+4 AC na eerste hit van een creature), of Steel Will (advantage op saves tegen frightened)." }
+                    ],
+                    11: [
+                        { name: "Multiattack", desc: "Kies één optie: Volley (ranged attack tegen elk creature binnen 10ft van een punt, 1 ammo per target) of Whirlwind Attack (melee attack tegen elk creature binnen 5ft)." }
+                    ],
+                    15: [
+                        { name: "Superior Hunter's Defense", desc: "Kies één optie: Evasion (0 damage bij DEX save succes), Stand Against the Tide (redirect missed melee attack naar ander creature), of Uncanny Dodge (halveer damage van een aanval als reaction)." }
+                    ]
+                }
             }
         }
     },
@@ -420,7 +434,21 @@ const DATA = {
             evocation: {
                 name: "School of Evocation",
                 level: 3,
-                features: {}
+                features: {
+                    3: [
+                        { name: "Evocation Savant", desc: "Evocation spells kopiëren naar je spellbook kost half zoveel tijd en goud." },
+                        { name: "Sculpt Spells", desc: "Als je een evocation spell cast die andere creatures raakt, kun je tot 1 + spell level creatures kiezen die automatisch slagen op hun save en geen damage nemen." }
+                    ],
+                    6: [
+                        { name: "Potent Cantrip", desc: "Als een creature slaagt op een saving throw tegen je cantrip, neemt het nog steeds de helft van de damage." }
+                    ],
+                    10: [
+                        { name: "Empowered Evocation", desc: "Voeg je INT modifier toe aan de damage van elke evocation spell die je cast." }
+                    ],
+                    14: [
+                        { name: "Overchannel", desc: "Als je een wizard spell van 5th level of lager cast, deal maximum damage. Na het eerste gebruik per long rest neem je 2d12 necrotic damage per spell level (stijgt bij herhaald gebruik)." }
+                    ]
+                }
             }
         }
     },
@@ -487,7 +515,21 @@ const DATA = {
             devotion: {
                 name: "Oath of Devotion",
                 level: 3,
-                features: {}
+                features: {
+                    3: [
+                        { name: "Sacred Weapon", desc: "Channel Divinity: Als action, voeg CHA modifier toe aan attack rolls met één wapen voor 1 minuut. Het wapen geeft ook bright light in 20ft." },
+                        { name: "Turn the Unholy", desc: "Channel Divinity: Elk fiend en undead binnen 30ft moet een WIS save doen of is 1 minuut turned." }
+                    ],
+                    7: [
+                        { name: "Aura of Devotion", desc: "Jij en vriendelijke creatures binnen 10ft kunnen niet charmed worden. Op level 18 wordt dit 30ft." }
+                    ],
+                    15: [
+                        { name: "Purity of Spirit", desc: "Je bent altijd onder het effect van Protection from Evil and Good." }
+                    ],
+                    20: [
+                        { name: "Holy Nimbus", desc: "Als action: 1 minuut lang 30ft bright light, vijanden in 10ft nemen 10 radiant damage per beurt. Advantage op saves tegen fiend en undead spells. 1x per long rest." }
+                    ]
+                }
             }
         }
     },
@@ -561,7 +603,21 @@ const DATA = {
             land: {
                 name: "Circle of the Land",
                 level: 3,
-                features: {}
+                features: {
+                    3: [
+                        { name: "Bonus Cantrip", desc: "Je leert één extra druid cantrip naar keuze." },
+                        { name: "Natural Recovery", desc: "Tijdens een short rest kun je spell slots herstellen. Het totale level van de slots mag niet hoger zijn dan de helft van je druid level (afgerond naar boven), en geen slots van 6th level of hoger." }
+                    ],
+                    6: [
+                        { name: "Land's Stride", desc: "Bewegen door nonmagical difficult terrain kost geen extra movement. Je kunt ook door nonmagical plants bewegen zonder vertraagd te worden of damage te nemen." }
+                    ],
+                    10: [
+                        { name: "Nature's Ward", desc: "Je bent immuun voor poison en disease. Je kunt niet charmed of frightened worden door elementals of fey." }
+                    ],
+                    14: [
+                        { name: "Nature's Sanctuary", desc: "Creatures van het elemental of fey type die jou aanvallen moeten een WIS save doen. Bij een fail moeten ze een ander target kiezen of de aanval mist automatisch." }
+                    ]
+                }
             }
         }
     },
@@ -627,7 +683,23 @@ const DATA = {
             champion: {
                 name: "Champion",
                 level: 3,
-                features: {}
+                features: {
+                    3: [
+                        { name: "Improved Critical", desc: "Je scoort een critical hit op een roll van 19 of 20." }
+                    ],
+                    7: [
+                        { name: "Remarkable Athlete", desc: "Voeg de helft van je proficiency bonus (afgerond naar boven) toe aan STR, DEX, en CON checks waar je nog geen proficiency hebt. Je running long jump afstand stijgt met je STR modifier in feet." }
+                    ],
+                    10: [
+                        { name: "Additional Fighting Style", desc: "Kies een tweede Fighting Style." }
+                    ],
+                    15: [
+                        { name: "Superior Critical", desc: "Je scoort een critical hit op een roll van 18, 19 of 20." }
+                    ],
+                    18: [
+                        { name: "Survivor", desc: "Aan het begin van elk van je beurten, als je minder dan de helft van je max HP hebt maar meer dan 0, herstel je 5 + CON modifier HP." }
+                    ]
+                }
             }
         }
     },
@@ -694,7 +766,20 @@ const DATA = {
             fiend: {
                 name: "The Fiend",
                 level: 1,
-                features: {}
+                features: {
+                    3: [
+                        { name: "Dark One's Blessing", desc: "Als je een hostile creature naar 0 HP brengt, krijg je CHA modifier + warlock level temporary HP." }
+                    ],
+                    6: [
+                        { name: "Dark One's Own Luck", desc: "Eén keer per short/long rest: voeg 1d10 toe aan een ability check of saving throw." }
+                    ],
+                    10: [
+                        { name: "Fiendish Resilience", desc: "Na een short/long rest: kies één damage type. Je hebt resistance tegen dat type tot je een ander type kiest. Dit werkt niet tegen magical of silver weapons." }
+                    ],
+                    14: [
+                        { name: "Hurl Through Hell", desc: "Als je een creature raakt met een aanval, kun je het teleporteren door de Lower Planes. Het verdwijnt tot het einde van je volgende beurt en neemt 10d10 psychic damage. 1x per long rest." }
+                    ]
+                }
             }
         }
     },
@@ -1319,6 +1404,311 @@ const DATA = {
                 { name: "Time Stop", time: "1 action", range: "Self", comp: "V", dur: "Instant", desc: "Stop de tijd voor 1d4+1 beurten. Je handelt alleen. Eindigt als je een ander creature beïnvloedt of beschadigt." },
                 { name: "Wish", time: "1 action", range: "Self", comp: "V", dur: "Instant", desc: "De machtigste spell. Dupliceer elke spell van 8th level of lager, of creëer een ander effect naar DM's oordeel. Risicovol bij creatief gebruik." },
                 { name: "Psychic Scream", time: "1 action", range: "90ft", comp: "S", dur: "Instant", desc: "Tot 10 creatures binnen 90ft. INT save of 14d6 psychic damage en stunned. Bij falen met INT 2 of lager: hoofd ontploft." }
+            ]
+        },
+
+        // ===== WIZARD SPELLS =====
+        wizard: {
+            0: [
+                { name: "Fire Bolt", time: "1 action", range: "120ft", comp: "V, S", dur: "Instant", desc: "Ranged spell attack, 1d10 fire damage, 120ft. Schaalt op 5e/11e/17e level." },
+                { name: "Mage Hand", time: "1 action", range: "30ft", comp: "V, S", dur: "1 min", desc: "Creëer een spectrale hand op 30ft die objecten kan manipuleren, deuren openen, etc. Duurt 1 minuut." },
+                { name: "Prestidigitation", time: "1 action", range: "10ft", comp: "V, S", dur: "Tot 1 uur", desc: "Klein magisch trucje: vonken, geluid, smaak veranderen, kleine illusie, licht, schoonmaken, etc." },
+                { name: "Minor Illusion", time: "1 action", range: "30ft", comp: "S, M (een beetje fleece)", dur: "1 min", desc: "Creëer een geluid of beeld van een object binnen 30ft. Investigation check om als illusie te herkennen." },
+                { name: "Light", time: "1 action", range: "Touch", comp: "V, M (een vuurvliegje)", dur: "1 uur", desc: "Een object straalt bright light uit in 20ft radius en dim light voor nog eens 20ft. Duurt 1 uur." },
+                { name: "Ray of Frost", time: "1 action", range: "60ft", comp: "V, S", dur: "Instant", desc: "Ranged spell attack, 1d8 cold damage, -10ft speed tot begin volgende beurt. Schaalt." },
+                { name: "Shocking Grasp", time: "1 action", range: "Touch", comp: "V, S", dur: "Instant", desc: "Melee spell attack met advantage tegen metalen armor. 1d8 lightning damage, target kan geen reactions nemen." },
+                { name: "Chill Touch", time: "1 action", range: "120ft", comp: "V, S", dur: "1 ronde", desc: "1d8 necrotic damage, target kan geen HP herstellen tot je volgende beurt. Undead krijgen disadvantage op attacks." },
+                { name: "Mending", time: "1 minute", range: "Touch", comp: "V, S, M (twee lodestones)", dur: "Instant", desc: "Repareer een enkele breuk of scheur in een object." },
+                { name: "Message", time: "1 action", range: "120ft", comp: "V, S, M (koperdraad)", dur: "1 ronde", desc: "Fluister een bericht naar een creature binnen 120ft. Alleen het target hoort het en kan antwoorden." },
+                { name: "Blade Ward", time: "1 action", range: "Self", comp: "V, S", dur: "1 ronde", desc: "Resistance tegen bludgeoning, piercing en slashing damage van weapon attacks tot einde volgende beurt." },
+                { name: "Friends", time: "1 action", range: "Self", comp: "S, M (make-up)", dur: "Concentration, 1 min", desc: "Advantage op CHA checks tegen een non-hostile creature. Na afloop weet het target dat je magie gebruikte." },
+                { name: "True Strike", time: "1 action", range: "30ft", comp: "S", dur: "Concentration, 1 ronde", desc: "Advantage op je eerste attack roll tegen het target op je volgende beurt." },
+                { name: "Mind Sliver", time: "1 action", range: "60ft", comp: "V", dur: "1 ronde", desc: "INT save of 1d6 psychic damage en -1d4 van de volgende saving throw. Schaalt." },
+                { name: "Toll the Dead", time: "1 action", range: "60ft", comp: "V, S", dur: "Instant", desc: "WIS save of 1d8 necrotic damage (1d12 als target HP mist). Schaalt." },
+                { name: "Booming Blade", time: "1 action", range: "Self (5ft)", comp: "S, M (een wapen)", dur: "1 ronde", desc: "Melee weapon attack. Bij hit: als target beweegt, 1d8 thunder damage. Schaalt." }
+            ],
+            1: [
+                { name: "Shield", time: "1 reaction", range: "Self", comp: "V, S", dur: "1 ronde", desc: "Reaction: +5 AC tot begin volgende beurt, inclusief tegen de triggering attack. Blokkeert Magic Missile." },
+                { name: "Magic Missile", time: "1 action", range: "120ft", comp: "V, S", dur: "Instant", desc: "Drie pijlen raken automatisch. Elk doet 1d4+1 force damage. Schaalt +1 pijl per hogere slot." },
+                { name: "Mage Armor", time: "1 action", range: "Touch", comp: "V, S, M (gelooid leer)", dur: "8 uur", desc: "AC wordt 13 + DEX modifier voor een creature zonder armor. Duurt 8 uur." },
+                { name: "Detect Magic", time: "1 action", range: "Self", comp: "V, S", dur: "Concentration, 10 min", desc: "Ritual. Voel de aanwezigheid van magie binnen 30ft." },
+                { name: "Find Familiar", time: "1 uur", range: "10ft", comp: "V, S, M (10gp houtskool en kruiden)", dur: "Instant", desc: "Roep een familiar op (uil, kat, etc.). Je kunt door zijn zintuigen kijken en spells via hem casten." },
+                { name: "Identify", time: "1 minute", range: "Touch", comp: "V, S, M (parel van 100gp)", dur: "Instant", desc: "Ritual. Leer de eigenschappen van een magisch item of actieve spells op een creature." },
+                { name: "Chromatic Orb", time: "1 action", range: "90ft", comp: "V, S, M (diamant van 50gp)", dur: "Instant", desc: "Ranged spell attack, 3d8 damage van gekozen type (acid/cold/fire/lightning/poison/thunder)." },
+                { name: "Thunderwave", time: "1 action", range: "Self (15ft cube)", comp: "V, S", dur: "Instant", desc: "CON save of 2d8 thunder damage en 10ft weggeduwd. Half bij save." },
+                { name: "Sleep", time: "1 action", range: "90ft", comp: "V, S, M (zand)", dur: "1 min", desc: "5d8 HP aan creatures in 20ft radius vallen in slaap (laagste HP eerst). Schaalt +2d8." },
+                { name: "Burning Hands", time: "1 action", range: "Self (15ft cone)", comp: "V, S", dur: "Instant", desc: "15ft cone. DEX save of 3d6 fire damage (half bij save). Schaalt +1d6." },
+                { name: "Charm Person", time: "1 action", range: "30ft", comp: "V, S", dur: "1 uur", desc: "WIS save (advantage als je vecht). Target beschouwt je als goede vriend. Duurt 1 uur." },
+                { name: "Disguise Self", time: "1 action", range: "Self", comp: "V, S", dur: "1 uur", desc: "Verander je uiterlijk. Investigation check om door de illusie te kijken. Duurt 1 uur." },
+                { name: "Feather Fall", time: "1 reaction", range: "60ft", comp: "V, M (een veer)", dur: "1 min", desc: "Reaction: tot 5 falling creatures vallen langzaam en nemen geen fall damage." },
+                { name: "Fog Cloud", time: "1 action", range: "120ft", comp: "V, S", dur: "Concentration, 1 uur", desc: "20ft radius mist. Heavily obscured. Concentration, 1 uur." },
+                { name: "Comprehend Languages", time: "1 action", range: "Self", comp: "V, S, M (roet en zout)", dur: "1 uur", desc: "Ritual. Je begrijpt elke gesproken taal en geschreven tekst. Duurt 1 uur." },
+                { name: "Color Spray", time: "1 action", range: "Self (15ft cone)", comp: "V, S, M (gekleurd poeder)", dur: "1 ronde", desc: "6d10 HP aan creatures worden blind (laagste HP eerst). Geen save. Schaalt +2d10." },
+                { name: "False Life", time: "1 action", range: "Self", comp: "V, S, M (alcohol)", dur: "1 uur", desc: "1d4+4 temporary HP. Duurt 1 uur. Schaalt +5 temp HP per hogere slot." },
+                { name: "Absorb Elements", time: "1 reaction", range: "Self", comp: "S", dur: "1 ronde", desc: "Reaction bij elementaire damage. Resistance + volgende melee attack doet +1d6 van dat type." },
+                { name: "Silvery Barbs", time: "1 reaction", range: "60ft", comp: "V", dur: "Instant", desc: "Reaction: creature herwerpt succes en neemt laagste. Geef een ally advantage op volgende roll." },
+                { name: "Tasha's Hideous Laughter", time: "1 action", range: "30ft", comp: "V, S, M (taartjes en een veer)", dur: "Concentration, 1 min", desc: "WIS save of target valt prone en is incapacitated door lachen. Save elke beurt en bij damage." }
+            ],
+            2: [
+                { name: "Misty Step", time: "1 bonus action", range: "Self", comp: "V", dur: "Instant", desc: "Bonus action: teleporteer tot 30ft naar een plek die je kunt zien." },
+                { name: "Scorching Ray", time: "1 action", range: "120ft", comp: "V, S", dur: "Instant", desc: "Drie vuurstralen. Ranged spell attack per straal, 2d6 fire damage. Schaalt +1 straal." },
+                { name: "Hold Person", time: "1 action", range: "60ft", comp: "V, S, M (ijzer)", dur: "Concentration, 1 min", desc: "WIS save of humanoid is paralyzed. Save elke beurt. Schaalt +1 target." },
+                { name: "Invisibility", time: "1 action", range: "Touch", comp: "V, S, M (wimper in gum arabic)", dur: "Concentration, 1 uur", desc: "Creature wordt onzichtbaar. Eindigt bij aanval of spell. Schaalt +1 target." },
+                { name: "Web", time: "1 action", range: "60ft", comp: "V, S, M (spinnenweb)", dur: "Concentration, 1 uur", desc: "20ft cube webs. DEX save of restrained. Moeilijk terrein. Brandbaar." },
+                { name: "Mirror Image", time: "1 action", range: "Self", comp: "V, S", dur: "1 min", desc: "Drie illusoire duplicaten. Aanvallen raken mogelijk een duplicaat dat verdwijnt bij hit." },
+                { name: "Shatter", time: "1 action", range: "60ft", comp: "V, S, M (glassplinter)", dur: "Instant", desc: "10ft radius. CON save of 3d8 thunder damage. Schaalt +1d8." },
+                { name: "Knock", time: "1 action", range: "60ft", comp: "V", dur: "Instant", desc: "Open een gesloten deur, kist of hangslot. Luid geluid hoorbaar tot 300ft." },
+                { name: "Levitate", time: "1 action", range: "60ft", comp: "V, S, M (leren lus)", dur: "Concentration, 10 min", desc: "Creature of object stijgt 20ft. Target beweegt zich door ergens af te zetten." },
+                { name: "Blur", time: "1 action", range: "Self", comp: "V", dur: "Concentration, 1 min", desc: "Attackers hebben disadvantage op attack rolls tegen jou." },
+                { name: "Darkness", time: "1 action", range: "60ft", comp: "V, M (vleermuisvacht en pek)", dur: "Concentration, 10 min", desc: "15ft radius magische duisternis. Blokkeert darkvision en niet-magisch licht." },
+                { name: "Detect Thoughts", time: "1 action", range: "Self", comp: "V, S, M (koperstuk)", dur: "Concentration, 1 min", desc: "Lees oppervlaktegedachten. Action om dieper te graven (WIS save)." },
+                { name: "Enlarge/Reduce", time: "1 action", range: "30ft", comp: "V, S, M (ijzerpoeder)", dur: "Concentration, 1 min", desc: "CON save. Enlarge: +1d4 weapon damage. Reduce: -1d4 damage." },
+                { name: "Phantasmal Force", time: "1 action", range: "60ft", comp: "V, S, M (fleece)", dur: "Concentration, 1 min", desc: "INT save of target percipieert een illusie die 1d6 psychic damage per beurt doet." },
+                { name: "See Invisibility", time: "1 action", range: "Self", comp: "V, S, M (talk)", dur: "1 uur", desc: "Je ziet onzichtbare creatures en objecten, plus het Ethereal Plane. Duurt 1 uur." },
+                { name: "Spider Climb", time: "1 action", range: "Touch", comp: "V, S, M (spin en bitumen)", dur: "Concentration, 1 uur", desc: "Target kan klimmen op elke ondergrond inclusief plafonds, handen vrij." },
+                { name: "Suggestion", time: "1 action", range: "30ft", comp: "V, M (slangetong en honingraat)", dur: "Concentration, 8 uur", desc: "WIS save of target volgt een redelijk-klinkende suggestie op." },
+                { name: "Flaming Sphere", time: "1 action", range: "60ft", comp: "V, S, M (talg en ijzerpoeder)", dur: "Concentration, 1 min", desc: "5ft diameter vuurbol. 2d6 fire damage bij nadering. Bonus action om te verplaatsen." }
+            ],
+            3: [
+                { name: "Fireball", time: "1 action", range: "150ft", comp: "V, S, M (vleermuismest en zwavel)", dur: "Instant", desc: "20ft radius explosie. DEX save of 8d6 fire damage (half bij save). Schaalt +1d6." },
+                { name: "Counterspell", time: "1 reaction", range: "60ft", comp: "S", dur: "Instant", desc: "Reaction: annuleer een spell van 3rd level of lager automatisch. Hogere: ability check DC 10 + level." },
+                { name: "Dispel Magic", time: "1 action", range: "120ft", comp: "V, S", dur: "Instant", desc: "Beëindig een magisch effect van 3rd level of lager. Hogere: ability check DC 10 + level." },
+                { name: "Fly", time: "1 action", range: "Touch", comp: "V, S, M (veertje)", dur: "Concentration, 10 min", desc: "Target krijgt 60ft flying speed. Bij einde: valt als het nog in de lucht is." },
+                { name: "Haste", time: "1 action", range: "30ft", comp: "V, S, M (zoethoutwortelpoeder)", dur: "Concentration, 1 min", desc: "+2 AC, double speed, advantage DEX saves, extra action per beurt. Bij einde: 1 beurt geen actions." },
+                { name: "Lightning Bolt", time: "1 action", range: "Self (100ft line)", comp: "V, S, M (vacht en barnsteen)", dur: "Instant", desc: "100ft lijn. DEX save of 8d6 lightning damage (half bij save). Schaalt +1d6." },
+                { name: "Hypnotic Pattern", time: "1 action", range: "120ft", comp: "S, M (gloeiend wierookstokje)", dur: "Concentration, 1 min", desc: "30ft cube. WIS save of charmed en incapacitated. Stopt bij damage of wakker schudden." },
+                { name: "Slow", time: "1 action", range: "120ft", comp: "V, S, M (stroop)", dur: "Concentration, 1 min", desc: "Tot 6 creatures. WIS save of halve speed, -2 AC, max 1 attack, geen reactions." },
+                { name: "Fear", time: "1 action", range: "Self (30ft cone)", comp: "V, S, M (witte veer)", dur: "Concentration, 1 min", desc: "30ft cone. WIS save of frightened en moet Dash weg van jou." },
+                { name: "Animate Dead", time: "1 minute", range: "10ft", comp: "V, S, M (bloed en botsplinter)", dur: "Instant", desc: "Animeer een skelet of zombie uit een lijk. Gehoorzaamt jouw commando's. Hercast om controle te behouden." },
+                { name: "Sending", time: "1 action", range: "Onbeperkt", comp: "V, S, M (koperdraad)", dur: "1 ronde", desc: "Stuur max 25 woorden naar een creature dat je kent. Het kan meteen antwoorden." },
+                { name: "Clairvoyance", time: "10 minutes", range: "1 mile", comp: "V, S, M (focus van 100gp)", dur: "Concentration, 10 min", desc: "Onzichtbare sensor op een bekende plek. Zie of hoor door de sensor." },
+                { name: "Tongues", time: "1 action", range: "Touch", comp: "V, M (kleipiramide)", dur: "1 uur", desc: "Target begrijpt elke gesproken taal en wordt begrepen door talige creatures." }
+            ],
+            4: [
+                { name: "Polymorph", time: "1 action", range: "60ft", comp: "V, S, M (rups-cocon)", dur: "Concentration, 1 uur", desc: "WIS save. Transformeer een creature in een beast met CR gelijk aan level. Reverteert bij 0 HP." },
+                { name: "Greater Invisibility", time: "1 action", range: "Touch", comp: "V, S", dur: "Concentration, 1 min", desc: "Target wordt onzichtbaar. Eindigt NIET bij aanval of spell casten!" },
+                { name: "Dimension Door", time: "1 action", range: "500ft", comp: "V", dur: "Instant", desc: "Teleporteer jezelf (en 1 willing creature) tot 500ft naar een plek die je kunt beschrijven." },
+                { name: "Banishment", time: "1 action", range: "60ft", comp: "V, S, M (weerzinwekkend item)", dur: "Concentration, 1 min", desc: "CHA save of target verdwijnt naar een harmless demiplane. Schaalt +1 target." },
+                { name: "Wall of Fire", time: "1 action", range: "120ft", comp: "V, S, M (fosforus)", dur: "Concentration, 1 min", desc: "60ft lang of ring, 20ft hoog. 5d8 fire damage bij binnentreden of starten." },
+                { name: "Ice Storm", time: "1 action", range: "300ft", comp: "V, S, M (stof en water)", dur: "Instant", desc: "20ft radius. DEX save of 2d8 bludgeoning + 4d6 cold. Wordt difficult terrain." },
+                { name: "Arcane Eye", time: "1 action", range: "30ft", comp: "V, S, M (vleermuisvacht)", dur: "Concentration, 1 uur", desc: "Onzichtbaar magisch oog dat je kunt besturen en waardoor je kunt kijken." }
+            ],
+            5: [
+                { name: "Wall of Force", time: "1 action", range: "120ft", comp: "V, S, M (edelsteenpoeder)", dur: "Concentration, 10 min", desc: "Onzichtbare muur van kracht. Niets kan erdoorheen. Geen Disintegrate." },
+                { name: "Cone of Cold", time: "1 action", range: "Self (60ft cone)", comp: "V, S, M (kristallen kegel)", dur: "Instant", desc: "60ft cone. CON save of 8d8 cold damage (half bij save). Schaalt +1d8." },
+                { name: "Telekinesis", time: "1 action", range: "60ft", comp: "V, S", dur: "Concentration, 10 min", desc: "Beweeg creature of object tot 1000 lbs. Creatures: contested ability check." },
+                { name: "Animate Objects", time: "1 action", range: "120ft", comp: "V, S", dur: "Concentration, 1 min", desc: "Animeer tot 10 kleine objecten. Ze vallen aan als bonus action. Schaalt +2 objecten." },
+                { name: "Hold Monster", time: "1 action", range: "90ft", comp: "V, S, M (ijzer)", dur: "Concentration, 1 min", desc: "WIS save of paralyzed. Werkt op elk creature type. Save elke beurt." },
+                { name: "Scrying", time: "10 minutes", range: "Self", comp: "V, S, M (focus van 1000gp)", dur: "Concentration, 10 min", desc: "Bekijk een creature op elk plane. WIS save, modifier afhankelijk van bekendheid." }
+            ]
+        },
+
+        // ===== DRUID SPELLS =====
+        druid: {
+            0: [
+                { name: "Druidcraft", time: "1 action", range: "30ft", comp: "V, S", dur: "Instant", desc: "Klein natuurlijk trucje: weer voorspellen, bloem laten bloeien, sensorisch effect, of vlammetje aan/uit." },
+                { name: "Produce Flame", time: "1 action", range: "Self", comp: "V, S", dur: "10 min", desc: "Vlam in je hand. Geeft licht in 10ft. Gooi als ranged spell attack voor 1d8 fire damage. Schaalt." },
+                { name: "Guidance", time: "1 action", range: "Touch", comp: "V, S", dur: "Concentration, 1 min", desc: "Target mag eenmalig 1d4 toevoegen aan een ability check. Concentration." },
+                { name: "Thorn Whip", time: "1 action", range: "30ft", comp: "V, S, M (doornenstengel)", dur: "Instant", desc: "Melee spell attack, 1d6 piercing. Trek target 10ft naar je toe als het Large of kleiner is. Schaalt." },
+                { name: "Shillelagh", time: "1 bonus action", range: "Touch", comp: "V, S, M (hulst of eikentakje)", dur: "1 min", desc: "Bonus action. Houten club/quarterstaff gebruikt WIS voor attacks, damage wordt 1d8." },
+                { name: "Mending", time: "1 minute", range: "Touch", comp: "V, S, M (twee lodestones)", dur: "Instant", desc: "Repareer een enkele breuk of scheur in een object." },
+                { name: "Resistance", time: "1 action", range: "Touch", comp: "V, S, M (miniature mantel)", dur: "Concentration, 1 min", desc: "Target mag eenmalig 1d4 toevoegen aan een saving throw. Concentration." },
+                { name: "Poison Spray", time: "1 action", range: "10ft", comp: "V, S", dur: "Instant", desc: "CON save of 1d12 poison damage. 10ft. Schaalt." }
+            ],
+            1: [
+                { name: "Healing Word", time: "1 bonus action", range: "60ft", comp: "V", dur: "Instant", desc: "Bonus action. Herstel 1d4 + spellcasting mod HP op 60ft. Schaalt +1d4." },
+                { name: "Entangle", time: "1 action", range: "90ft", comp: "V, S", dur: "Concentration, 1 min", desc: "20ft vierkant. STR save of restrained door wijnranken. Moeilijk terrein." },
+                { name: "Goodberry", time: "1 action", range: "Touch", comp: "V, S, M (hulst)", dur: "Instant", desc: "Creëer 10 bessen. Elke bes herstelt 1 HP en voorziet in een dag voedsel. Verdwijnen na 24 uur." },
+                { name: "Thunderwave", time: "1 action", range: "Self (15ft cube)", comp: "V, S", dur: "Instant", desc: "CON save of 2d8 thunder damage en 10ft weggeduwd. Half bij save." },
+                { name: "Faerie Fire", time: "1 action", range: "60ft", comp: "V", dur: "Concentration, 1 min", desc: "20ft cube. DEX save of verlicht. Attacks hebben advantage. Onzichtbaarheid opgeheven." },
+                { name: "Cure Wounds", time: "1 action", range: "Touch", comp: "V, S", dur: "Instant", desc: "Herstel 1d8 + spellcasting mod HP. Schaalt +1d8." },
+                { name: "Fog Cloud", time: "1 action", range: "120ft", comp: "V, S", dur: "Concentration, 1 uur", desc: "20ft radius mist. Heavily obscured. Concentration, 1 uur." },
+                { name: "Detect Magic", time: "1 action", range: "Self", comp: "V, S", dur: "Concentration, 10 min", desc: "Ritual. Voel magie binnen 30ft." },
+                { name: "Animal Friendship", time: "1 action", range: "30ft", comp: "V, S, M (voedsel)", dur: "24 uur", desc: "WIS save of beast (INT 3-) wordt gecharmeerd. 24 uur. Schaalt +1 target." },
+                { name: "Speak with Animals", time: "1 action", range: "Self", comp: "V, S", dur: "10 min", desc: "Ritual. Communiceer met beesten. 10 minuten." },
+                { name: "Ice Knife", time: "1 action", range: "60ft", comp: "S, M (ijs)", dur: "Instant", desc: "Ranged spell attack, 1d10 piercing. Explodeert: DEX save of 2d6 cold in 5ft. Schaalt +1d6." },
+                { name: "Absorb Elements", time: "1 reaction", range: "Self", comp: "S", dur: "1 ronde", desc: "Reaction bij elementaire damage. Resistance + volgende melee doet +1d6 van dat type." }
+            ],
+            2: [
+                { name: "Moonbeam", time: "1 action", range: "120ft", comp: "V, S, M (maansteen)", dur: "Concentration, 1 min", desc: "5ft radius lichtcilinder. CON save of 2d10 radiant. Shapechangers hebben disadvantage. Schaalt." },
+                { name: "Pass Without Trace", time: "1 action", range: "Self", comp: "V, S, M (as van hulst)", dur: "Concentration, 1 uur", desc: "Jij en allies binnen 30ft krijgen +10 op Stealth checks. Niet te tracken." },
+                { name: "Spike Growth", time: "1 action", range: "150ft", comp: "V, S, M (doornen)", dur: "Concentration, 10 min", desc: "20ft radius. Moeilijk terrein, 2d4 piercing per 5ft movement. Gecamoufleerd." },
+                { name: "Hold Person", time: "1 action", range: "60ft", comp: "V, S, M (ijzer)", dur: "Concentration, 1 min", desc: "WIS save of humanoid is paralyzed. Save elke beurt. Schaalt +1 target." },
+                { name: "Flame Blade", time: "1 bonus action", range: "Self", comp: "V, S, M (sumacblad)", dur: "Concentration, 10 min", desc: "Vlammend zwaard. Melee spell attack voor 3d6 fire damage. Geeft licht." },
+                { name: "Heat Metal", time: "1 action", range: "60ft", comp: "V, S, M (ijzer en vlam)", dur: "Concentration, 1 min", desc: "Metalen object gloeit op. 2d8 fire damage. Vasthoudend target: disadvantage op checks." },
+                { name: "Lesser Restoration", time: "1 action", range: "Touch", comp: "V, S", dur: "Instant", desc: "Beëindig een ziekte of condition: blinded, deafened, paralyzed, of poisoned." },
+                { name: "Gust of Wind", time: "1 action", range: "Self (60ft line)", comp: "V, S, M (zaad)", dur: "Concentration, 1 min", desc: "60ft lijn wind. STR save of 15ft weggeduwd. Difficult terrain." },
+                { name: "Barkskin", time: "1 action", range: "Touch", comp: "V, S, M (eikenschors)", dur: "Concentration, 1 uur", desc: "Target's AC kan niet lager zijn dan 16." }
+            ],
+            3: [
+                { name: "Call Lightning", time: "1 action", range: "120ft", comp: "V, S", dur: "Concentration, 10 min", desc: "Stormwolk. Elke beurt als action: 3d10 lightning in 5ft radius. Schaalt +1d10." },
+                { name: "Conjure Animals", time: "1 action", range: "60ft", comp: "V, S", dur: "Concentration, 1 uur", desc: "Roep fey beesten op. Eén CR 2, twee CR 1, vier CR 1/2, of acht CR 1/4." },
+                { name: "Plant Growth", time: "1 action / 8 uur", range: "150ft", comp: "V, S", dur: "Instant", desc: "100ft radius dichte plantengroei (4ft per 1ft movement). Of 8 uur ritual voor vruchtbare grond." },
+                { name: "Dispel Magic", time: "1 action", range: "120ft", comp: "V, S", dur: "Instant", desc: "Beëindig magisch effect van 3rd level of lager. Hogere: ability check DC 10 + level." },
+                { name: "Sleet Storm", time: "1 action", range: "150ft", comp: "V, S, M (stof en water)", dur: "Concentration, 1 min", desc: "40ft radius. Difficult terrain, heavily obscured. CON save of prone." },
+                { name: "Wind Wall", time: "1 action", range: "120ft", comp: "V, S, M (waaier en veer)", dur: "Concentration, 1 min", desc: "50ft lang, 15ft hoog. 3d8 bludgeoning. Blokkeert projectielen en gas." }
+            ],
+            4: [
+                { name: "Polymorph", time: "1 action", range: "60ft", comp: "V, S, M (rups-cocon)", dur: "Concentration, 1 uur", desc: "WIS save. Transformeer creature in beast met CR gelijk aan level. Reverteert bij 0 HP." },
+                { name: "Wall of Fire", time: "1 action", range: "120ft", comp: "V, S, M (fosforus)", dur: "Concentration, 1 min", desc: "60ft lang of ring, 20ft hoog. 5d8 fire damage bij binnentreden." },
+                { name: "Ice Storm", time: "1 action", range: "300ft", comp: "V, S, M (stof en water)", dur: "Instant", desc: "20ft radius. DEX save of 2d8 bludgeoning + 4d6 cold. Difficult terrain." },
+                { name: "Giant Insect", time: "1 action", range: "30ft", comp: "V, S", dur: "Concentration, 10 min", desc: "Transformeer insecten in giant versies. Tot 10 duizendpoten, 5 wespen, 3 spinnen of 1 schorpioen." },
+                { name: "Conjure Woodland Beings", time: "1 action", range: "60ft", comp: "V, S, M (hulstbes)", dur: "Concentration, 1 uur", desc: "Roep fey creatures op. Eén CR 2, twee CR 1, vier CR 1/2 of acht CR 1/4." }
+            ],
+            5: [
+                { name: "Greater Restoration", time: "1 action", range: "Touch", comp: "V, S, M (diamantstof van 100gp)", dur: "Instant", desc: "Beëindig charm/petrification/curse, ability score reductie, of HP max reductie." },
+                { name: "Mass Cure Wounds", time: "1 action", range: "60ft", comp: "V, S", dur: "Instant", desc: "Tot 6 creatures herstellen 3d8 + spellcasting mod HP. Schaalt +1d8." },
+                { name: "Conjure Elemental", time: "1 minute", range: "90ft", comp: "V, S, M (elementaal materiaal)", dur: "Concentration, 1 uur", desc: "Roep elemental van CR 5 of lager op. Verliest controle bij concentratieverlies." },
+                { name: "Wall of Stone", time: "1 action", range: "120ft", comp: "V, S, M (graniet)", dur: "Concentration, 10 min", desc: "10 panelen van 10x10ft steen. AC 15, 30 HP per paneel. Kan permanent worden." }
+            ]
+        },
+
+        // ===== RANGER SPELLS =====
+        ranger: {
+            1: [
+                { name: "Hunter's Mark", time: "1 bonus action", range: "90ft", comp: "V", dur: "Concentration, 1 uur", desc: "Bonus action. Markeer target: +1d6 damage per hit. Advantage op Perception/Survival om het te vinden." },
+                { name: "Cure Wounds", time: "1 action", range: "Touch", comp: "V, S", dur: "Instant", desc: "Herstel 1d8 + spellcasting mod HP. Schaalt +1d8." },
+                { name: "Goodberry", time: "1 action", range: "Touch", comp: "V, S, M (hulst)", dur: "Instant", desc: "10 magische bessen. Elke bes herstelt 1 HP en voorziet in een dag voedsel." },
+                { name: "Ensnaring Strike", time: "1 bonus action", range: "Self", comp: "V", dur: "Concentration, 1 min", desc: "Volgende hit: STR save of restrained door wijnranken. 1d6 piercing per beurt. Schaalt +1d6." },
+                { name: "Hail of Thorns", time: "1 bonus action", range: "Self", comp: "V", dur: "Concentration, 1 min", desc: "Volgende ranged hit: 5ft radius. DEX save of 1d10 piercing (half bij save). Schaalt +1d10." },
+                { name: "Absorb Elements", time: "1 reaction", range: "Self", comp: "S", dur: "1 ronde", desc: "Reaction bij elementaire damage. Resistance + volgende melee doet +1d6 van dat type." },
+                { name: "Fog Cloud", time: "1 action", range: "120ft", comp: "V, S", dur: "Concentration, 1 uur", desc: "20ft radius mist. Heavily obscured." },
+                { name: "Detect Magic", time: "1 action", range: "Self", comp: "V, S", dur: "Concentration, 10 min", desc: "Ritual. Voel magie binnen 30ft." },
+                { name: "Animal Friendship", time: "1 action", range: "30ft", comp: "V, S, M (voedsel)", dur: "24 uur", desc: "WIS save of beast (INT 3-) wordt gecharmeerd. 24 uur." },
+                { name: "Speak with Animals", time: "1 action", range: "Self", comp: "V, S", dur: "10 min", desc: "Ritual. Communiceer met beesten." }
+            ],
+            2: [
+                { name: "Pass Without Trace", time: "1 action", range: "Self", comp: "V, S, M (as van hulst)", dur: "Concentration, 1 uur", desc: "+10 op Stealth checks voor jou en allies binnen 30ft. Niet te tracken." },
+                { name: "Spike Growth", time: "1 action", range: "150ft", comp: "V, S, M (doornen)", dur: "Concentration, 10 min", desc: "20ft radius. Moeilijk terrein, 2d4 piercing per 5ft. Gecamoufleerd." },
+                { name: "Lesser Restoration", time: "1 action", range: "Touch", comp: "V, S", dur: "Instant", desc: "Beëindig ziekte of condition: blinded, deafened, paralyzed, poisoned." },
+                { name: "Silence", time: "1 action", range: "120ft", comp: "V, S", dur: "Concentration, 10 min", desc: "20ft radius stilte. Geen geluid, verbal spells geblokkeerd. Ritual." },
+                { name: "Misty Step", time: "1 bonus action", range: "Self", comp: "V", dur: "Instant", desc: "Teleporteer tot 30ft naar een plek die je kunt zien." },
+                { name: "Darkvision", time: "1 action", range: "Touch", comp: "V, S, M (wortel)", dur: "8 uur", desc: "Target krijgt darkvision tot 60ft. 8 uur." },
+                { name: "Aid", time: "1 action", range: "30ft", comp: "V, S, M (linnen)", dur: "8 uur", desc: "Tot 3 creatures krijgen +5 max HP en huidige HP. 8 uur. Schaalt +5." }
+            ],
+            3: [
+                { name: "Conjure Animals", time: "1 action", range: "60ft", comp: "V, S", dur: "Concentration, 1 uur", desc: "Roep fey beesten op. Eén CR 2, twee CR 1, vier CR 1/2, of acht CR 1/4." },
+                { name: "Lightning Arrow", time: "1 bonus action", range: "Self", comp: "V, S", dur: "Concentration, 1 min", desc: "Volgende ranged attack: 4d8 lightning (DEX save half). 10ft radius. Schaalt +1d8." },
+                { name: "Plant Growth", time: "1 action / 8 uur", range: "150ft", comp: "V, S", dur: "Instant", desc: "100ft radius dichte plantengroei. Of 8 uur ritual voor vruchtbare grond." },
+                { name: "Revivify", time: "1 action", range: "Touch", comp: "V, S, M (diamanten van 300gp)", dur: "Instant", desc: "Breng creature terug dat max 1 minuut dood is. Komt terug met 1 HP." },
+                { name: "Conjure Barrage", time: "1 action", range: "Self (60ft cone)", comp: "V, S, M (munitie/wapen)", dur: "Instant", desc: "60ft cone. DEX save of 3d8 damage (wapentype). Half bij save." }
+            ],
+            4: [
+                { name: "Freedom of Movement", time: "1 action", range: "Touch", comp: "V, S, M (leren band)", dur: "1 uur", desc: "Target niet beïnvloed door moeilijk terrein of magische restraints. 1 uur." },
+                { name: "Guardian of Nature", time: "1 bonus action", range: "Self", comp: "V", dur: "Concentration, 1 min", desc: "Primal Beast (speed+10, advantage melee, +1d6 force) of Great Tree (10 temp HP, advantage ranged)." },
+                { name: "Stoneskin", time: "1 action", range: "Touch", comp: "V, S, M (diamantstof van 100gp)", dur: "Concentration, 1 uur", desc: "Resistance tegen nonmagical bludgeoning, piercing en slashing damage." }
+            ],
+            5: [
+                { name: "Swift Quiver", time: "1 bonus action", range: "Touch", comp: "V, S, M (koker met munitie)", dur: "Concentration, 1 min", desc: "Eindeloze munitie. Bonus action: twee extra ranged weapon attacks per beurt." },
+                { name: "Steel Wind Strike", time: "1 action", range: "30ft", comp: "S, M (wapen)", dur: "Instant", desc: "Melee spell attack tegen tot 5 creatures. 6d10 force per hit. Teleporteer naar geraakt target." },
+                { name: "Conjure Volley", time: "1 action", range: "150ft", comp: "V, S, M (munitie/wapen)", dur: "Instant", desc: "40ft radius. DEX save of 8d8 damage (wapentype). Half bij save." }
+            ]
+        },
+
+        // ===== PALADIN SPELLS =====
+        paladin: {
+            1: [
+                { name: "Divine Smite", time: "Onderdeel van aanval", range: "Self", comp: "V", dur: "Instant", desc: "Bij melee hit: besteed slot voor 2d8 radiant. +1d8 per hogere slot, +1d8 vs undead/fiends. Max 5d8." },
+                { name: "Cure Wounds", time: "1 action", range: "Touch", comp: "V, S", dur: "Instant", desc: "Herstel 1d8 + spellcasting mod HP. Schaalt +1d8." },
+                { name: "Shield of Faith", time: "1 bonus action", range: "60ft", comp: "V, S, M (perkament)", dur: "Concentration, 10 min", desc: "Target krijgt +2 AC. Concentration, 10 minuten." },
+                { name: "Bless", time: "1 action", range: "30ft", comp: "V, S, M (heilig water)", dur: "Concentration, 1 min", desc: "Tot 3 creatures: +1d4 op attack rolls en saving throws. Schaalt +1 target." },
+                { name: "Command", time: "1 action", range: "60ft", comp: "V", dur: "1 ronde", desc: "Eén-woord commando. WIS save of target volgt op. Schaalt +1 target." },
+                { name: "Detect Evil and Good", time: "1 action", range: "Self", comp: "V, S", dur: "Concentration, 10 min", desc: "Detecteer aberrations, celestials, elementals, fey, fiends en undead binnen 30ft." },
+                { name: "Detect Magic", time: "1 action", range: "Self", comp: "V, S", dur: "Concentration, 10 min", desc: "Ritual. Voel magie binnen 30ft." },
+                { name: "Protection from Evil and Good", time: "1 action", range: "Touch", comp: "V, S, M (heilig water)", dur: "Concentration, 10 min", desc: "Buitengewone creatures hebben disadvantage op attacks tegen target." },
+                { name: "Thunderous Smite", time: "1 bonus action", range: "Self", comp: "V", dur: "Concentration, 1 min", desc: "Volgende melee hit: +2d6 thunder. STR save of 10ft weggeduwd en prone." },
+                { name: "Wrathful Smite", time: "1 bonus action", range: "Self", comp: "V", dur: "Concentration, 1 min", desc: "Volgende melee hit: +1d6 psychic. WIS save of frightened." },
+                { name: "Compelled Duel", time: "1 bonus action", range: "30ft", comp: "V", dur: "Concentration, 1 min", desc: "WIS save of target heeft disadvantage op attacks tegen anderen en moet bij je blijven." }
+            ],
+            2: [
+                { name: "Aid", time: "1 action", range: "30ft", comp: "V, S, M (linnen)", dur: "8 uur", desc: "Tot 3 creatures krijgen +5 max HP en huidige HP. 8 uur. Schaalt +5." },
+                { name: "Find Steed", time: "10 minutes", range: "30ft", comp: "V, S", dur: "Instant", desc: "Roep een geest-paard op. Intelligent en gehoorzaam." },
+                { name: "Lesser Restoration", time: "1 action", range: "Touch", comp: "V, S", dur: "Instant", desc: "Beëindig ziekte of condition: blinded, deafened, paralyzed, poisoned." },
+                { name: "Magic Weapon", time: "1 bonus action", range: "Touch", comp: "V, S", dur: "Concentration, 1 uur", desc: "Wapen wordt +1 op attack en damage. Schaalt naar +2/+3." },
+                { name: "Protection from Poison", time: "1 action", range: "Touch", comp: "V, S", dur: "1 uur", desc: "Neutraliseer gif. Advantage op poison saves. Resistance tegen poison damage." },
+                { name: "Branding Smite", time: "1 bonus action", range: "Self", comp: "V", dur: "Concentration, 1 min", desc: "Volgende hit: +2d6 radiant. Target wordt zichtbaar." },
+                { name: "Zone of Truth", time: "1 action", range: "60ft", comp: "V, S", dur: "10 min", desc: "15ft radius. CHA save of creature kan niet liegen. Je weet of save geslaagd is." }
+            ],
+            3: [
+                { name: "Revivify", time: "1 action", range: "Touch", comp: "V, S, M (diamanten van 300gp)", dur: "Instant", desc: "Breng creature terug dat max 1 minuut dood is. Komt terug met 1 HP." },
+                { name: "Dispel Magic", time: "1 action", range: "120ft", comp: "V, S", dur: "Instant", desc: "Beëindig magisch effect van 3rd level of lager. Hogere: ability check DC 10 + level." },
+                { name: "Aura of Vitality", time: "1 action", range: "Self (30ft)", comp: "V", dur: "Concentration, 1 min", desc: "Bonus action elke beurt: herstel 2d6 HP bij een creature binnen 30ft." },
+                { name: "Blinding Smite", time: "1 bonus action", range: "Self", comp: "V", dur: "Concentration, 1 min", desc: "Volgende melee hit: +3d8 radiant. CON save of blinded." },
+                { name: "Crusader's Mantle", time: "1 action", range: "Self", comp: "V", dur: "Concentration, 1 min", desc: "Allies binnen 30ft: +1d4 radiant per melee weapon hit." },
+                { name: "Spirit Shroud", time: "1 bonus action", range: "Self", comp: "V, S", dur: "Concentration, 1 min", desc: "Attacks binnen 10ft: +1d8 extra damage. Targets kunnen geen HP herstellen." }
+            ],
+            4: [
+                { name: "Banishment", time: "1 action", range: "60ft", comp: "V, S, M (weerzinwekkend item)", dur: "Concentration, 1 min", desc: "CHA save of target verdwijnt naar harmless demiplane. Schaalt +1 target." },
+                { name: "Death Ward", time: "1 action", range: "Touch", comp: "V, S", dur: "8 uur", desc: "Eerste keer naar 0 HP: wordt 1 HP. Eenmalig. 8 uur." },
+                { name: "Find Greater Steed", time: "10 minutes", range: "30ft", comp: "V, S", dur: "Instant", desc: "Roep krachtige geest op: griffon, pegasus, dire wolf, etc." },
+                { name: "Staggering Smite", time: "1 bonus action", range: "Self", comp: "V", dur: "Concentration, 1 min", desc: "Volgende melee hit: +4d6 psychic. WIS save of disadvantage en geen reactions." },
+                { name: "Aura of Life", time: "1 action", range: "Self (30ft)", comp: "V", dur: "Concentration, 10 min", desc: "Allies: resistance necrotic, herstellen 1 HP als ze met 0 beginnen." }
+            ],
+            5: [
+                { name: "Destructive Wave", time: "1 action", range: "Self (30ft)", comp: "V", dur: "Instant", desc: "CON save of 5d6 thunder + 5d6 radiant/necrotic en prone. Half bij save." },
+                { name: "Holy Weapon", time: "1 bonus action", range: "Touch", comp: "V, S", dur: "Concentration, 1 uur", desc: "Wapen doet +2d8 radiant per hit. Bonus action ontploffing: 4d8 radiant in 30ft." },
+                { name: "Raise Dead", time: "1 uur", range: "Touch", comp: "V, S, M (diamant van 500gp)", dur: "Instant", desc: "Breng creature terug dat max 10 dagen dood is. -4 penalty, vermindert per long rest." },
+                { name: "Banishing Smite", time: "1 bonus action", range: "Self", comp: "V", dur: "Concentration, 1 min", desc: "Volgende hit: +5d10 force. Bij 50 HP of minder na hit: gebanished." }
+            ]
+        },
+
+        // ===== WARLOCK SPELLS =====
+        warlock: {
+            0: [
+                { name: "Eldritch Blast", time: "1 action", range: "120ft", comp: "V, S", dur: "Instant", desc: "Ranged spell attack, 1d10 force. Op 5e level: 2 stralen, 11e: 3, 17e: 4. Elke straal apart." },
+                { name: "Minor Illusion", time: "1 action", range: "30ft", comp: "S, M (fleece)", dur: "1 min", desc: "Geluid of beeld van een object. Investigation check om te herkennen." },
+                { name: "Prestidigitation", time: "1 action", range: "10ft", comp: "V, S", dur: "Tot 1 uur", desc: "Klein magisch trucje: vonken, geluid, smaak, kleine illusie, schoonmaken, etc." },
+                { name: "Mage Hand", time: "1 action", range: "30ft", comp: "V, S", dur: "1 min", desc: "Spectrale hand die objecten kan manipuleren op 30ft. Duurt 1 minuut." },
+                { name: "Chill Touch", time: "1 action", range: "120ft", comp: "V, S", dur: "1 ronde", desc: "1d8 necrotic, target kan geen HP herstellen. Undead: disadvantage op attacks. Schaalt." },
+                { name: "Toll the Dead", time: "1 action", range: "60ft", comp: "V, S", dur: "Instant", desc: "WIS save of 1d8 necrotic (1d12 als target HP mist). Schaalt." },
+                { name: "Booming Blade", time: "1 action", range: "Self (5ft)", comp: "S, M (wapen)", dur: "1 ronde", desc: "Melee weapon attack. Als target beweegt: 1d8 thunder damage. Schaalt." },
+                { name: "Friends", time: "1 action", range: "Self", comp: "S, M (make-up)", dur: "Concentration, 1 min", desc: "Advantage op CHA checks tegen non-hostile creature. Na afloop weet target het." },
+                { name: "Mind Sliver", time: "1 action", range: "60ft", comp: "V", dur: "1 ronde", desc: "INT save of 1d6 psychic en -1d4 van volgende saving throw. Schaalt." }
+            ],
+            1: [
+                { name: "Hex", time: "1 bonus action", range: "90ft", comp: "V, S, M (newt-oog)", dur: "Concentration, 1 uur", desc: "Bonus action. +1d6 necrotic per hit. Kies ability: target heeft disadvantage op checks daarmee." },
+                { name: "Armor of Agathys", time: "1 action", range: "Self", comp: "V, S, M (water)", dur: "1 uur", desc: "5 temp HP. Melee aanvallers nemen 5 cold damage zolang je temp HP hebt. Schaalt +5." },
+                { name: "Hellish Rebuke", time: "1 reaction", range: "60ft", comp: "V, S", dur: "Instant", desc: "Reaction bij damage. DEX save of 2d10 fire (half bij save). Schaalt +1d10." },
+                { name: "Charm Person", time: "1 action", range: "30ft", comp: "V, S", dur: "1 uur", desc: "WIS save (advantage als je vecht). Target beschouwt je als goede vriend." },
+                { name: "Protection from Evil and Good", time: "1 action", range: "Touch", comp: "V, S, M (heilig water)", dur: "Concentration, 10 min", desc: "Buitengewone creatures hebben disadvantage op attacks tegen target." },
+                { name: "Witch Bolt", time: "1 action", range: "30ft", comp: "V, S, M (bliksemboomtakje)", dur: "Concentration, 1 min", desc: "Ranged spell attack, 1d12 lightning. Action elke beurt: automatisch 1d12." },
+                { name: "Expeditious Retreat", time: "1 bonus action", range: "Self", comp: "V, S", dur: "Concentration, 10 min", desc: "Bonus action Dash elke beurt." },
+                { name: "Arms of Hadar", time: "1 action", range: "Self (10ft)", comp: "V, S", dur: "Instant", desc: "STR save of 2d6 necrotic en geen reactions. Half bij save. Schaalt +1d6." }
+            ],
+            2: [
+                { name: "Misty Step", time: "1 bonus action", range: "Self", comp: "V", dur: "Instant", desc: "Teleporteer tot 30ft naar een plek die je kunt zien." },
+                { name: "Hold Person", time: "1 action", range: "60ft", comp: "V, S, M (ijzer)", dur: "Concentration, 1 min", desc: "WIS save of humanoid is paralyzed. Save elke beurt. Schaalt +1 target." },
+                { name: "Invisibility", time: "1 action", range: "Touch", comp: "V, S, M (wimper in gum arabic)", dur: "Concentration, 1 uur", desc: "Creature wordt onzichtbaar. Eindigt bij aanval of spell." },
+                { name: "Mirror Image", time: "1 action", range: "Self", comp: "V, S", dur: "1 min", desc: "Drie duplicaten. Aanvallen raken mogelijk duplicaat dat verdwijnt bij hit." },
+                { name: "Suggestion", time: "1 action", range: "30ft", comp: "V, M (slangetong en honingraat)", dur: "Concentration, 8 uur", desc: "WIS save of target volgt redelijke suggestie op." },
+                { name: "Darkness", time: "1 action", range: "60ft", comp: "V, M (vleermuisvacht en pek)", dur: "Concentration, 10 min", desc: "15ft radius magische duisternis. Blokkeert darkvision." },
+                { name: "Crown of Madness", time: "1 action", range: "120ft", comp: "V, S", dur: "Concentration, 1 min", desc: "WIS save of target moet melee attack doen naar jouw keuze. Save elke beurt." },
+                { name: "Spider Climb", time: "1 action", range: "Touch", comp: "V, S, M (spin en bitumen)", dur: "Concentration, 1 uur", desc: "Target klimt op elke ondergrond inclusief plafonds, handen vrij." },
+                { name: "Shatter", time: "1 action", range: "60ft", comp: "V, S, M (glassplinter)", dur: "Instant", desc: "10ft radius. CON save of 3d8 thunder. Schaalt +1d8." }
+            ],
+            3: [
+                { name: "Counterspell", time: "1 reaction", range: "60ft", comp: "S", dur: "Instant", desc: "Annuleer spell van 3rd level of lager. Hogere: ability check DC 10 + level." },
+                { name: "Dispel Magic", time: "1 action", range: "120ft", comp: "V, S", dur: "Instant", desc: "Beëindig magisch effect van 3rd level of lager. Hogere: ability check DC 10 + level." },
+                { name: "Fly", time: "1 action", range: "Touch", comp: "V, S, M (veertje)", dur: "Concentration, 10 min", desc: "60ft flying speed. Valt bij einde als nog in de lucht." },
+                { name: "Fear", time: "1 action", range: "Self (30ft cone)", comp: "V, S, M (witte veer)", dur: "Concentration, 1 min", desc: "WIS save of frightened en moet Dash weg van jou." },
+                { name: "Hunger of Hadar", time: "1 action", range: "150ft", comp: "V, S, M (octopustentakel)", dur: "Concentration, 1 min", desc: "20ft radius leegte. 2d6 cold begin beurt, 2d6 acid einde. Blind, moeilijk terrein." },
+                { name: "Hypnotic Pattern", time: "1 action", range: "120ft", comp: "S, M (wierookstokje)", dur: "Concentration, 1 min", desc: "30ft cube. WIS save of charmed en incapacitated." },
+                { name: "Summon Fey", time: "1 action", range: "90ft", comp: "V, S, M (gilded flower van 300gp)", dur: "Concentration, 1 uur", desc: "Roep fey geest op die jouw commando's volgt. Sterker op hogere slots." },
+                { name: "Thunder Step", time: "1 action", range: "90ft", comp: "V", dur: "Instant", desc: "Teleporteer tot 90ft. Creatures bij vertrekpunt: CON save of 3d10 thunder. Neem 1 ally mee." }
+            ],
+            4: [
+                { name: "Banishment", time: "1 action", range: "60ft", comp: "V, S, M (weerzinwekkend item)", dur: "Concentration, 1 min", desc: "CHA save of target verdwijnt. Schaalt +1 target." },
+                { name: "Dimension Door", time: "1 action", range: "500ft", comp: "V", dur: "Instant", desc: "Teleporteer jezelf (en 1 willing creature) tot 500ft." },
+                { name: "Shadow of Moil", time: "1 action", range: "Self", comp: "V, S, M (edelsteen van 150gp)", dur: "Concentration, 1 min", desc: "Heavily obscured, resistance radiant. 2d8 necrotic bij melee hit op jou." },
+                { name: "Summon Aberration", time: "1 action", range: "90ft", comp: "V, S, M (tentacle van 200gp)", dur: "Concentration, 1 uur", desc: "Roep aberration op. Sterker op hogere slots." },
+                { name: "Sickening Radiance", time: "1 action", range: "120ft", comp: "V, S", dur: "Concentration, 10 min", desc: "30ft radius. CON save of 4d10 radiant en 1 level exhaustion." }
+            ],
+            5: [
+                { name: "Hold Monster", time: "1 action", range: "90ft", comp: "V, S, M (ijzer)", dur: "Concentration, 1 min", desc: "WIS save of paralyzed. Elk creature type. Save elke beurt." },
+                { name: "Synaptic Static", time: "1 action", range: "120ft", comp: "V, S", dur: "Instant", desc: "20ft radius. INT save of 8d6 psychic. Gefaalde targets: -1d6 op rolls, 1 min." },
+                { name: "Enervation", time: "1 action", range: "60ft", comp: "V, S", dur: "Concentration, 1 min", desc: "DEX save of 4d8 necrotic. Action elke beurt: automatisch 4d8. Je healt de helft." },
+                { name: "Far Step", time: "1 bonus action", range: "Self", comp: "V", dur: "Concentration, 1 min", desc: "Bonus action elke beurt: teleporteer tot 60ft." },
+                { name: "Wall of Light", time: "1 action", range: "120ft", comp: "V, S, M (handspiegel)", dur: "Concentration, 10 min", desc: "60ft lang, 10ft hoog. 4d8 radiant bij binnentreden. Action: ranged attack 4d8." }
             ]
         }
     }
