@@ -57,6 +57,19 @@ const DATA = {
         ]
     },
 
+    // ===== WOOD ELF RACE (2024) =====
+    woodElf: {
+        speed: 35,
+        darkvision: 60,
+        features: [
+            { name: "Darkvision", desc: "Je kunt in dim light zien als bright light tot 60ft, en in duisternis als dim light." },
+            { name: "Fey Ancestry", desc: "Advantage op saving throws tegen de charmed condition. Je bent immuun voor magische slaap." },
+            { name: "Keen Senses", desc: "Proficiency in de Perception skill." },
+            { name: "Trance", desc: "Je hoeft niet te slapen. In plaats daarvan mediteer je 4 uur per long rest." },
+            { name: "Elf Lineage: Wood Elf", desc: "Walking speed 35ft. Level 3: Longstrider (1x/long rest gratis). Level 5: Pass Without Trace (1x/long rest gratis)." }
+        ]
+    },
+
     // ===== SORCERER CLASS =====
     sorcerer: {
         hitDie: 6,
@@ -889,6 +902,15 @@ const DATA = {
             traits: "Celestial Resistance (necrotic + radiant resistance), Darkvision 60ft, Healing Hands (heal = prof bonus, 1x/long rest), Light Bearer (Light cantrip), Celestial Revelation (lvl 3: Wings/Radiance/Shroud)",
             languages: "Common, +1 naar keuze",
             speed: "30ft",
+            size: "Medium"
+        },
+        woodElf: {
+            title: "Wood Elf (2024)",
+            desc: "Snel en onopvallend. Wood Elves leven in harmonie met de natuur en bewegen als schaduwen door het bos.",
+            abilities: "+1 op drie ability scores naar keuze (via background), of +2/+1",
+            traits: "Darkvision 60ft, Fey Ancestry (advantage vs charmed, immuun magische slaap), Keen Senses (Perception proficiency), Trance (4 uur meditatie i.p.v. slaap), Elf Lineage: Wood Elf (speed 35ft, Longstrider lvl 3, Pass Without Trace lvl 5)",
+            languages: "Common, Elvish",
+            speed: "35ft",
             size: "Medium"
         },
 
