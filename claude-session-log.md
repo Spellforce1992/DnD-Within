@@ -1,4 +1,4 @@
-# Session Log — DnD Vashara Characters
+# Session Log — D&D Within
 
 ### Recap — 2026-03-27
 
@@ -81,9 +81,20 @@
 - Eventueel finetuning van tooltip positionering
 
 **TODO:**
-- [ ] Uiterlijk layout: tekst linker kolom (mag doorlopen onder afbeelding), afbeelding rechter kolom (iets smaller)
-- [ ] Save/Cancel knoppen bij ability scores mooier maken (Engels: Save/Cancel)
-- [ ] Check: Scout en Wild Magic staan al bij level 1 — klopt dat? Scout is subclass op level 3 bij Rogue. Subclass label pas tonen vanaf het juiste level?
-- [ ] Rond portret ~2x zo groot maken (~200px)
+- [x] Alle TODO's opgelost in volledige SPA rebuild
+
+---
+
+### Recap — 2026-03-28 (sessie 3+4)
+
+**What was done:**
+- COMPLETE REBUILD: Single Page Application campaign platform "D&D Within — Valoria"
+- Hash-based SPA router, login systeem (9 accounts), per-karakter thema's
+- 8 party members, 6 nieuwe klassen/rassen/achtergronden
+- Tabbed character sheets, dashboard, maps, timeline, lore, notes
+- Alle D&D 5.5e mechanics behouden + uitgebreid
+- engine.js geëxtraheerd, data.js uitgebreid naar 1303 regels
+- Volledig nieuwe CSS (3534 regels), app.js (2791 regels)
+- ren.html en saya.html verwijderd (SPA verwerkt alles)
 
 ---

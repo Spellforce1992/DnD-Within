@@ -1,16 +1,159 @@
 // ============================================================
-// D&D 5e Interactive Character Sheet Engine — Ashvane Twins
-// Requires data.js (global DATA object) to be loaded first.
+// D&D Within — Full SPA Application
+// Requires data.js and engine.js to be loaded first.
 // ============================================================
 
-const CHARACTERS = {
+// ============================================================
+// Section 1: User / Auth System
+// ============================================================
+
+const USERS = {
+    dm:      { name: "Dungeon Master", role: "dm", characterId: null, pin: "0000" },
+    ren:     { name: "Joshua", role: "player", characterId: "ren", pin: "1111" },
+    saya:    { name: "Speler 2", role: "player", characterId: "saya", pin: "2222" },
+    ranger:  { name: "Speler 3", role: "player", characterId: "ranger", pin: "3333" },
+    wizard:  { name: "Speler 4", role: "player", characterId: "wizard", pin: "4444" },
+    paladin: { name: "Speler 5", role: "player", characterId: "paladin", pin: "5555" },
+    druid:   { name: "Speler 6", role: "player", characterId: "druid", pin: "6666" },
+    fighter: { name: "Speler 7", role: "player", characterId: "fighter", pin: "7777" },
+    warlock: { name: "Speler 8", role: "player", characterId: "warlock", pin: "8888" }
+};
+
+function getSession() {
+    return JSON.parse(localStorage.getItem('dw_session') || 'null');
+}
+
+function setSession(userId) {
+    localStorage.setItem('dw_session', JSON.stringify({ userId: userId, time: Date.now() }));
+}
+
+function clearSession() {
+    localStorage.removeItem('dw_session');
+}
+
+function currentUser() {
+    var s = getSession();
+    return s ? USERS[s.userId] : null;
+}
+
+function currentUserId() {
+    var s = getSession();
+    return s ? s.userId : null;
+}
+
+function isDM() {
+    var u = currentUser();
+    return u && u.role === 'dm';
+}
+
+function canEdit(charId) {
+    var u = currentUser();
+    return u && (u.role === 'dm' || u.characterId === charId);
+}
+
+// ============================================================
+// Section 2: Router
+// ============================================================
+
+function navigate(hash) {
+    window.location.hash = hash;
+}
+
+function getRoute() {
+    var hash = window.location.hash.slice(1) || '/';
+    var parts = hash.split('/').filter(Boolean);
+    return { path: '/' + parts.join('/'), parts: parts };
+}
+
+function initRouter() {
+    window.addEventListener('hashchange', function() { renderApp(); });
+    renderApp();
+}
+
+// ============================================================
+// Section 3: State Management
+// ============================================================
+
+function loadCharState(charId) {
+    // Try new key first, then migrate old key
+    var key = 'dw_char_' + charId;
+    var saved = localStorage.getItem(key);
+
+    // Migration from old format
+    if (!saved) {
+        var oldKey = 'ashvane_' + charId;
+        var oldSaved = localStorage.getItem(oldKey);
+        if (oldSaved) {
+            localStorage.setItem(key, oldSaved);
+            saved = oldSaved;
+        }
+    }
+
+    var config = loadCharConfig(charId);
+    var defaults = {
+        level: 1,
+        skills: config.defaultSkills ? config.defaultSkills.slice() : [],
+        expertise: config.defaultExpertise ? config.defaultExpertise.slice() : [],
+        cantrips: config.defaultCantrips ? config.defaultCantrips.slice() : [],
+        prepared: config.defaultPrepared ? config.defaultPrepared.slice() : [],
+        metamagic: [],
+        asiChoices: {},
+        favorites: [],
+        items: (config.defaultItems || []).map(function(i) { return Object.assign({}, i); }),
+        customAbilities: null,
+        currentHP: null,
+        gold: 0,
+        notes: ''
+    };
+
+    if (saved) {
+        try {
+            var parsed = JSON.parse(saved);
+            var keys = Object.keys(defaults);
+            for (var i = 0; i < keys.length; i++) {
+                if (!(keys[i] in parsed)) {
+                    parsed[keys[i]] = defaults[keys[i]];
+                }
+            }
+            return parsed;
+        } catch (e) { /* fall through to default */ }
+    }
+    return defaults;
+}
+
+function saveCharState(charId, state) {
+    var key = 'dw_char_' + charId;
+    localStorage.setItem(key, JSON.stringify(state));
+}
+
+function loadCharConfig(charId) {
+    if (CHAR_DEFAULTS[charId]) return CHAR_DEFAULTS[charId];
+    // Check for custom char in localStorage
+    var custom = localStorage.getItem('dw_charconfig_' + charId);
+    if (custom) {
+        try { return JSON.parse(custom); } catch (e) { /* ignore */ }
+    }
+    return null;
+}
+
+function loadImage(charId, type) {
+    return localStorage.getItem('dw_img_' + charId + '_' + type) || '';
+}
+
+function saveImage(charId, type, base64) {
+    localStorage.setItem('dw_img_' + charId + '_' + type, base64);
+}
+
+// ============================================================
+// Section 4: Character Defaults
+// ============================================================
+
+var CHAR_DEFAULTS = {
     ren: {
-        name: "Ren Ashvane",
-        className: "rogue",
-        subclass: "scout",
-        background: "Urchin",
-        alignment: "Chaotic Good",
-        age: 19,
+        id: "ren", name: "Ren Ashvane", player: "ren",
+        race: "woodElf", className: "rogue", subclass: "scout",
+        background: "wayfarer", alignment: "Chaotic Good", age: 19,
+        accentColor: "#22d3ee",
         baseAbilities: { str: 10, dex: 16, con: 14, int: 14, wis: 12, cha: 10 },
         defaultSkills: ["stealth", "sleight of hand", "perception", "acrobatics", "investigation", "athletics"],
         defaultExpertise: ["stealth", "sleight of hand"],
@@ -20,6 +163,18 @@ const CHARACTERS = {
             { name: 'Shortbow', hit: null, dmg: "1d6", type: "piercing" },
             { name: 'Dagger (thrown)', hit: null, dmg: "1d4", type: "piercing", finesse: true }
         ],
+        appearance: [
+            "Hoekig gezicht, scherpe kaaklijnen en ingevallen wangen. Donkerbruin haar, kort aan de zijkanten en langer bovenop, rommelig. Amberkleurige ogen, altijd half samengeknepen. Wit litteken dwars over zijn linkerwenkbrauw.",
+            "Licht gebruinde huid, eeltige handen. Iets langer dan Saya, mager en pezig. Draagt vaders donkerbruine leren jas die twee maten te groot is. Zachtzolen laarzen \u2014 bijna geluidloos."
+        ],
+        personality: {
+            traits: "Scant elke kamer binnen 3 seconden: uitgangen, wapens, bedreigingen. Praat weinig tegen vreemden, maar wordt warm zodra hij iemand vertrouwt.",
+            ideal: "Overleven is geen talent. Het is een keuze die je elke dag opnieuw maakt.",
+            bond: "Saya. Niet 'mijn zusje dat ik moet beschermen' \u2014 maar mijn gelijke, mijn partner.",
+            flaw: "Vertrouwt niemand behalve Saya. Het kost hem weken om iemand binnen te laten.",
+            fear: "Water. De rivier. Leeftijd 17."
+        },
+        backstory: "Opgegroeid op straat na de dood van hun ouders bij de Slangenmars. Samen met zijn tweelingzus Saya heeft hij geleerd te overleven met niets dan hun verstand en hun messen.",
         quotes: [
             "Er is altijd een uitweg. En als die er niet is, maak je er een.",
             "Vertrouwen is duur. Ik betaal liever met staal.",
@@ -44,17 +199,29 @@ const CHARACTERS = {
             { name: "Burglar's pack", weight: 0, notes: 'Inhoud al verdeeld' }
         ]
     },
+
     saya: {
-        name: "Saya Ashvane",
-        className: "sorcerer",
-        subclass: "wildMagic",
-        background: "Urchin",
-        alignment: "Chaotic Good",
-        age: 19,
+        id: "saya", name: "Saya Ashvane", player: "saya",
+        race: "woodElf", className: "sorcerer", subclass: "wildMagic",
+        background: "wayfarer", alignment: "Chaotic Good", age: 19,
+        accentColor: "#f472b6",
         baseAbilities: { str: 8, dex: 15, con: 14, int: 12, wis: 10, cha: 17 },
         defaultSkills: ["deception", "persuasion", "arcana", "sleight of hand"],
         defaultCantrips: ["Fire Bolt", "Prestidigitation", "Minor Illusion", "Mage Hand"],
         defaultPrepared: ["Shield", "Mage Armor", "Chaos Bolt", "Disguise Self"],
+        weapons: [],
+        appearance: [
+            "Smal gezicht met hoge jukbeenderen en een scherpe kin. Donkerbruin haar in een slordige vlecht. Amberkleurige ogen met goudvlekjes \u2014 die violet oplichten als haar magie piekt.",
+            "Licht gebruinde huid met sproeten. Vingers bevlekt met inkt. Draagt een oversized donkerpaars linnen overhemd. Moeders koperen ring aan een koord om haar nek."
+        ],
+        personality: {
+            traits: "Neuriet altijd. Tekent kaarten van alles. Praat snel, denkt sneller, liegt het snelst. Maar nooit tegen Ren.",
+            ideal: "Controle is een illusie. Maar het is m\u00edjn illusie, en ik ben er goed in.",
+            bond: "Ren. De enige die niet wegrende toen ik in brand stond.",
+            flaw: "Moet alles in kaart brengen. Als ze het niet kan tekenen, begrijpt ze het niet.",
+            fear: "Stilte. Stilte is wat er was vlak voordat de slangen kwamen."
+        },
+        backstory: "Tweelingzus van Ren. Haar Wild Magic manifesteerde zich toen ze 13 was \u2014 ze stak een marktkraam in brand. Sindsdien heeft ze zichzelf geleerd haar chaotische magie te beheersen.",
         quotes: [
             "Magie is niet iets wat ik heb geleerd. Het is iets wat weigerde om stil te zijn.",
             "Controle is een illusie. Maar het is m\u00edjn illusie, en ik ben er goed in.",
@@ -76,416 +243,860 @@ const CHARACTERS = {
             { name: 'Set versleten kleding', weight: 3, notes: '' },
             { name: 'Nette outfit', weight: 4, notes: 'Voor als ze iemand moet oplichten' }
         ]
+    },
+
+    ranger: {
+        id: "ranger", name: "Nieuw Karakter", player: "ranger",
+        race: "human", className: "ranger", subclass: "hunter",
+        background: "guide", alignment: "Neutral Good", age: 25,
+        accentColor: "#4ade80",
+        baseAbilities: { str: 12, dex: 16, con: 14, int: 10, wis: 15, cha: 8 },
+        defaultSkills: ["perception", "stealth", "survival"],
+        defaultExpertise: [],
+        weapons: [
+            { name: 'Longbow', hit: null, dmg: "1d8", type: "piercing" },
+            { name: 'Shortsword', hit: null, dmg: "1d6", type: "piercing", finesse: true }
+        ],
+        appearance: ["", ""],
+        personality: { traits: "", ideal: "", bond: "", flaw: "", fear: "" },
+        backstory: "",
+        quotes: [],
+        defaultItems: []
+    },
+
+    wizard: {
+        id: "wizard", name: "Nieuw Karakter", player: "wizard",
+        race: "halfling", className: "wizard", subclass: "evocation",
+        background: "sage", alignment: "Neutral", age: 40,
+        accentColor: "#818cf8",
+        baseAbilities: { str: 8, dex: 14, con: 14, int: 17, wis: 12, cha: 10 },
+        defaultSkills: ["arcana", "history"],
+        defaultExpertise: [],
+        defaultCantrips: ["Fire Bolt", "Prestidigitation", "Mage Hand"],
+        defaultPrepared: ["Shield", "Magic Missile", "Detect Magic", "Mage Armor"],
+        weapons: [],
+        appearance: ["", ""],
+        personality: { traits: "", ideal: "", bond: "", flaw: "", fear: "" },
+        backstory: "",
+        quotes: [],
+        defaultItems: []
+    },
+
+    paladin: {
+        id: "paladin", name: "Nieuw Karakter", player: "paladin",
+        race: "tiefling", className: "paladin", subclass: "devotion",
+        background: "soldier", alignment: "Lawful Good", age: 28,
+        accentColor: "#fbbf24",
+        baseAbilities: { str: 16, dex: 10, con: 14, int: 8, wis: 12, cha: 15 },
+        defaultSkills: ["athletics", "persuasion"],
+        defaultExpertise: [],
+        weapons: [
+            { name: 'Longsword', hit: null, dmg: "1d8", type: "slashing" },
+            { name: 'Shield', hit: null, dmg: "-", type: "-" }
+        ],
+        appearance: ["", ""],
+        personality: { traits: "", ideal: "", bond: "", flaw: "", fear: "" },
+        backstory: "",
+        quotes: [],
+        defaultItems: []
+    },
+
+    druid: {
+        id: "druid", name: "Nieuw Karakter", player: "druid",
+        race: "aasimar", className: "druid", subclass: "land",
+        background: "acolyte", alignment: "Neutral Good", age: 30,
+        accentColor: "#34d399",
+        baseAbilities: { str: 10, dex: 14, con: 14, int: 12, wis: 17, cha: 8 },
+        defaultSkills: ["nature", "perception"],
+        defaultExpertise: [],
+        defaultCantrips: ["Produce Flame", "Guidance", "Druidcraft"],
+        defaultPrepared: ["Healing Word", "Entangle", "Goodberry", "Thunderwave"],
+        weapons: [],
+        appearance: ["", ""],
+        personality: { traits: "", ideal: "", bond: "", flaw: "", fear: "" },
+        backstory: "",
+        quotes: [],
+        defaultItems: []
+    },
+
+    fighter: {
+        id: "fighter", name: "Nieuw Karakter", player: "fighter",
+        race: "tiefling", className: "fighter", subclass: "champion",
+        background: "soldier", alignment: "Chaotic Neutral", age: 22,
+        accentColor: "#f87171",
+        baseAbilities: { str: 16, dex: 14, con: 15, int: 10, wis: 12, cha: 8 },
+        defaultSkills: ["athletics", "perception"],
+        defaultExpertise: [],
+        weapons: [
+            { name: 'Greatsword', hit: null, dmg: "2d6", type: "slashing" },
+            { name: 'Handaxe (thrown)', hit: null, dmg: "1d6", type: "slashing" }
+        ],
+        appearance: ["", ""],
+        personality: { traits: "", ideal: "", bond: "", flaw: "", fear: "" },
+        backstory: "",
+        quotes: [],
+        defaultItems: []
+    },
+
+    warlock: {
+        id: "warlock", name: "Nieuw Karakter", player: "warlock",
+        race: "tiefling", className: "warlock", subclass: "fiend",
+        background: "charlatan", alignment: "Chaotic Neutral", age: 26,
+        accentColor: "#a78bfa",
+        baseAbilities: { str: 8, dex: 14, con: 14, int: 12, wis: 10, cha: 17 },
+        defaultSkills: ["deception", "arcana"],
+        defaultExpertise: [],
+        defaultCantrips: ["Eldritch Blast", "Minor Illusion"],
+        defaultPrepared: ["Hex", "Armor of Agathys"],
+        weapons: [],
+        appearance: ["", ""],
+        personality: { traits: "", ideal: "", bond: "", flaw: "", fear: "" },
+        backstory: "",
+        quotes: [],
+        defaultItems: []
     }
 };
 
 // ============================================================
-// Tooltip Data (for basic info hover tooltips)
+// Section 5: Tooltip Data
 // ============================================================
 
-const TOOLTIPS = {
+var TOOLTIPS = {
     'Half-Elf': 'Darkvision 60ft. Fey Ancestry: advantage op saves tegen charmed. 2 extra skill proficiencies. +2 CHA, +1 op 2 andere abilities.',
+    'Wood Elf': 'Darkvision 60ft. Fey Ancestry: advantage op saves tegen charmed. Fleet of Foot: base speed 35ft. Mask of the Wild: hide in licht natural obscurement.',
+    'Human': 'Resourceful: Heroic Inspiration na elke long rest. Skillful: 1 extra skill proficiency. Versatile: 1 origin feat.',
+    'Halfling': 'Brave: advantage vs frightened. Lucky: herrol een 1 op d20. Halfling Nimbleness: beweeg door grotere creatures. Naturally Stealthy.',
+    'Tiefling': 'Darkvision 60ft. Fiendish Legacy: resistance (fire/necrotic/poison). Otherworldly Presence: Thaumaturgy cantrip.',
+    'Aasimar': 'Celestial Resistance: resistance tegen necrotic en radiant. Darkvision 60ft. Healing Hands. Light Bearer: Light cantrip.',
     'Rogue': 'Hit Die: d8. Saving Throws: DEX, INT. Sneak Attack, Expertise, Cunning Action. Skills: 4 proficiencies.',
     'Sorcerer': 'Hit Die: d6. Saving Throws: CON, CHA. Sorcery Points, Metamagic. Spellcasting met Charisma.',
+    'Ranger': 'Hit Die: d10. Saving Throws: STR, DEX. Favored Enemy, Natural Explorer, Spellcasting met Wisdom.',
+    'Wizard': 'Hit Die: d6. Saving Throws: INT, WIS. Arcane Recovery, Spellcasting met Intelligence. Grootste spell list.',
+    'Paladin': 'Hit Die: d10. Saving Throws: WIS, CHA. Divine Smite, Lay on Hands, Aura of Protection. Spellcasting met Charisma.',
+    'Druid': 'Hit Die: d8. Saving Throws: INT, WIS. Wild Shape, Spellcasting met Wisdom. Kan geen metal armor dragen.',
+    'Fighter': 'Hit Die: d10. Saving Throws: STR, CON. Fighting Style, Second Wind, Action Surge. Meeste ASIs.',
+    'Warlock': 'Hit Die: d8. Saving Throws: WIS, CHA. Pact Magic (short rest slots), Eldritch Invocations, Pact Boon.',
     'Scout': 'Rogue subclass. Survivalist: proficiency in Nature & Survival. Skirmisher: reaction om weg te bewegen. Superior Mobility op level 9.',
     'Wild Magic': 'Sorcerer subclass. Wild Magic Surge: kans op willekeurig magisch effect. Tides of Chaos: advantage 1x per long rest. Bend Luck op level 6.',
+    'Hunter': 'Ranger subclass. Colossus Slayer, Giant Killer, of Horde Breaker. Defensive Tactics op level 7.',
+    'Evocation': 'Wizard subclass. Sculpt Spells: bescherm allies in AoE. Potent Cantrip. Empowered Evocation.',
+    'Devotion': 'Paladin subclass. Sacred Weapon, Turn the Unholy. Aura of Devotion. Holy Nimbus.',
+    'Land': 'Druid subclass. Bonus cantrip. Natural Recovery. Extra spells per terrain type.',
+    'Champion': 'Fighter subclass. Improved Critical (19-20). Remarkable Athlete. Additional Fighting Style.',
+    'Fiend': 'Warlock subclass. Dark One\'s Blessing: temp HP bij kills. Dark One\'s Own Luck. Fiendish Resilience.',
+    'Thief': 'Rogue subclass. Fast Hands: bonus action Use Object. Second-Story Work: climbing speed. Supreme Sneak.',
     'Urchin': 'Achtergrond: opgegroeid op straat. Proficiency: Sleight of Hand, Stealth. Tool: Disguise kit, Thieves\' tools. Feature: City Secrets.',
-    'Chaotic Good': 'Volgt het eigen geweten met weinig respect voor regels. Doet het juiste, ook als het niet de wet is.'
+    'Wayfarer': 'Achtergrond: reiziger en zwerver. Wanderer: je vindt altijd voedsel en water in de wildernis voor jezelf en 5 anderen.',
+    'Chaotic Good': 'Volgt het eigen geweten met weinig respect voor regels. Doet het juiste, ook als het niet de wet is.',
+    'Neutral Good': 'Doet het beste zonder vooroordeel voor of tegen orde. Het goede doen is wat telt.',
+    'Lawful Good': 'Combineert eer en mededogen. Verwacht dat anderen dezelfde normen hanteren.',
+    'Neutral': 'Handelt zonder vooroordeel. Kiest de middenweg. Vermijdt morele extremen.',
+    'Chaotic Neutral': 'Volgt eigen grillen. Individuele vrijheid boven alles. Onvoorspelbaar maar niet kwaadaardig.'
 };
 
 // ============================================================
-// State Management
+// Section 6: Active Tab State
 // ============================================================
 
-function loadState(charId) {
-    const key = `ashvane_${charId}`;
-    const saved = localStorage.getItem(key);
-    const config = CHARACTERS[charId];
-    const defaults = {
-        level: 1,
-        skills: [...(config.defaultSkills || [])],
-        expertise: [...(config.defaultExpertise || [])],
-        cantrips: [...(config.defaultCantrips || [])],
-        prepared: [...(config.defaultPrepared || [])],
-        metamagic: [],
-        asiChoices: {},
-        favorites: [],
-        items: [...(config.defaultItems || []).map(i => ({...i}))],
-        customAbilities: null
+var activeTab = 'overview';
+var spellFilter = 'all';
+var abilityEditMode = false;
+var editAbilities = null;
+
+// ============================================================
+// Section 7: Utility Functions
+// ============================================================
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function escapeAttr(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function capitalize(str) {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function classDisplayName(className) {
+    var names = {
+        rogue: 'Rogue', sorcerer: 'Sorcerer', ranger: 'Ranger',
+        wizard: 'Wizard', paladin: 'Paladin', druid: 'Druid',
+        fighter: 'Fighter', warlock: 'Warlock'
     };
-    if (saved) {
-        try {
-            const parsed = JSON.parse(saved);
-            // Merge with defaults to ensure new fields exist
-            for (const key of Object.keys(defaults)) {
-                if (!(key in parsed)) {
-                    parsed[key] = defaults[key];
-                }
-            }
-            return parsed;
-        } catch (e) { /* fall through to default */ }
-    }
-    return defaults;
+    return names[className] || capitalize(className);
 }
 
-function saveState(charId, state) {
-    const key = `ashvane_${charId}`;
-    localStorage.setItem(key, JSON.stringify(state));
-}
-
-function getMod(score) {
-    return Math.floor((score - 10) / 2);
-}
-
-function getProfBonus(level) {
-    return DATA.profBonus[level] || 2;
-}
-
-function getAbilityScore(config, state, ability) {
-    // Check for manual override first
-    if (state.customAbilities && state.customAbilities[ability] !== undefined && state.customAbilities[ability] !== null) {
-        return state.customAbilities[ability];
-    }
-    let score = config.baseAbilities[ability] || 10;
-    // Add ASI bonuses from all levels up to current
-    for (let lvl = 1; lvl <= state.level; lvl++) {
-        const choice = state.asiChoices[lvl];
-        if (!choice) continue;
-        if (choice.type === 'asi' && choice.abilities) {
-            score += (choice.abilities[ability] || 0);
-        }
-        if (choice.type === 'feat' && choice.feat) {
-            const feat = DATA.feats.find(f => f.name === choice.feat);
-            if (feat && feat.abilityBonus && feat.abilityBonus[ability]) {
-                score += feat.abilityBonus[ability];
-            }
-        }
-    }
-    return score;
-}
-
-// Get the calculated (non-override) score for tooltip breakdown
-function getCalculatedAbilityScore(config, state, ability) {
-    let score = config.baseAbilities[ability] || 10;
-    for (let lvl = 1; lvl <= state.level; lvl++) {
-        const choice = state.asiChoices[lvl];
-        if (!choice) continue;
-        if (choice.type === 'asi' && choice.abilities) {
-            score += (choice.abilities[ability] || 0);
-        }
-        if (choice.type === 'feat' && choice.feat) {
-            const feat = DATA.feats.find(f => f.name === choice.feat);
-            if (feat && feat.abilityBonus && feat.abilityBonus[ability]) {
-                score += feat.abilityBonus[ability];
-            }
-        }
-    }
-    return score;
-}
-
-function getAbilityBreakdown(config, state, ability) {
-    const base = config.baseAbilities[ability] || 10;
-    // Determine racial bonus based on Half-Elf rules
-    // Half-Elf: +2 CHA, then the two +1s are already baked into baseAbilities
-    // For display purposes, we show the standard array value vs what's in base
-    // The baseAbilities already include racial bonuses, so we need to deduce them
-    // Standard array: 15, 14, 13, 12, 10, 8
-    // Half-Elf racial: +2 CHA, +1 to two others (DEX and CON for both characters)
-    const standardArray = [15, 14, 13, 12, 10, 8];
-
-    // Determine which standard array value was assigned to this ability
-    let racialBonus = 0;
-    let baseWithoutRacial = base;
-
-    // For Ren: STR 10, DEX 16(15+1), CON 14(13+1), INT 14, WIS 12, CHA 10(8+2)
-    // For Saya: STR 8, DEX 15(14+1), CON 14(13+1), INT 12, WIS 10, CHA 17(15+2)
-    if (config.name === "Ren Ashvane") {
-        const racials = { str: 0, dex: 1, con: 1, int: 0, wis: 0, cha: 2 };
-        racialBonus = racials[ability] || 0;
-    } else if (config.name === "Saya Ashvane") {
-        const racials = { str: 0, dex: 1, con: 1, int: 0, wis: 0, cha: 2 };
-        racialBonus = racials[ability] || 0;
-    }
-    baseWithoutRacial = base - racialBonus;
-
-    // ASI bonuses
-    let asiTotal = 0;
-    let asiDetails = [];
-    for (let lvl = 1; lvl <= state.level; lvl++) {
-        const choice = state.asiChoices[lvl];
-        if (!choice) continue;
-        if (choice.type === 'asi' && choice.abilities && choice.abilities[ability]) {
-            asiTotal += choice.abilities[ability];
-            asiDetails.push(`Level ${lvl} ASI: +${choice.abilities[ability]}`);
-        }
-        if (choice.type === 'feat' && choice.feat) {
-            const feat = DATA.feats.find(f => f.name === choice.feat);
-            if (feat && feat.abilityBonus && feat.abilityBonus[ability]) {
-                asiTotal += feat.abilityBonus[ability];
-                asiDetails.push(`${choice.feat}: +${feat.abilityBonus[ability]}`);
-            }
-        }
-    }
-
-    const total = baseWithoutRacial + racialBonus + asiTotal;
-
-    return {
-        baseArray: baseWithoutRacial,
-        racialBonus,
-        asiTotal,
-        asiDetails,
-        total
+function subclassDisplayName(subclass) {
+    var names = {
+        scout: 'Scout', wildMagic: 'Wild Magic', thief: 'Thief',
+        hunter: 'Hunter', evocation: 'Evocation', devotion: 'Devotion',
+        land: 'Land', champion: 'Champion', fiend: 'Fiend'
     };
+    return names[subclass] || capitalize(subclass);
 }
 
-function getAllAbilityScores(config, state) {
-    const abilities = {};
-    for (const ab of ['str', 'dex', 'con', 'int', 'wis', 'cha']) {
-        abilities[ab] = getAbilityScore(config, state, ab);
-    }
-    return abilities;
+function raceDisplayName(race) {
+    var names = {
+        woodElf: 'Wood Elf', halfElf: 'Half-Elf', human: 'Human',
+        halfling: 'Halfling', tiefling: 'Tiefling', aasimar: 'Aasimar'
+    };
+    return names[race] || capitalize(race);
 }
 
-function getHP(config, state) {
-    const conScore = getAbilityScore(config, state, 'con');
-    const conMod = getMod(conScore);
-    const classData = DATA[config.className];
-    const hitDie = classData ? classData.hitDie : (config.className === 'rogue' ? 8 : 6);
-    // Level 1: max hit die + CON mod
-    let hp = hitDie + conMod;
-    // Each additional level: average (hitDie/2 + 1) + CON mod
-    for (let i = 2; i <= state.level; i++) {
-        hp += Math.floor(hitDie / 2) + 1 + conMod;
-    }
-    return Math.max(hp, 1);
+function hasSpellcasting(className) {
+    return ['sorcerer', 'wizard', 'druid', 'ranger', 'paladin', 'warlock'].indexOf(className) !== -1;
 }
 
-function getAC(config, state) {
-    const dexMod = getMod(getAbilityScore(config, state, 'dex'));
-    if (config.className === 'rogue') {
-        // Studded leather: 12 + DEX mod
-        return 12 + dexMod;
+function getCharacterIds() {
+    return ['ren', 'saya', 'ranger', 'wizard', 'paladin', 'druid', 'fighter', 'warlock'];
+}
+
+// ============================================================
+// Section 8: Main Render Function (Router)
+// ============================================================
+
+function renderApp() {
+    var user = currentUser();
+    var route = getRoute();
+
+    if (!user && route.path !== '/login') {
+        navigate('/login');
+        return;
     }
-    if (config.className === 'sorcerer') {
-        // Mage Armor prepared? 13 + DEX, otherwise 10 + DEX
-        if (state.prepared && state.prepared.includes('Mage Armor')) {
-            return 13 + dexMod;
+
+    // Set accent color for current context
+    if (route.parts[0] === 'characters' && route.parts[1]) {
+        var cfg = loadCharConfig(route.parts[1]);
+        if (cfg) document.documentElement.style.setProperty('--accent', cfg.accentColor);
+    } else {
+        document.documentElement.style.setProperty('--accent', '#22d3ee');
+    }
+
+    var app = document.getElementById('app');
+    var html = '';
+
+    if (route.path === '/login' || !user) {
+        html = renderLogin();
+    } else {
+        html = renderNavbar(route) + '<main class="main-content">';
+
+        if (route.path === '/' || route.path === '/dashboard') {
+            html += renderDashboard();
+        } else if (route.path === '/characters') {
+            html += renderCharacterList();
+        } else if (route.parts[0] === 'characters' && route.parts[1]) {
+            html += renderCharacterSheet(route.parts[1]);
+        } else if (route.path === '/maps') {
+            html += renderMaps();
+        } else if (route.path === '/timeline') {
+            html += renderTimeline();
+        } else if (route.parts[0] === 'lore') {
+            html += renderLore(route.parts[1]);
+        } else if (route.path === '/notes') {
+            html += renderNotes();
+        } else {
+            html += '<div class="page-placeholder"><h2>Pagina niet gevonden</h2><p>De pagina die je zoekt bestaat niet.</p></div>';
         }
-        return 10 + dexMod;
+
+        html += '</main>';
     }
-    return 10 + dexMod;
-}
 
-function getMaxPrepared(state, chaMod) {
-    return Math.max(1, chaMod + state.level);
-}
-
-function getMaxCantrips(level) {
-    return DATA.sorcerer.cantripsKnown[level] || 4;
-}
-
-function formatMod(mod) {
-    return mod >= 0 ? `+${mod}` : `${mod}`;
+    app.innerHTML = html;
+    bindPageEvents(route);
 }
 
 // ============================================================
-// Spell Filter Mode (module-level)
-// ============================================================
-let spellFilter = 'all'; // 'all', 'prepared', or 'favorites'
-
-// ============================================================
-// Edit Mode State (module-level)
-// ============================================================
-let abilityEditMode = false;
-let editAbilities = null; // temp storage during edit
-
-// ============================================================
-// Rendering Functions
+// Section 9: Login Page
 // ============================================================
 
-function renderHeader(config, state) {
-    const el = document.getElementById('char-header-content');
-    if (!el) return;
+function renderLogin() {
+    var html = '<div class="login-page">';
+    html += '<div class="login-container">';
+    html += '<div class="login-logo"><h1>D&D Within</h1><p class="login-subtitle">Valoria Campaign Platform</p></div>';
+    html += '<div class="login-user-grid">';
 
-    const classLabel = config.className.charAt(0).toUpperCase() + config.className.slice(1);
-    const subLabel = config.subclass === 'scout' ? 'Scout'
-        : config.subclass === 'wildMagic' ? 'Wild Magic'
-        : config.subclass;
+    var ids = Object.keys(USERS);
+    for (var i = 0; i < ids.length; i++) {
+        var uid = ids[i];
+        var u = USERS[uid];
+        var icon = u.role === 'dm' ? '&#9876;' : '&#128100;';
+        html += '<button class="login-user-card" data-user-id="' + uid + '">';
+        html += '<span class="login-user-icon">' + icon + '</span>';
+        html += '<span class="login-user-name">' + escapeHtml(u.name) + '</span>';
+        if (u.characterId) {
+            var charCfg = loadCharConfig(u.characterId);
+            if (charCfg) {
+                html += '<span class="login-user-char">' + escapeHtml(charCfg.name) + '</span>';
+            }
+        } else {
+            html += '<span class="login-user-char">Dungeon Master</span>';
+        }
+        html += '</button>';
+    }
 
-    // Pick a random quote
-    const quotes = config.quotes || [];
-    const quoteText = quotes.length > 0 ? quotes[Math.floor(Math.random() * quotes.length)] : '';
-
-    el.innerHTML = `
-        <div class="header-top-row">
-            <div class="portrait-frame" id="portrait-frame">
-                <span class="portrait-placeholder">&#128100;</span>
-            </div>
-            <div class="header-info">
-                <h1>${config.name}</h1>
-                <p class="char-title">${classLabel} &mdash; ${subLabel}</p>
-                <div class="level-control">
-                    <button class="level-btn" data-action="level-down" ${state.level <= 1 ? 'disabled' : ''}>&minus;</button>
-                    <span class="level-display">Level ${state.level}</span>
-                    <button class="level-btn" data-action="level-up" ${state.level >= 20 ? 'disabled' : ''}>&plus;</button>
-                </div>
-            </div>
-            <div class="header-actions" id="options-dropdown">
-                <button class="options-toggle" data-action="toggle-options">&#9881;</button>
-                <div class="options-menu">
-                    <button class="header-btn" data-action="export-char">&#128190; Opslaan</button>
-                    <label class="header-btn">&#128194; Laden<input type="file" accept=".json" data-action="import-char" style="display:none;"></label>
-                    <button class="header-btn header-btn-danger" data-action="reset-char">&#128260; Reset</button>
-                </div>
-            </div>
-        </div>
-        <div class="header-quote-row">
-            <p class="char-quote-dynamic">"${escapeHtml(quoteText)}"</p>
-            <button class="quote-refresh-btn" data-action="refresh-quote" title="Ander citaat">&#8635;</button>
-        </div>
-    `;
+    html += '</div>';
+    html += '<div class="login-pin-area" style="display:none;">';
+    html += '<p class="login-pin-label">Voer je PIN in</p>';
+    html += '<input type="password" class="login-pin-input" maxlength="4" placeholder="****" autocomplete="off">';
+    html += '<div class="login-pin-actions">';
+    html += '<button class="btn btn-primary login-btn" data-action="login-confirm">Inloggen</button>';
+    html += '<button class="btn btn-ghost login-back-btn" data-action="login-back">Terug</button>';
+    html += '</div>';
+    html += '<p class="login-error" style="display:none;"></p>';
+    html += '</div>';
+    html += '</div>';
+    html += '</div>';
+    return html;
 }
 
-function renderAbilityScores(config, state) {
-    const el = document.getElementById('ability-scores-content');
-    if (!el) return;
+// ============================================================
+// Section 10: Navbar
+// ============================================================
 
-    const abilities = getAllAbilityScores(config, state);
-    const primaryAbility = config.className === 'rogue' ? 'dex' : 'cha';
-    const primaryClass = config.className === 'rogue' ? 'ability-primary' : 'ability-primary-saya';
+function renderNavbar(route) {
+    var user = currentUser();
+    var links = [
+        { path: '/dashboard', label: 'Dashboard', icon: '&#9733;' },
+        { path: '/characters', label: 'Characters', icon: '&#9876;' },
+        { path: '/maps', label: 'Maps', icon: '&#9873;' },
+        { path: '/timeline', label: 'Timeline', icon: '&#128337;' },
+        { path: '/lore', label: 'Lore', icon: '&#128214;' },
+        { path: '/notes', label: 'Notes', icon: '&#128221;' }
+    ];
 
-    const abNames = { str: 'STR', dex: 'DEX', con: 'CON', int: 'INT', wis: 'WIS', cha: 'CHA' };
+    var html = '<nav class="navbar">';
+    html += '<a class="navbar-logo" href="#/dashboard">D&D Within</a>';
+    html += '<div class="navbar-links">';
 
-    if (abilityEditMode) {
-        // Edit mode
+    for (var i = 0; i < links.length; i++) {
+        var link = links[i];
+        var isActive = route.path === link.path || (link.path === '/dashboard' && route.path === '/');
+        // Also active on sub-paths
+        if (link.path === '/characters' && route.parts[0] === 'characters') isActive = true;
+        if (link.path === '/lore' && route.parts[0] === 'lore') isActive = true;
+        html += '<a class="navbar-link' + (isActive ? ' active' : '') + '" href="#' + link.path + '">' + link.icon + ' ' + link.label + '</a>';
+    }
+
+    html += '</div>';
+    html += '<div class="navbar-user">';
+    html += '<span class="navbar-username">' + escapeHtml(user ? user.name : '') + '</span>';
+    html += '<button class="btn btn-ghost btn-sm navbar-logout" data-action="logout">Uitloggen</button>';
+    html += '</div>';
+    html += '<button class="navbar-mobile-toggle" data-action="toggle-nav">&#9776;</button>';
+    html += '</nav>';
+    return html;
+}
+
+// ============================================================
+// Section 11: Dashboard
+// ============================================================
+
+function renderDashboard() {
+    var user = currentUser();
+    var html = '<div class="dashboard-page">';
+
+    // Welcome banner
+    html += '<div class="dashboard-banner">';
+    html += '<h1>Welkom in Valoria</h1>';
+    html += '<p>De schaduwen fluisteren, avontuur wacht.</p>';
+    html += '</div>';
+
+    // Quick access for player
+    if (user && user.characterId) {
+        var cfg = loadCharConfig(user.characterId);
+        var state = loadCharState(user.characterId);
+        if (cfg) {
+            html += '<div class="dashboard-quickaccess">';
+            html += '<h2>Jouw Karakter</h2>';
+            html += '<a class="dashboard-mychar-card" href="#/characters/' + user.characterId + '" style="border-color:' + cfg.accentColor + '">';
+            var portrait = loadImage(user.characterId, 'portrait');
+            if (portrait) {
+                html += '<img class="dashboard-mychar-portrait" src="' + portrait + '" alt="">';
+            } else {
+                html += '<div class="dashboard-mychar-portrait placeholder">&#128100;</div>';
+            }
+            html += '<div class="dashboard-mychar-info">';
+            html += '<h3>' + escapeHtml(cfg.name) + '</h3>';
+            html += '<p>' + raceDisplayName(cfg.race) + ' ' + classDisplayName(cfg.className) + ' (Level ' + state.level + ')</p>';
+            html += '</div>';
+            html += '</a>';
+            html += '</div>';
+        }
+    }
+
+    // Party overview
+    html += '<div class="dashboard-party">';
+    html += '<h2>Party Overzicht</h2>';
+    html += '<div class="party-grid">';
+
+    var charIds = getCharacterIds();
+    for (var i = 0; i < charIds.length; i++) {
+        var cid = charIds[i];
+        var ccfg = loadCharConfig(cid);
+        var cstate = loadCharState(cid);
+        if (!ccfg) continue;
+
+        var portrait = loadImage(cid, 'portrait');
+        html += '<a class="party-card" href="#/characters/' + cid + '" style="--card-accent:' + ccfg.accentColor + '">';
+        if (portrait) {
+            html += '<img class="party-card-portrait" src="' + portrait + '" alt="">';
+        } else {
+            html += '<div class="party-card-portrait placeholder">&#128100;</div>';
+        }
+        html += '<div class="party-card-info">';
+        html += '<span class="party-card-name">' + escapeHtml(ccfg.name) + '</span>';
+        html += '<span class="party-card-class">' + classDisplayName(ccfg.className) + ' ' + cstate.level + '</span>';
+        html += '</div>';
+        html += '</a>';
+    }
+
+    html += '</div>';
+    html += '</div>';
+
+    // Campaign info
+    html += '<div class="dashboard-info">';
+    html += '<h2>Campaign: De Slangenmars</h2>';
+    html += '<p>In het hart van Valoria broedt een oud kwaad. De tweeling Ren en Saya Ashvane zoeken antwoorden over het verleden dat hen achtervolgde \u2014 en de toekomst die hen opwacht.</p>';
+    html += '<div class="dashboard-links">';
+    html += '<a class="btn btn-ghost" href="#/lore/valoria">Over Valoria</a>';
+    html += '<a class="btn btn-ghost" href="#/lore/ashvane">De Ashvane Tweeling</a>';
+    html += '<a class="btn btn-ghost" href="#/timeline">Tijdlijn</a>';
+    html += '</div>';
+    html += '</div>';
+
+    html += '</div>';
+    return html;
+}
+
+// ============================================================
+// Section 12: Character List
+// ============================================================
+
+function renderCharacterList() {
+    var html = '<div class="characters-page">';
+    html += '<div class="characters-header"><h1>Characters</h1></div>';
+    html += '<div class="characters-grid">';
+
+    var charIds = getCharacterIds();
+    var user = currentUser();
+
+    for (var i = 0; i < charIds.length; i++) {
+        var cid = charIds[i];
+        var cfg = loadCharConfig(cid);
+        var state = loadCharState(cid);
+        if (!cfg) continue;
+
+        var isOwn = user && user.characterId === cid;
+        var portrait = loadImage(cid, 'portrait');
+        var banner = loadImage(cid, 'banner');
+
+        html += '<a class="char-card' + (isOwn ? ' char-card-own' : '') + '" href="#/characters/' + cid + '" style="--card-accent:' + cfg.accentColor + '">';
+
+        if (banner) {
+            html += '<div class="char-card-banner" style="background-image:url(' + banner + ')"></div>';
+        } else {
+            html += '<div class="char-card-banner" style="background:linear-gradient(135deg, ' + cfg.accentColor + '33, transparent)"></div>';
+        }
+
+        html += '<div class="char-card-body">';
+        if (portrait) {
+            html += '<img class="char-card-portrait" src="' + portrait + '" alt="">';
+        } else {
+            html += '<div class="char-card-portrait placeholder">&#128100;</div>';
+        }
+        html += '<h3 class="char-card-name">' + escapeHtml(cfg.name) + '</h3>';
+        html += '<p class="char-card-details">' + raceDisplayName(cfg.race) + ' ' + classDisplayName(cfg.className) + '</p>';
+        html += '<p class="char-card-level">Level ' + state.level + '</p>';
+        if (isOwn) html += '<span class="char-card-badge">Jouw karakter</span>';
+        html += '</div>';
+        html += '</a>';
+    }
+
+    html += '</div>';
+    html += '</div>';
+    return html;
+}
+
+// ============================================================
+// Section 13: Character Sheet
+// ============================================================
+
+function renderCharacterSheet(charId) {
+    var config = loadCharConfig(charId);
+    if (!config) {
+        return '<div class="page-placeholder"><h2>Karakter niet gevonden</h2></div>';
+    }
+
+    var state = loadCharState(charId);
+    var editable = canEdit(charId);
+
+    var classLabel = classDisplayName(config.className);
+    var subLabel = subclassDisplayName(config.subclass);
+    var raceLabel = raceDisplayName(config.race);
+
+    // Banner
+    var banner = loadImage(charId, 'banner');
+    var portrait = loadImage(charId, 'portrait');
+
+    var html = '<div class="charsheet" data-char-id="' + charId + '">';
+
+    // Banner section
+    html += '<div class="charsheet-banner"' + (banner ? ' style="background-image:url(' + banner + ')"' : '') + '>';
+    if (editable) {
+        html += '<label class="banner-upload-btn" title="Banner uploaden"><input type="file" accept="image/*" data-action="upload-banner" style="display:none">&#128247;</label>';
+    }
+    html += '</div>';
+
+    // Header with portrait
+    html += '<div class="charsheet-header">';
+    html += '<div class="charsheet-portrait-wrap">';
+    if (portrait) {
+        html += '<img class="charsheet-portrait" src="' + portrait + '" alt="">';
+    } else {
+        html += '<div class="charsheet-portrait placeholder">&#128100;</div>';
+    }
+    if (editable) {
+        html += '<label class="portrait-upload-btn" title="Portret uploaden"><input type="file" accept="image/*" data-action="upload-portrait" style="display:none">&#128247;</label>';
+    }
+    html += '</div>';
+
+    html += '<div class="charsheet-info">';
+    html += '<h1 class="charsheet-name">' + escapeHtml(config.name) + '</h1>';
+    html += '<p class="charsheet-subtitle">';
+    html += '<span class="info-item" data-tip="' + escapeAttr(raceLabel) + '"><span class="value">' + raceLabel + '</span></span>';
+    html += ' &mdash; ';
+    html += '<span class="info-item" data-tip="' + escapeAttr(classLabel) + '"><span class="value">' + classLabel + '</span></span>';
+    html += ' &mdash; ';
+    html += '<span class="info-item" data-tip="' + escapeAttr(subLabel) + '"><span class="value">' + subLabel + '</span></span>';
+    html += '</p>';
+
+    // Level control
+    if (editable) {
+        html += '<div class="level-control">';
+        html += '<button class="level-btn" data-action="level-down"' + (state.level <= 1 ? ' disabled' : '') + '>&minus;</button>';
+        html += '<span class="level-display">Level ' + state.level + '</span>';
+        html += '<button class="level-btn" data-action="level-up"' + (state.level >= 20 ? ' disabled' : '') + '>&plus;</button>';
+        html += '</div>';
+    } else {
+        html += '<div class="level-control"><span class="level-display">Level ' + state.level + '</span></div>';
+    }
+
+    html += '</div>';
+
+    // Header actions
+    if (editable) {
+        html += '<div class="charsheet-actions" id="options-dropdown">';
+        html += '<button class="options-toggle" data-action="toggle-options">&#9881;</button>';
+        html += '<div class="options-menu">';
+        html += '<button class="header-btn" data-action="export-char">&#128190; Opslaan</button>';
+        html += '<label class="header-btn">&#128194; Laden<input type="file" accept=".json" data-action="import-char" style="display:none"></label>';
+        html += '<button class="header-btn header-btn-danger" data-action="reset-char">&#128260; Reset</button>';
+        html += '</div>';
+        html += '</div>';
+    }
+
+    html += '</div>';
+
+    // Quote
+    var quotes = config.quotes || [];
+    if (quotes.length > 0) {
+        var quoteText = quotes[Math.floor(Math.random() * quotes.length)];
+        html += '<div class="charsheet-quote">';
+        html += '<p class="char-quote-dynamic">&ldquo;' + escapeHtml(quoteText) + '&rdquo;</p>';
+        html += '<button class="quote-refresh-btn" data-action="refresh-quote" title="Ander citaat">&#8635;</button>';
+        html += '</div>';
+    }
+
+    // Tab bar
+    var tabs = [
+        { id: 'overview', label: 'Overzicht' },
+        { id: 'stats', label: 'Stats' },
+        { id: 'combat', label: 'Combat' }
+    ];
+    if (hasSpellcasting(config.className)) {
+        tabs.push({ id: 'spells', label: 'Spells' });
+    }
+    tabs.push({ id: 'story', label: 'Verhaal' });
+    tabs.push({ id: 'inventory', label: 'Inventaris' });
+
+    html += '<div class="charsheet-tabs">';
+    for (var t = 0; t < tabs.length; t++) {
+        html += '<button class="charsheet-tab' + (activeTab === tabs[t].id ? ' active' : '') + '" data-tab="' + tabs[t].id + '">' + tabs[t].label + '</button>';
+    }
+    html += '</div>';
+
+    // Tab content
+    html += '<div class="charsheet-tab-content">';
+
+    if (activeTab === 'overview') {
+        html += renderTabOverview(charId, config, state);
+    } else if (activeTab === 'stats') {
+        html += renderTabStats(charId, config, state);
+    } else if (activeTab === 'combat') {
+        html += renderTabCombat(charId, config, state);
+    } else if (activeTab === 'spells') {
+        html += renderTabSpells(charId, config, state);
+    } else if (activeTab === 'story') {
+        html += renderTabStory(charId, config, state);
+    } else if (activeTab === 'inventory') {
+        html += renderTabInventory(charId, config, state);
+    }
+
+    html += '</div>';
+    html += '</div>';
+    return html;
+}
+
+// ============================================================
+// Section 14: Tab — Overview
+// ============================================================
+
+function renderTabOverview(charId, config, state) {
+    var html = '<div class="tab-overview">';
+
+    // Quick stats row
+    var hp = getHP(config, state);
+    var ac = getAC(config, state);
+    var profBonus = getProfBonus(state.level);
+    var dexMod = getMod(getAbilityScore(config, state, 'dex'));
+
+    html += '<div class="overview-stats">';
+    html += '<div class="overview-stat"><span class="stat-value">' + hp + '</span><span class="stat-label">HP</span></div>';
+    html += '<div class="overview-stat"><span class="stat-value">' + ac + '</span><span class="stat-label">AC</span></div>';
+    html += '<div class="overview-stat"><span class="stat-value">' + formatMod(dexMod) + '</span><span class="stat-label">Initiative</span></div>';
+    html += '<div class="overview-stat"><span class="stat-value">+' + profBonus + '</span><span class="stat-label">Prof. Bonus</span></div>';
+    html += '</div>';
+
+    // Info grid
+    html += '<div class="overview-info-grid">';
+    html += '<div class="info-item" data-tip="' + escapeAttr(raceDisplayName(config.race)) + '"><span class="label">Ras</span><span class="value">' + raceDisplayName(config.race) + '</span></div>';
+    html += '<div class="info-item" data-tip="' + escapeAttr(classDisplayName(config.className)) + '"><span class="label">Klasse</span><span class="value">' + classDisplayName(config.className) + '</span></div>';
+    html += '<div class="info-item" data-tip="' + escapeAttr(subclassDisplayName(config.subclass)) + '"><span class="label">Subklasse</span><span class="value">' + subclassDisplayName(config.subclass) + '</span></div>';
+    html += '<div class="info-item" data-tip="' + escapeAttr(config.background || '') + '"><span class="label">Achtergrond</span><span class="value">' + escapeHtml(config.background || '-') + '</span></div>';
+    html += '<div class="info-item" data-tip="' + escapeAttr(config.alignment || '') + '"><span class="label">Alignment</span><span class="value">' + escapeHtml(config.alignment || '-') + '</span></div>';
+    html += '<div class="info-item"><span class="label">Leeftijd</span><span class="value">' + (config.age || '-') + '</span></div>';
+    html += '</div>';
+
+    // Appearance
+    if (config.appearance && (config.appearance[0] || config.appearance[1])) {
+        html += '<div class="overview-appearance">';
+        html += '<h3>Uiterlijk</h3>';
+        var appearImg = loadImage(charId, 'appearance');
+        if (appearImg) {
+            html += '<img class="appearance-img" src="' + appearImg + '" alt="">';
+        }
+        if (config.appearance[0]) html += '<p>' + escapeHtml(config.appearance[0]) + '</p>';
+        if (config.appearance[1]) html += '<p>' + escapeHtml(config.appearance[1]) + '</p>';
+        if (canEdit(charId)) {
+            html += '<label class="btn btn-ghost btn-sm appearance-upload-btn">&#128247; Afbeelding<input type="file" accept="image/*" data-action="upload-appearance" style="display:none"></label>';
+        }
+        html += '</div>';
+    }
+
+    // Features summary
+    html += renderFeaturesSummary(config, state);
+
+    html += '</div>';
+    return html;
+}
+
+function renderFeaturesSummary(config, state) {
+    var classData = DATA[config.className];
+    if (!classData) return '';
+
+    var html = '<div class="overview-features">';
+    html += '<h3>Class Features</h3>';
+
+    for (var lvl = 1; lvl <= state.level; lvl++) {
+        var features = classData.features ? (classData.features[lvl] || []) : [];
+        for (var f = 0; f < features.length; f++) {
+            var feat = features[f];
+            var isNew = (lvl === state.level);
+            html += '<div class="feature-card' + (isNew ? ' new-feature' : '') + '">';
+            html += '<h4>' + escapeHtml(feat.name) + (lvl > 1 ? ' <span class="feature-level">(Level ' + lvl + ')</span>' : '') + '</h4>';
+            html += '<p>' + escapeHtml(feat.desc) + '</p>';
+            html += '</div>';
+        }
+    }
+
+    // Subclass features
+    var subData = classData.subclasses && classData.subclasses[config.subclass];
+    if (subData) {
+        html += '<h3 style="margin-top:1rem;">Subclass Features</h3>';
+        for (var lvl2 = 1; lvl2 <= state.level; lvl2++) {
+            var subFeatures = subData.features ? (subData.features[lvl2] || []) : [];
+            for (var sf = 0; sf < subFeatures.length; sf++) {
+                var sfeat = subFeatures[sf];
+                var isNew2 = (lvl2 === state.level);
+                html += '<div class="feature-card' + (isNew2 ? ' new-feature' : '') + '">';
+                html += '<h4>' + escapeHtml(sfeat.name) + ' <span class="feature-level">(Level ' + lvl2 + ')</span></h4>';
+                html += '<p>' + escapeHtml(sfeat.desc) + '</p>';
+                html += '</div>';
+            }
+        }
+    }
+
+    // Racial features
+    var raceKey = config.race;
+    var raceData = DATA[raceKey];
+    if (raceData && raceData.features) {
+        html += '<h3 style="margin-top:1rem;">Racial Traits (' + raceDisplayName(config.race) + ')</h3>';
+        for (var rf = 0; rf < raceData.features.length; rf++) {
+            var rfeat = raceData.features[rf];
+            html += '<div class="feature-card">';
+            html += '<h4>' + escapeHtml(rfeat.name) + '</h4>';
+            html += '<p>' + escapeHtml(rfeat.desc) + '</p>';
+            html += '</div>';
+        }
+    }
+
+    html += '</div>';
+    return html;
+}
+
+// ============================================================
+// Section 15: Tab — Stats
+// ============================================================
+
+function renderTabStats(charId, config, state) {
+    var html = '<div class="tab-stats">';
+
+    // Ability Scores
+    html += '<div class="stats-section">';
+    html += '<h3>Ability Scores</h3>';
+    html += renderAbilityScoresHTML(charId, config, state);
+    html += '</div>';
+
+    // Saving Throws
+    html += '<div class="stats-section">';
+    html += '<h3>Saving Throws</h3>';
+    html += renderSavingThrowsHTML(config, state);
+    html += '</div>';
+
+    // Skills
+    html += '<div class="stats-section">';
+    html += '<h3>Skills</h3>';
+    html += renderSkillsHTML(config, state);
+    html += '</div>';
+
+    // ASI
+    html += '<div class="stats-section" id="asi-content">';
+    html += '<h3>Ability Score Improvements</h3>';
+    html += renderASIHTML(charId, config, state);
+    html += '</div>';
+
+    html += '</div>';
+    return html;
+}
+
+function renderAbilityScoresHTML(charId, config, state) {
+    var abilities = getAllAbilityScores(config, state);
+    var classData = DATA[config.className];
+    // Determine primary ability
+    var primaryAbility = 'str';
+    if (config.className === 'rogue' || config.className === 'ranger') primaryAbility = 'dex';
+    else if (config.className === 'sorcerer' || config.className === 'warlock' || config.className === 'paladin') primaryAbility = 'cha';
+    else if (config.className === 'wizard') primaryAbility = 'int';
+    else if (config.className === 'druid') primaryAbility = 'wis';
+    else if (config.className === 'fighter') primaryAbility = 'str';
+
+    var abNames = { str: 'STR', dex: 'DEX', con: 'CON', int: 'INT', wis: 'WIS', cha: 'CHA' };
+    var editable = canEdit(charId);
+    var html = '';
+
+    if (abilityEditMode && editable) {
         if (!editAbilities) {
             editAbilities = {};
-            for (const ab of Object.keys(abNames)) {
-                editAbilities[ab] = abilities[ab];
+            var abs = Object.keys(abNames);
+            for (var i = 0; i < abs.length; i++) {
+                editAbilities[abs[i]] = abilities[abs[i]];
             }
         }
-        el.innerHTML = `
-            <div class="ability-scores edit-mode-active">
-                ${Object.entries(abNames).map(([key, label]) => {
-                    const score = editAbilities[key];
-                    const mod = getMod(score);
-                    const highlight = key === primaryAbility ? ` ${primaryClass}` : '';
-                    return `
-                        <div class="ability edit-mode${highlight}">
-                            <span class="ability-name">${label}</span>
-                            <button class="ability-adj" data-ab="${key}" data-dir="up">&#9650;</button>
-                            <span class="ability-score">${score}</span>
-                            <button class="ability-adj" data-ab="${key}" data-dir="down">&#9660;</button>
-                            <span class="ability-mod">${formatMod(mod)}</span>
-                        </div>`;
-                }).join('')}
-            </div>
-            <div class="ability-edit-actions">
-                <button class="ability-edit-btn" data-action="ability-save">Opslaan</button>
-                <button class="ability-edit-btn ability-edit-cancel" data-action="ability-cancel">Annuleren</button>
-            </div>
-        `;
+        html += '<div class="ability-scores edit-mode-active">';
+        var keys = Object.keys(abNames);
+        for (var k = 0; k < keys.length; k++) {
+            var key = keys[k];
+            var label = abNames[key];
+            var score = editAbilities[key];
+            var mod = getMod(score);
+            var highlight = key === primaryAbility ? ' ability-primary' : '';
+            html += '<div class="ability edit-mode' + highlight + '">';
+            html += '<span class="ability-name">' + label + '</span>';
+            html += '<button class="ability-adj" data-ab="' + key + '" data-dir="up">&#9650;</button>';
+            html += '<span class="ability-score">' + score + '</span>';
+            html += '<button class="ability-adj" data-ab="' + key + '" data-dir="down">&#9660;</button>';
+            html += '<span class="ability-mod">' + formatMod(mod) + '</span>';
+            html += '</div>';
+        }
+        html += '</div>';
+        html += '<div class="ability-edit-actions">';
+        html += '<button class="ability-edit-btn" data-action="ability-save">Opslaan</button>';
+        html += '<button class="ability-edit-btn ability-edit-cancel" data-action="ability-cancel">Annuleren</button>';
+        html += '</div>';
     } else {
-        el.innerHTML = `
-            <div class="ability-edit-header">
-                <button class="edit-toggle-btn" data-action="ability-edit" title="Bewerken">&#9998;</button>
-            </div>
-            <div class="ability-scores">
-                ${Object.entries(abNames).map(([key, label]) => {
-                    const score = abilities[key];
-                    const mod = getMod(score);
-                    const highlight = key === primaryAbility ? ` ${primaryClass}` : '';
-                    return `
-                        <div class="ability${highlight}" data-ability="${key}">
-                            <span class="ability-name">${label}</span>
-                            <span class="ability-score">${score}</span>
-                            <span class="ability-mod">${formatMod(mod)}</span>
-                        </div>`;
-                }).join('')}
-            </div>
-        `;
+        if (editable) {
+            html += '<div class="ability-edit-header"><button class="edit-toggle-btn" data-action="ability-edit" title="Bewerken">&#9998;</button></div>';
+        }
+        html += '<div class="ability-scores">';
+        var keys2 = Object.keys(abNames);
+        for (var k2 = 0; k2 < keys2.length; k2++) {
+            var key2 = keys2[k2];
+            var label2 = abNames[key2];
+            var score2 = abilities[key2];
+            var mod2 = getMod(score2);
+            var highlight2 = key2 === primaryAbility ? ' ability-primary' : '';
+            html += '<div class="ability' + highlight2 + '" data-ability="' + key2 + '">';
+            html += '<span class="ability-name">' + label2 + '</span>';
+            html += '<span class="ability-score">' + score2 + '</span>';
+            html += '<span class="ability-mod">' + formatMod(mod2) + '</span>';
+            html += '</div>';
+        }
+        html += '</div>';
     }
+
+    return html;
 }
 
-function renderCombatStats(config, state) {
-    const el = document.getElementById('combat-stats-content');
-    if (!el) return;
+function renderSavingThrowsHTML(config, state) {
+    var classData = DATA[config.className];
+    var profSaves = classData ? classData.savingThrows : [];
+    var profBonus = getProfBonus(state.level);
+    var abNames = { str: 'STR', dex: 'DEX', con: 'CON', int: 'INT', wis: 'WIS', cha: 'CHA' };
 
-    const hp = getHP(config, state);
-    const ac = getAC(config, state);
-    const dexMod = getMod(getAbilityScore(config, state, 'dex'));
-    const profBonus = getProfBonus(state.level);
-    const hitDie = config.className === 'rogue' ? 'd8' : 'd6';
-
-    el.innerHTML = `
-        <div class="combat-stats">
-            <div class="combat-stat">
-                <span class="stat-value">${hp}</span>
-                <span class="stat-label">HP</span>
-            </div>
-            <div class="combat-stat">
-                <span class="stat-value">${ac}</span>
-                <span class="stat-label">AC</span>
-            </div>
-            <div class="combat-stat">
-                <span class="stat-value">30ft</span>
-                <span class="stat-label">Speed</span>
-            </div>
-            <div class="combat-stat">
-                <span class="stat-value">${formatMod(dexMod)}</span>
-                <span class="stat-label">Initiative</span>
-            </div>
-            <div class="combat-stat">
-                <span class="stat-value">+${profBonus}</span>
-                <span class="stat-label">Prof.</span>
-            </div>
-            <div class="combat-stat">
-                <span class="stat-value">${state.level}${hitDie}</span>
-                <span class="stat-label">Hit Dice</span>
-            </div>
-        </div>
-    `;
+    var html = '<div class="saves-list">';
+    var keys = Object.keys(abNames);
+    for (var i = 0; i < keys.length; i++) {
+        var key = keys[i];
+        var label = abNames[key];
+        var mod = getMod(getAbilityScore(config, state, key));
+        var isProf = profSaves.indexOf(key) !== -1;
+        var total = isProf ? mod + profBonus : mod;
+        html += '<div class="save' + (isProf ? ' prof' : '') + '"><span>' + label + '</span><span>' + formatMod(total) + '</span></div>';
+    }
+    html += '</div>';
+    return html;
 }
 
-function renderSavingThrows(config, state) {
-    const el = document.getElementById('saving-throws-content');
-    if (!el) return;
+function renderSkillsHTML(config, state) {
+    var profBonus = getProfBonus(state.level);
+    var abilities = getAllAbilityScores(config, state);
 
-    const profSaves = config.className === 'rogue'
-        ? ['dex', 'int']
-        : ['con', 'cha'];
+    var html = '<div class="skills-list">';
+    var skills = DATA.skills || [];
+    for (var i = 0; i < skills.length; i++) {
+        var skill = skills[i];
+        var abilityMod = getMod(abilities[skill.ability]);
+        var skillNameLower = skill.name.toLowerCase();
+        var isExpertise = state.expertise.indexOf(skillNameLower) !== -1;
+        var isProf = state.skills.indexOf(skillNameLower) !== -1;
 
-    const profBonus = getProfBonus(state.level);
-    const abNames = { str: 'STR', dex: 'DEX', con: 'CON', int: 'INT', wis: 'WIS', cha: 'CHA' };
-
-    el.innerHTML = `
-        <div class="saves-list">
-            ${Object.entries(abNames).map(([key, label]) => {
-                const mod = getMod(getAbilityScore(config, state, key));
-                const isProf = profSaves.includes(key);
-                const total = isProf ? mod + profBonus : mod;
-                return `<div class="save${isProf ? ' prof' : ''}"><span>${label}</span><span>${formatMod(total)}</span></div>`;
-            }).join('')}
-        </div>
-    `;
-}
-
-function renderSkills(config, state) {
-    const el = document.getElementById('skills-content');
-    if (!el) return;
-
-    const profBonus = getProfBonus(state.level);
-    const abilities = getAllAbilityScores(config, state);
-
-    // Build skills list from DATA.skills
-    const skillRows = DATA.skills.map(skill => {
-        const abilityMod = getMod(abilities[skill.ability]);
-        const skillNameLower = skill.name.toLowerCase();
-        const isExpertise = state.expertise.includes(skillNameLower);
-        const isProf = state.skills.includes(skillNameLower);
-
-        let total = abilityMod;
-        let cssClass = 'skill';
+        var total = abilityMod;
+        var cssClass = 'skill';
         if (isExpertise) {
             total += profBonus * 2;
             cssClass += ' expertise';
@@ -494,275 +1105,376 @@ function renderSkills(config, state) {
             cssClass += ' prof';
         }
 
-        return `<div class="${cssClass}"><span>${skill.name} <span class="skill-ability">(${skill.ability.toUpperCase()})</span></span><span>${formatMod(total)}</span></div>`;
-    });
+        html += '<div class="' + cssClass + '"><span>' + escapeHtml(skill.name) + ' <span class="skill-ability">(' + skill.ability.toUpperCase() + ')</span></span><span>' + formatMod(total) + '</span></div>';
+    }
+    html += '</div>';
 
-    el.innerHTML = `
-        <div class="skills-list">
-            ${skillRows.join('')}
-        </div>
-        ${state.expertise.length > 0 ? '<p class="block-note" style="margin-top: 0.75rem;">&#9733; = Expertise (dubbele proficiency)</p>' : ''}
-    `;
+    if (state.expertise && state.expertise.length > 0) {
+        html += '<p class="block-note" style="margin-top:0.75rem;">&#9733; = Expertise (dubbele proficiency)</p>';
+    }
+
+    return html;
 }
 
-function renderWeapons(config, state) {
-    const el = document.getElementById('weapons-content');
-    if (!el) return;
-    if (config.className !== 'rogue') { el.innerHTML = ''; return; }
+function renderASIHTML(charId, config, state) {
+    var classData = DATA[config.className];
+    var asiLevels = classData ? classData.asiLevels : [4, 8, 12, 16, 19];
+    if (!asiLevels) asiLevels = [4, 8, 12, 16, 19];
 
-    const dexMod = getMod(getAbilityScore(config, state, 'dex'));
-    const strMod = getMod(getAbilityScore(config, state, 'str'));
-    const profBonus = getProfBonus(state.level);
-    const sneakAttack = DATA.rogue.sneakAttack[state.level] || '1d6';
-
-    const rows = config.weapons.map(w => {
-        const attackMod = w.finesse ? Math.max(dexMod, strMod) : strMod;
-        const hitBonus = attackMod + profBonus;
-        const damageMod = w.finesse ? Math.max(dexMod, strMod) : strMod;
-        const dmgStr = damageMod >= 0 ? `${w.dmg}+${damageMod}` : `${w.dmg}${damageMod}`;
-        return `
-            <div class="weapon">
-                <span class="weapon-name">${w.name}</span>
-                <span class="weapon-hit">${formatMod(hitBonus)}</span>
-                <span class="weapon-dmg">${dmgStr} ${w.type}</span>
-            </div>`;
-    });
-
-    el.innerHTML = `
-        <div class="weapons-table">
-            ${rows.join('')}
-        </div>
-        <p class="block-note" style="margin-top: 0.75rem;">+ Sneak Attack: ${sneakAttack} extra damage bij advantage of adjacent ally</p>
-    `;
-}
-
-function renderSpellcasting(config, state) {
-    const el = document.getElementById('spell-section-content');
-    if (!el) return;
-    if (config.className !== 'sorcerer') { el.innerHTML = ''; return; }
-
-    const chaMod = getMod(getAbilityScore(config, state, 'cha'));
-    const profBonus = getProfBonus(state.level);
-    const spellDC = 8 + profBonus + chaMod;
-    const spellAttack = profBonus + chaMod;
-    const sorcPts = DATA.sorcerer.sorceryPoints[state.level] || 0;
-    const maxPrepared = getMaxPrepared(state, chaMod);
-    const maxCantrips = getMaxCantrips(state.level);
-    const maxSpellLevel = DATA.sorcerer.maxSpellLevel[state.level] || 1;
-    const spellSlots = DATA.sorcerer.spellSlots[state.level] || [];
-    const preparedCount = state.prepared.length;
-
-    // Spell stats header
-    let html = `
-        <div class="spell-header">
-            <div class="spell-stat"><span class="label">Save DC</span><span class="value">${spellDC}</span></div>
-            <div class="spell-stat"><span class="label">Attack</span><span class="value">${formatMod(spellAttack)}</span></div>
-            <div class="spell-stat"><span class="label">Sorc Pts</span><span class="value">${sorcPts}</span></div>
-            <div class="spell-stat prepared-counter"><span class="label">Voorbereid</span><span class="value">${preparedCount}/${maxPrepared}</span></div>
-        </div>
-    `;
-
-    // Filter bar (replaces old view toggle)
-    html += `
-        <div class="spell-filter-bar">
-            <button class="filter-btn${spellFilter === 'all' ? ' active' : ''}" data-filter="all">Alle</button>
-            <button class="filter-btn${spellFilter === 'prepared' ? ' active' : ''}" data-filter="prepared">Voorbereid</button>
-            <button class="filter-btn${spellFilter === 'favorites' ? ' active' : ''}" data-filter="favorites">&#9733; Favorieten</button>
-        </div>
-    `;
-
-    const favorites = state.favorites || [];
-
-    // Cantrips (level 0)
-    const cantrips = (DATA.spells.sorcerer[0] || []);
-    html += `<h3 class="spell-level-header">Cantrips <span class="slots">altijd bekend &mdash; ${state.cantrips.length}/${maxCantrips}</span></h3>`;
-    html += `<div class="spell-grid">`;
-    for (const spell of cantrips) {
-        const isSelected = state.cantrips.includes(spell.name);
-        const isFav = favorites.includes(spell.name);
-        if (spellFilter === 'prepared' && !isSelected) continue;
-        if (spellFilter === 'favorites' && !isFav) continue;
-        const cls = isSelected ? 'spell-toggle selected' : 'spell-toggle';
-        const starCls = isFav ? 'spell-star favorited' : 'spell-star';
-        html += `<button class="${cls}" data-spell="${escapeAttr(spell.name)}" data-level="0"><span class="${starCls}" data-spell-star="${escapeAttr(spell.name)}">&#9733;</span> ${escapeHtml(spell.name)}</button>`;
-    }
-    html += `</div>`;
-
-    // Spell levels 1 through maxSpellLevel
-    const levelNames = ['Cantrips', '1st Level', '2nd Level', '3rd Level', '4th Level', '5th Level', '6th Level', '7th Level', '8th Level', '9th Level'];
-
-    for (let lvl = 1; lvl <= maxSpellLevel; lvl++) {
-        const slots = spellSlots[lvl - 1] || 0;
-        const spells = (DATA.spells.sorcerer[lvl] || []);
-
-        html += `<h3 class="spell-level-header">${levelNames[lvl]} <span class="slots">${slots} slots</span></h3>`;
-        html += `<div class="spell-grid">`;
-        for (const spell of spells) {
-            const isPrepared = state.prepared.includes(spell.name);
-            const isFav = favorites.includes(spell.name);
-            if (spellFilter === 'prepared' && !isPrepared) continue;
-            if (spellFilter === 'favorites' && !isFav) continue;
-            const cls = isPrepared ? 'spell-toggle prepared' : 'spell-toggle';
-            const starCls = isFav ? 'spell-star favorited' : 'spell-star';
-            html += `<button class="${cls}" data-spell="${escapeAttr(spell.name)}" data-level="${lvl}"><span class="${starCls}" data-spell-star="${escapeAttr(spell.name)}">&#9733;</span> ${escapeHtml(spell.name)}</button>`;
-        }
-        html += `</div>`;
+    var relevantLevels = [];
+    for (var i = 0; i < asiLevels.length; i++) {
+        if (asiLevels[i] <= state.level) relevantLevels.push(asiLevels[i]);
     }
 
-    // Show locked higher levels hint
-    if (maxSpellLevel < 9) {
-        html += `<p class="block-note" style="margin-top:1rem;opacity:0.5;">Hogere spell levels worden beschikbaar bij hogere levels.</p>`;
+    if (relevantLevels.length === 0) {
+        return '<p class="block-note">Ability Score Improvement beschikbaar op level ' + asiLevels[0] + '.</p>';
     }
 
-    el.innerHTML = html;
-}
+    var html = '';
+    for (var r = 0; r < relevantLevels.length; r++) {
+        var lvl = relevantLevels[r];
+        var choice = state.asiChoices[lvl];
+        html += '<div class="asi-panel" data-asi-level="' + lvl + '">';
+        html += '<h4>Level ' + lvl + ' \u2014 Ability Score Improvement</h4>';
 
-function renderFeatures(config, state) {
-    const el = document.getElementById('features-content');
-    if (!el) return;
-
-    const classData = DATA[config.className];
-    if (!classData) return;
-
-    let html = '';
-
-    // Class features
-    html += '<h3 style="margin-bottom:0.5rem;">Klasse Features</h3>';
-    for (let lvl = 1; lvl <= state.level; lvl++) {
-        const features = classData.features[lvl] || [];
-        for (const feat of features) {
-            const isNew = lvl === state.level;
-            html += `<div class="feature-card${isNew ? ' new-feature' : ''}">
-                <h4>${feat.name}${lvl > 1 ? ` <span class="feature-level">(Level ${lvl})</span>` : ''}</h4>
-                <p>${feat.desc}</p>
-            </div>`;
-        }
-    }
-
-    // Subclass features
-    const subData = classData.subclasses && classData.subclasses[config.subclass];
-    if (subData) {
-        html += '<h3 style="margin:1rem 0 0.5rem;">Subklasse Features</h3>';
-        for (let lvl = 1; lvl <= state.level; lvl++) {
-            const features = subData.features[lvl] || [];
-            for (const feat of features) {
-                const isNew = lvl === state.level;
-                html += `<div class="feature-card${isNew ? ' new-feature' : ''}">
-                    <h4>${feat.name} <span class="feature-level">(Level ${lvl})</span></h4>
-                    <p>${feat.desc}</p>
-                </div>`;
+        if (!choice) {
+            html += '<div class="asi-options">';
+            html += '<button class="asi-option" data-asi-level="' + lvl + '" data-asi-type="asi-two">+2 op 1 ability</button>';
+            html += '<button class="asi-option" data-asi-level="' + lvl + '" data-asi-type="asi-split">+1 op 2 abilities</button>';
+            html += '<button class="asi-option" data-asi-level="' + lvl + '" data-asi-type="feat">Feat kiezen</button>';
+            html += '</div>';
+        } else if (choice.type === 'asi') {
+            var parts = [];
+            var abKeys = Object.keys(choice.abilities || {});
+            for (var a = 0; a < abKeys.length; a++) {
+                if (choice.abilities[abKeys[a]] > 0) {
+                    parts.push(abKeys[a].toUpperCase() + ' +' + choice.abilities[abKeys[a]]);
+                }
+            }
+            html += '<p class="asi-chosen">Gekozen: ' + parts.join(', ') + '</p>';
+            if (canEdit(charId)) {
+                html += '<button class="asi-option asi-reset" data-asi-level="' + lvl + '" data-asi-type="reset">Opnieuw kiezen</button>';
+            }
+        } else if (choice.type === 'feat') {
+            html += '<p class="asi-chosen">Feat: <strong>' + escapeHtml(choice.feat) + '</strong></p>';
+            if (canEdit(charId)) {
+                html += '<button class="asi-option asi-reset" data-asi-level="' + lvl + '" data-asi-type="reset">Opnieuw kiezen</button>';
             }
         }
+        html += '</div>';
     }
-
-    // Racial features (Half-Elf)
-    if (DATA.halfElf && DATA.halfElf.features) {
-        html += '<h3 style="margin:1rem 0 0.5rem;">Raciale Traits (Half-Elf)</h3>';
-        for (const feat of DATA.halfElf.features) {
-            html += `<div class="feature-card">
-                <h4>${feat.name}</h4>
-                <p>${feat.desc}</p>
-            </div>`;
-        }
-    }
-
-    el.innerHTML = html;
+    return html;
 }
 
-function renderMetamagic(config, state) {
-    const el = document.getElementById('metamagic-content');
-    if (!el) return;
-    if (config.className !== 'sorcerer') { el.innerHTML = ''; return; }
-    if (state.level < 2) { el.innerHTML = '<p class="block-note">Metamagic wordt beschikbaar op level 2.</p>'; return; }
+// ============================================================
+// Section 16: Tab — Combat
+// ============================================================
 
-    // Determine max metamagic choices based on level
-    let maxChoices = 0;
+function renderTabCombat(charId, config, state) {
+    var html = '<div class="tab-combat">';
+
+    var hp = getHP(config, state);
+    var ac = getAC(config, state);
+    var dexMod = getMod(getAbilityScore(config, state, 'dex'));
+    var profBonus = getProfBonus(state.level);
+    var classData = DATA[config.className];
+    var hitDie = classData ? 'd' + classData.hitDie : (config.className === 'rogue' ? 'd8' : 'd6');
+    var speed = '30ft';
+    // Check for race speed
+    var raceData = DATA[config.race];
+    if (raceData && raceData.speed) speed = raceData.speed + 'ft';
+
+    // Combat stats grid
+    html += '<div class="combat-stats">';
+    html += '<div class="combat-stat"><span class="stat-value">' + hp + '</span><span class="stat-label">HP</span></div>';
+    html += '<div class="combat-stat"><span class="stat-value">' + ac + '</span><span class="stat-label">AC</span></div>';
+    html += '<div class="combat-stat"><span class="stat-value">' + speed + '</span><span class="stat-label">Speed</span></div>';
+    html += '<div class="combat-stat"><span class="stat-value">' + formatMod(dexMod) + '</span><span class="stat-label">Initiative</span></div>';
+    html += '<div class="combat-stat"><span class="stat-value">+' + profBonus + '</span><span class="stat-label">Prof.</span></div>';
+    html += '<div class="combat-stat"><span class="stat-value">' + state.level + hitDie + '</span><span class="stat-label">Hit Dice</span></div>';
+    html += '</div>';
+
+    // Weapons
+    if (config.weapons && config.weapons.length > 0) {
+        html += '<div class="combat-section">';
+        html += '<h3>Wapens</h3>';
+        html += renderWeaponsHTML(config, state);
+        html += '</div>';
+    }
+
+    // Sneak Attack for rogues
+    if (config.className === 'rogue') {
+        var sneakAttack = (DATA.rogue && DATA.rogue.sneakAttack) ? DATA.rogue.sneakAttack[state.level] || '1d6' : '1d6';
+        html += '<div class="combat-section">';
+        html += '<p class="block-note">Sneak Attack: ' + sneakAttack + ' extra damage bij advantage of adjacent ally</p>';
+        html += '</div>';
+    }
+
+    // Metamagic for sorcerer
+    if (config.className === 'sorcerer') {
+        html += '<div class="combat-section">';
+        html += '<h3>Metamagic</h3>';
+        html += renderMetamagicHTML(charId, config, state);
+        html += '</div>';
+    }
+
+    html += '</div>';
+    return html;
+}
+
+function renderWeaponsHTML(config, state) {
+    var dexMod = getMod(getAbilityScore(config, state, 'dex'));
+    var strMod = getMod(getAbilityScore(config, state, 'str'));
+    var profBonus = getProfBonus(state.level);
+
+    var html = '<div class="weapons-table">';
+    var weapons = config.weapons || [];
+    for (var w = 0; w < weapons.length; w++) {
+        var weapon = weapons[w];
+        var attackMod = weapon.finesse ? Math.max(dexMod, strMod) : strMod;
+        var hitBonus = attackMod + profBonus;
+        var damageMod = weapon.finesse ? Math.max(dexMod, strMod) : strMod;
+        var dmgStr = weapon.dmg;
+        if (weapon.dmg !== '-') {
+            dmgStr = damageMod >= 0 ? weapon.dmg + '+' + damageMod : weapon.dmg + damageMod;
+        }
+        html += '<div class="weapon">';
+        html += '<span class="weapon-name">' + escapeHtml(weapon.name) + '</span>';
+        html += '<span class="weapon-hit">' + formatMod(hitBonus) + '</span>';
+        html += '<span class="weapon-dmg">' + dmgStr + (weapon.type && weapon.type !== '-' ? ' ' + weapon.type : '') + '</span>';
+        html += '</div>';
+    }
+    html += '</div>';
+    return html;
+}
+
+function renderMetamagicHTML(charId, config, state) {
+    if (state.level < 2) return '<p class="block-note">Metamagic wordt beschikbaar op level 2.</p>';
+
+    var maxChoices = 0;
     if (state.level >= 2) maxChoices = 2;
     if (state.level >= 10) maxChoices = 3;
     if (state.level >= 17) maxChoices = 4;
 
-    const allMetamagic = DATA.metamagic || [];
-    const chosen = state.metamagic || [];
-    const canChooseMore = chosen.length < maxChoices;
+    var allMetamagic = DATA.metamagic || [];
+    var chosen = state.metamagic || [];
+    var canChooseMore = chosen.length < maxChoices;
 
-    let html = `<p class="block-note" style="margin-bottom:0.75rem;">Gekozen: ${chosen.length}/${maxChoices}</p>`;
-    html += `<div class="metamagic-grid">`;
-    for (const mm of allMetamagic) {
-        const isChosen = chosen.includes(mm.name);
-        let cls = 'metamagic-option';
+    var html = '<p class="block-note" style="margin-bottom:0.75rem;">Gekozen: ' + chosen.length + '/' + maxChoices + '</p>';
+    html += '<div class="metamagic-grid">';
+    for (var m = 0; m < allMetamagic.length; m++) {
+        var mm = allMetamagic[m];
+        var isChosen = chosen.indexOf(mm.name) !== -1;
+        var cls = 'metamagic-option';
         if (isChosen) cls += ' chosen';
         if (!isChosen && !canChooseMore) cls += ' locked';
-        html += `<button class="${cls}" data-metamagic="${escapeAttr(mm.name)}" title="${escapeAttr(mm.desc || '')}">
-            <strong>${mm.name}</strong>
-            <span class="meta-cost">${mm.cost}</span>
-        </button>`;
+        html += '<button class="' + cls + '" data-metamagic="' + escapeAttr(mm.name) + '" title="' + escapeAttr(mm.desc || '') + '">';
+        html += '<strong>' + escapeHtml(mm.name) + '</strong>';
+        html += '<span class="meta-cost">' + mm.cost + '</span>';
+        html += '</button>';
     }
-    html += `</div>`;
-
-    el.innerHTML = html;
+    html += '</div>';
+    return html;
 }
 
-function renderASI(config, state) {
-    const el = document.getElementById('asi-content');
-    if (!el) return;
+// ============================================================
+// Section 17: Tab — Spells
+// ============================================================
 
-    const classData = DATA[config.className];
-    const asiLevels = classData ? classData.asiLevels : [4, 8, 12, 16, 19];
-    const abilities = getAllAbilityScores(config, state);
-
-    // Only show ASI panels for levels the character has reached
-    const relevantLevels = asiLevels.filter(lvl => lvl <= state.level);
-
-    if (relevantLevels.length === 0) {
-        el.innerHTML = `<p class="block-note">Ability Score Improvement beschikbaar op level ${asiLevels[0]}.</p>`;
-        return;
+function renderTabSpells(charId, config, state) {
+    if (!hasSpellcasting(config.className)) {
+        return '<div class="tab-spells"><p class="block-note">Dit karakter heeft geen spellcasting.</p></div>';
     }
 
-    let html = '';
-    for (const lvl of relevantLevels) {
-        const choice = state.asiChoices[lvl];
-        html += `<div class="asi-panel" data-asi-level="${lvl}">`;
-        html += `<h4>Level ${lvl} — Ability Score Improvement</h4>`;
+    // Currently full spell data only available for sorcerer in data.js
+    // Other classes show a placeholder
+    if (config.className !== 'sorcerer') {
+        return renderTabSpellsGeneric(charId, config, state);
+    }
 
-        if (!choice) {
-            // No choice made yet — show options
-            html += `<div class="asi-options">
-                <button class="asi-option" data-asi-level="${lvl}" data-asi-type="asi-two">+2 op 1 ability</button>
-                <button class="asi-option" data-asi-level="${lvl}" data-asi-type="asi-split">+1 op 2 abilities</button>
-                <button class="asi-option" data-asi-level="${lvl}" data-asi-type="feat">Feat kiezen</button>
-            </div>`;
-        } else if (choice.type === 'asi') {
-            // Show the ASI choice made
-            const parts = Object.entries(choice.abilities || {})
-                .filter(([, v]) => v > 0)
-                .map(([ab, v]) => `${ab.toUpperCase()} +${v}`);
-            html += `<p class="asi-chosen">Gekozen: ${parts.join(', ')}</p>`;
-            html += `<button class="asi-option asi-reset" data-asi-level="${lvl}" data-asi-type="reset">Opnieuw kiezen</button>`;
-        } else if (choice.type === 'feat') {
-            html += `<p class="asi-chosen">Feat: <strong>${choice.feat}</strong></p>`;
-            html += `<button class="asi-option asi-reset" data-asi-level="${lvl}" data-asi-type="reset">Opnieuw kiezen</button>`;
+    return renderTabSpellsSorcerer(charId, config, state);
+}
+
+function renderTabSpellsGeneric(charId, config, state) {
+    var html = '<div class="tab-spells">';
+    html += '<div class="spell-header">';
+    html += '<p class="block-note">Spell management voor ' + classDisplayName(config.className) + ' wordt binnenkort toegevoegd.</p>';
+    html += '</div>';
+
+    // Show known cantrips and prepared spells from state
+    if (state.cantrips && state.cantrips.length > 0) {
+        html += '<h3 class="spell-level-header">Cantrips</h3>';
+        html += '<div class="spell-grid">';
+        for (var i = 0; i < state.cantrips.length; i++) {
+            html += '<span class="spell-toggle selected">' + escapeHtml(state.cantrips[i]) + '</span>';
         }
-
-        html += `</div>`;
+        html += '</div>';
+    }
+    if (state.prepared && state.prepared.length > 0) {
+        html += '<h3 class="spell-level-header">Voorbereide Spells</h3>';
+        html += '<div class="spell-grid">';
+        for (var j = 0; j < state.prepared.length; j++) {
+            html += '<span class="spell-toggle prepared">' + escapeHtml(state.prepared[j]) + '</span>';
+        }
+        html += '</div>';
     }
 
-    el.innerHTML = html;
+    html += '</div>';
+    return html;
+}
+
+function renderTabSpellsSorcerer(charId, config, state) {
+    var chaMod = getMod(getAbilityScore(config, state, 'cha'));
+    var profBonus = getProfBonus(state.level);
+    var spellDC = 8 + profBonus + chaMod;
+    var spellAttack = profBonus + chaMod;
+    var sorcPts = DATA.sorcerer.sorceryPoints[state.level] || 0;
+    var maxPrepared = getMaxPrepared(state, chaMod);
+    var maxCantrips = getMaxCantrips(state.level);
+    var maxSpellLevel = DATA.sorcerer.maxSpellLevel[state.level] || 1;
+    var spellSlots = DATA.sorcerer.spellSlots[state.level] || [];
+    var preparedCount = state.prepared.length;
+
+    var html = '<div class="tab-spells">';
+
+    // Spell stats header
+    html += '<div class="spell-header">';
+    html += '<div class="spell-stat"><span class="label">Save DC</span><span class="value">' + spellDC + '</span></div>';
+    html += '<div class="spell-stat"><span class="label">Attack</span><span class="value">' + formatMod(spellAttack) + '</span></div>';
+    html += '<div class="spell-stat"><span class="label">Sorc Pts</span><span class="value">' + sorcPts + '</span></div>';
+    html += '<div class="spell-stat prepared-counter"><span class="label">Voorbereid</span><span class="value">' + preparedCount + '/' + maxPrepared + '</span></div>';
+    html += '</div>';
+
+    // Filter bar
+    html += '<div class="spell-filter-bar">';
+    html += '<button class="filter-btn' + (spellFilter === 'all' ? ' active' : '') + '" data-filter="all">Alle</button>';
+    html += '<button class="filter-btn' + (spellFilter === 'prepared' ? ' active' : '') + '" data-filter="prepared">Voorbereid</button>';
+    html += '<button class="filter-btn' + (spellFilter === 'favorites' ? ' active' : '') + '" data-filter="favorites">&#9733; Favorieten</button>';
+    html += '</div>';
+
+    var favorites = state.favorites || [];
+
+    // Cantrips (level 0)
+    var cantrips = (DATA.spells && DATA.spells.sorcerer && DATA.spells.sorcerer[0]) ? DATA.spells.sorcerer[0] : [];
+    html += '<h3 class="spell-level-header">Cantrips <span class="slots">altijd bekend &mdash; ' + state.cantrips.length + '/' + maxCantrips + '</span></h3>';
+    html += '<div class="spell-grid">';
+    for (var c = 0; c < cantrips.length; c++) {
+        var spell = cantrips[c];
+        var isSelected = state.cantrips.indexOf(spell.name) !== -1;
+        var isFav = favorites.indexOf(spell.name) !== -1;
+        if (spellFilter === 'prepared' && !isSelected) continue;
+        if (spellFilter === 'favorites' && !isFav) continue;
+        var cls = isSelected ? 'spell-toggle selected' : 'spell-toggle';
+        var starCls = isFav ? 'spell-star favorited' : 'spell-star';
+        html += '<button class="' + cls + '" data-spell="' + escapeAttr(spell.name) + '" data-level="0">';
+        html += '<span class="' + starCls + '" data-spell-star="' + escapeAttr(spell.name) + '">&#9733;</span> ';
+        html += escapeHtml(spell.name) + '</button>';
+    }
+    html += '</div>';
+
+    // Spell levels 1 through maxSpellLevel
+    var levelNames = ['Cantrips', '1st Level', '2nd Level', '3rd Level', '4th Level', '5th Level', '6th Level', '7th Level', '8th Level', '9th Level'];
+
+    for (var lvl = 1; lvl <= maxSpellLevel; lvl++) {
+        var slots = spellSlots[lvl - 1] || 0;
+        var spells = (DATA.spells && DATA.spells.sorcerer && DATA.spells.sorcerer[lvl]) ? DATA.spells.sorcerer[lvl] : [];
+
+        html += '<h3 class="spell-level-header">' + levelNames[lvl] + ' <span class="slots">' + slots + ' slots</span></h3>';
+        html += '<div class="spell-grid">';
+        for (var s = 0; s < spells.length; s++) {
+            var sp = spells[s];
+            var isPrepared = state.prepared.indexOf(sp.name) !== -1;
+            var isFav2 = favorites.indexOf(sp.name) !== -1;
+            if (spellFilter === 'prepared' && !isPrepared) continue;
+            if (spellFilter === 'favorites' && !isFav2) continue;
+            var cls2 = isPrepared ? 'spell-toggle prepared' : 'spell-toggle';
+            var starCls2 = isFav2 ? 'spell-star favorited' : 'spell-star';
+            html += '<button class="' + cls2 + '" data-spell="' + escapeAttr(sp.name) + '" data-level="' + lvl + '">';
+            html += '<span class="' + starCls2 + '" data-spell-star="' + escapeAttr(sp.name) + '">&#9733;</span> ';
+            html += escapeHtml(sp.name) + '</button>';
+        }
+        html += '</div>';
+    }
+
+    if (maxSpellLevel < 9) {
+        html += '<p class="block-note" style="margin-top:1rem;opacity:0.5;">Hogere spell levels worden beschikbaar bij hogere levels.</p>';
+    }
+
+    html += '</div>';
+    return html;
 }
 
 // ============================================================
-// Items System
+// Section 18: Tab — Story
 // ============================================================
 
-function renderItems(config, state) {
-    const el = document.getElementById('items-content');
-    if (!el) return;
+function renderTabStory(charId, config, state) {
+    var html = '<div class="tab-story">';
 
-    const strScore = getAbilityScore(config, state, 'str');
-    const capacity = strScore * 15;
-    const totalWeight = (state.items || []).reduce((sum, item) => sum + (item.weight || 0), 0);
+    // Personality
+    var personality = config.personality || {};
+    if (personality.traits || personality.ideal || personality.bond || personality.flaw || personality.fear) {
+        html += '<div class="story-section">';
+        html += '<h3>Persoonlijkheid</h3>';
+        if (personality.traits) {
+            html += '<div class="story-item"><span class="story-label">Traits</span><p>' + escapeHtml(personality.traits) + '</p></div>';
+        }
+        if (personality.ideal) {
+            html += '<div class="story-item"><span class="story-label">Ideaal</span><p>' + escapeHtml(personality.ideal) + '</p></div>';
+        }
+        if (personality.bond) {
+            html += '<div class="story-item"><span class="story-label">Band</span><p>' + escapeHtml(personality.bond) + '</p></div>';
+        }
+        if (personality.flaw) {
+            html += '<div class="story-item"><span class="story-label">Fout</span><p>' + escapeHtml(personality.flaw) + '</p></div>';
+        }
+        if (personality.fear) {
+            html += '<div class="story-item"><span class="story-label">Angst</span><p>' + escapeHtml(personality.fear) + '</p></div>';
+        }
+        html += '</div>';
+    }
 
-    let encStatus = '';
-    let encClass = '';
+    // Backstory
+    if (config.backstory) {
+        html += '<div class="story-section">';
+        html += '<h3>Backstory</h3>';
+        html += '<p class="story-text">' + escapeHtml(config.backstory) + '</p>';
+        html += '</div>';
+    }
+
+    // Quotes
+    if (config.quotes && config.quotes.length > 0) {
+        html += '<div class="story-section">';
+        html += '<h3>Citaten</h3>';
+        for (var q = 0; q < config.quotes.length; q++) {
+            html += '<blockquote class="story-quote">&ldquo;' + escapeHtml(config.quotes[q]) + '&rdquo;</blockquote>';
+        }
+        html += '</div>';
+    }
+
+    if (!config.backstory && !personality.traits && (!config.quotes || config.quotes.length === 0)) {
+        html += '<p class="block-note">Nog geen verhaal geschreven voor dit karakter.</p>';
+    }
+
+    html += '</div>';
+    return html;
+}
+
+// ============================================================
+// Section 19: Tab — Inventory
+// ============================================================
+
+function renderTabInventory(charId, config, state) {
+    var strScore = getAbilityScore(config, state, 'str');
+    var capacity = strScore * 15;
+    var totalWeight = 0;
+    var items = state.items || [];
+    for (var i = 0; i < items.length; i++) {
+        totalWeight += (items[i].weight || 0);
+    }
+
+    var encStatus = '';
+    var encClass = '';
     if (totalWeight > strScore * 10) {
         encStatus = '&#128308; Overbelast (-20ft speed, disadvantage)';
         encClass = 'enc-heavy';
@@ -774,235 +1486,255 @@ function renderItems(config, state) {
         encClass = 'enc-ok';
     }
 
-    // Build datalist options from DATA.items if available
-    let datalistOptions = '';
+    // Build datalist options from DATA.items
+    var datalistOptions = '';
     if (typeof DATA !== 'undefined' && DATA.items) {
-        for (const category of Object.keys(DATA.items)) {
-            const items = DATA.items[category];
-            if (Array.isArray(items)) {
-                for (const item of items) {
-                    const itemName = typeof item === 'string' ? item : item.name;
-                    const itemWeight = typeof item === 'object' && item.weight !== undefined ? item.weight : '';
-                    datalistOptions += `<option value="${escapeAttr(itemName)}" data-weight="${itemWeight}">`;
+        var categories = Object.keys(DATA.items);
+        for (var ci = 0; ci < categories.length; ci++) {
+            var catItems = DATA.items[categories[ci]];
+            if (Array.isArray(catItems)) {
+                for (var di = 0; di < catItems.length; di++) {
+                    var ditem = catItems[di];
+                    var itemName = typeof ditem === 'string' ? ditem : ditem.name;
+                    var itemWeight = typeof ditem === 'object' && ditem.weight !== undefined ? ditem.weight : '';
+                    datalistOptions += '<option value="' + escapeAttr(itemName) + '" data-weight="' + itemWeight + '">';
                 }
             }
         }
     }
 
-    let html = `
-        <div class="items-header">
-            <span class="weight-total">Gewicht: ${totalWeight.toFixed(2)} / ${capacity} lbs</span>
-            <span class="encumbrance-status ${encClass}">${encStatus}</span>
-            <button class="item-add-btn" data-action="add-item">+ Item toevoegen</button>
-        </div>
-        <div class="item-add-form" style="display:none;">
-            <input type="text" class="item-name-input" placeholder="Item naam..." list="item-suggestions">
-            <datalist id="item-suggestions">${datalistOptions}</datalist>
-            <input type="number" class="item-weight-input" placeholder="Gewicht (lbs)" step="0.25" min="0">
-            <input type="text" class="item-notes-input" placeholder="Notities...">
-            <button class="item-confirm-btn" data-action="confirm-item">&#10003;</button>
-            <button class="item-cancel-btn" data-action="cancel-item">&#10005;</button>
-        </div>
-        <div class="items-grid">
-    `;
+    var editable = canEdit(charId);
+    var html = '<div class="tab-inventory">';
 
-    (state.items || []).forEach((item, idx) => {
-        html += `
-            <div class="item-row">
-                <span class="item-name">${escapeHtml(item.name)}</span>
-                <span class="item-weight">${item.weight} lbs</span>
-                <span class="item-notes">${item.notes ? escapeHtml(item.notes) : '-'}</span>
-                <button class="item-remove" data-item-idx="${idx}">&#10005;</button>
-            </div>`;
-    });
-
-    html += `</div>`;
-    el.innerHTML = html;
-}
-
-// ============================================================
-// ASI Sub-dialogs
-// ============================================================
-
-function showASIAbilityPicker(charId, config, state, level, mode, renderCallback) {
-    const el = document.getElementById('asi-content');
-    if (!el) return;
-
-    const abilities = getAllAbilityScores(config, state);
-    const abNames = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
-    const abLabels = { str: 'STR', dex: 'DEX', con: 'CON', int: 'INT', wis: 'WIS', cha: 'CHA' };
-
-    let selected = {};
-    const maxPoints = mode === 'asi-two' ? 2 : 2; // 2 points total either way
-    const maxPerAbility = mode === 'asi-two' ? 2 : 1;
-
-    function renderPicker() {
-        const totalSpent = Object.values(selected).reduce((s, v) => s + v, 0);
-        let html = `<div class="asi-panel" data-asi-level="${level}">`;
-        html += `<h4>Level ${level} — ${mode === 'asi-two' ? '+2 op 1 ability' : '+1 op 2 abilities'}</h4>`;
-        html += `<p class="block-note">Punten over: ${maxPoints - totalSpent}</p>`;
-        html += `<div class="asi-ability-picker">`;
-        for (const ab of abNames) {
-            const current = abilities[ab];
-            const added = selected[ab] || 0;
-            const canAdd = (current + added) < 20 && added < maxPerAbility && totalSpent < maxPoints;
-            html += `<div class="asi-ability-row">
-                <span>${abLabels[ab]} (${current}${added > 0 ? ' +' + added : ''})</span>
-                <button class="asi-ability-btn" data-ab="${ab}" ${canAdd ? '' : 'disabled'}>+1</button>
-            </div>`;
-        }
-        html += `</div>`;
-        html += `<div style="display:flex;gap:0.5rem;margin-top:0.75rem;">`;
-        html += `<button class="asi-option" data-action="asi-confirm" ${totalSpent === maxPoints ? '' : 'disabled'}>Bevestigen</button>`;
-        html += `<button class="asi-option asi-reset" data-action="asi-cancel">Annuleren</button>`;
-        html += `</div></div>`;
-
-        // Replace just this ASI panel
-        const panel = el.querySelector(`[data-asi-level="${level}"]`);
-        if (panel) {
-            panel.outerHTML = html;
-        } else {
-            el.innerHTML = html;
-        }
-
-        // Bind events for this picker
-        const newPanel = el.querySelector(`[data-asi-level="${level}"]`);
-        if (!newPanel) return;
-
-        newPanel.querySelectorAll('.asi-ability-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const ab = btn.dataset.ab;
-                selected[ab] = (selected[ab] || 0) + 1;
-                renderPicker();
-            });
-        });
-
-        const confirmBtn = newPanel.querySelector('[data-action="asi-confirm"]');
-        if (confirmBtn) {
-            confirmBtn.addEventListener('click', () => {
-                state.asiChoices[level] = { type: 'asi', abilities: { ...selected } };
-                saveState(charId, state);
-                renderCallback();
-            });
-        }
-
-        const cancelBtn = newPanel.querySelector('[data-action="asi-cancel"]');
-        if (cancelBtn) {
-            cancelBtn.addEventListener('click', () => {
-                renderCallback();
-            });
-        }
+    html += '<div class="items-header">';
+    html += '<span class="weight-total">Gewicht: ' + totalWeight.toFixed(2) + ' / ' + capacity + ' lbs</span>';
+    html += '<span class="encumbrance-status ' + encClass + '">' + encStatus + '</span>';
+    if (editable) {
+        html += '<button class="item-add-btn" data-action="add-item">+ Item toevoegen</button>';
     }
+    html += '</div>';
 
-    renderPicker();
-}
-
-function showFeatPicker(charId, config, state, level, renderCallback) {
-    const el = document.getElementById('asi-content');
-    if (!el) return;
-
-    const abilities = getAllAbilityScores(config, state);
-    const feats = DATA.feats || [];
-
-    let html = `<div class="asi-panel" data-asi-level="${level}">`;
-    html += `<h4>Level ${level} — Feat kiezen</h4>`;
-    html += `<div class="feat-grid">`;
-
-    for (const feat of feats) {
-        const meetsPrereq = checkPrerequisite(feat, abilities, config);
-        const cls = meetsPrereq ? 'feat-card' : 'feat-card unavailable';
-        html += `<button class="${cls}" data-feat="${escapeAttr(feat.name)}" ${meetsPrereq ? '' : 'disabled'} title="${escapeAttr(feat.desc || '')}">
-            <strong>${feat.name}</strong>
-            ${feat.prereq ? `<span class="feat-prereq">${feat.prereq}</span>` : ''}
-        </button>`;
-    }
-
-    html += `</div>`;
-    html += `<button class="asi-option asi-reset" data-action="feat-cancel" style="margin-top:0.75rem;">Annuleren</button>`;
-    html += `</div>`;
-
-    const panel = el.querySelector(`[data-asi-level="${level}"]`);
-    if (panel) {
-        panel.outerHTML = html;
+    // Gold
+    html += '<div class="gold-row">';
+    html += '<span class="gold-label">Goud: </span>';
+    if (editable) {
+        html += '<input type="number" class="gold-input" value="' + (state.gold || 0) + '" min="0" step="1" data-action="update-gold">';
+        html += '<span class="gold-suffix"> gp</span>';
     } else {
-        el.innerHTML = html;
+        html += '<span class="gold-amount">' + (state.gold || 0) + ' gp</span>';
+    }
+    html += '</div>';
+
+    if (editable) {
+        html += '<div class="item-add-form" style="display:none;">';
+        html += '<input type="text" class="item-name-input" placeholder="Item naam..." list="item-suggestions">';
+        html += '<datalist id="item-suggestions">' + datalistOptions + '</datalist>';
+        html += '<input type="number" class="item-weight-input" placeholder="Gewicht (lbs)" step="0.25" min="0">';
+        html += '<input type="text" class="item-notes-input" placeholder="Notities...">';
+        html += '<button class="item-confirm-btn" data-action="confirm-item">&#10003;</button>';
+        html += '<button class="item-cancel-btn" data-action="cancel-item">&#10005;</button>';
+        html += '</div>';
     }
 
-    // Bind events
-    const newPanel = el.querySelector(`[data-asi-level="${level}"]`);
-    if (!newPanel) return;
-
-    newPanel.querySelectorAll('.feat-card:not(.unavailable)').forEach(btn => {
-        btn.addEventListener('click', () => {
-            state.asiChoices[level] = { type: 'feat', feat: btn.dataset.feat };
-            saveState(charId, state);
-            renderCallback();
-        });
-    });
-
-    const cancelBtn = newPanel.querySelector('[data-action="feat-cancel"]');
-    if (cancelBtn) {
-        cancelBtn.addEventListener('click', () => {
-            renderCallback();
-        });
+    html += '<div class="items-grid">';
+    for (var idx = 0; idx < items.length; idx++) {
+        var item = items[idx];
+        html += '<div class="item-row">';
+        html += '<span class="item-name">' + escapeHtml(item.name) + '</span>';
+        html += '<span class="item-weight">' + item.weight + ' lbs</span>';
+        html += '<span class="item-notes">' + (item.notes ? escapeHtml(item.notes) : '-') + '</span>';
+        if (editable) {
+            html += '<button class="item-remove" data-item-idx="' + idx + '">&#10005;</button>';
+        }
+        html += '</div>';
     }
-}
+    html += '</div>';
 
-function checkPrerequisite(feat, abilities, config) {
-    if (!feat.prereq) return true;
-    const prereq = feat.prereq.toLowerCase();
-
-    // Check ability score prerequisites like "STR 13"
-    for (const [ab, score] of Object.entries(abilities)) {
-        const pattern = new RegExp(`${ab}\\s+(\\d+)`, 'i');
-        const altPattern = new RegExp(`${ab.toUpperCase()}\\s+(\\d+)`);
-        const match = prereq.match(pattern) || prereq.match(altPattern);
-        if (match && score < parseInt(match[1])) return false;
-    }
-
-    // Full ability name checks
-    const abilityNames = {
-        strength: 'str', dexterity: 'dex', constitution: 'con',
-        intelligence: 'int', wisdom: 'wis', charisma: 'cha'
-    };
-    for (const [name, ab] of Object.entries(abilityNames)) {
-        const pattern = new RegExp(`${name}\\s+(\\d+)`, 'i');
-        const match = prereq.match(pattern);
-        if (match && abilities[ab] < parseInt(match[1])) return false;
-    }
-
-    // Spellcasting prereq
-    if (prereq.includes('spellcasting') || prereq.includes('spell')) {
-        if (config.className !== 'sorcerer') return false;
-    }
-
-    return true;
+    html += '</div>';
+    return html;
 }
 
 // ============================================================
-// Tooltip Systems
+// Section 20: Maps Page
 // ============================================================
 
-let activeTooltip = null;
+function renderMaps() {
+    var html = '<div class="maps-page">';
+    html += '<h1>Kaarten van Valoria</h1>';
+    html += '<p class="block-note">Kaarten komen binnenkort.</p>';
+
+    // Map upload area for DM
+    if (isDM()) {
+        html += '<div class="map-upload-area">';
+        html += '<label class="btn btn-primary">&#128247; Kaart uploaden<input type="file" accept="image/*" data-action="upload-map" style="display:none"></label>';
+        html += '</div>';
+    }
+
+    // Show stored maps
+    var mapCount = parseInt(localStorage.getItem('dw_map_count') || '0');
+    if (mapCount > 0) {
+        html += '<div class="maps-grid">';
+        for (var i = 0; i < mapCount; i++) {
+            var mapData = localStorage.getItem('dw_map_' + i);
+            var mapName = localStorage.getItem('dw_map_name_' + i) || 'Kaart ' + (i + 1);
+            if (mapData) {
+                html += '<div class="map-card">';
+                html += '<img class="map-img" src="' + mapData + '" alt="' + escapeAttr(mapName) + '">';
+                html += '<span class="map-name">' + escapeHtml(mapName) + '</span>';
+                html += '</div>';
+            }
+        }
+        html += '</div>';
+    }
+
+    html += '</div>';
+    return html;
+}
+
+// ============================================================
+// Section 21: Timeline Page
+// ============================================================
+
+function renderTimeline() {
+    var events = [
+        { date: 'Dag 0', title: 'De Slangenmars', desc: 'De ouders van Ren en Saya komen om. De tweeling is 7 jaar oud.', type: 'danger' },
+        { date: 'Dag 0 + 6 jaar', title: 'Wild Magic Ontwaakt', desc: 'Saya\'s magie manifesteert zich. Een marktkraam gaat in vlammen op.', type: 'magic' },
+        { date: 'Dag 0 + 10 jaar', title: 'De Rivier', desc: 'Een incident bij de rivier. Ren is 17. Hij praat er niet over.', type: 'danger' },
+        { date: 'Dag 0 + 12 jaar', title: 'Begin van het Avontuur', desc: 'De tweeling is 19. Iets trekt hen weg uit de stad, richting het onbekende.', type: 'quest' },
+        { date: 'Sessie 1', title: 'Aankomst in Valoria', desc: 'Het avontuur begint in de schaduw van de oude muren van Valoria.', type: 'quest' }
+    ];
+
+    var html = '<div class="timeline-page">';
+    html += '<h1>Tijdlijn</h1>';
+    html += '<div class="timeline">';
+
+    for (var i = 0; i < events.length; i++) {
+        var ev = events[i];
+        html += '<div class="timeline-event timeline-' + ev.type + '">';
+        html += '<div class="timeline-marker"></div>';
+        html += '<div class="timeline-content">';
+        html += '<span class="timeline-date">' + escapeHtml(ev.date) + '</span>';
+        html += '<h3>' + escapeHtml(ev.title) + '</h3>';
+        html += '<p>' + escapeHtml(ev.desc) + '</p>';
+        html += '</div>';
+        html += '</div>';
+    }
+
+    html += '</div>';
+    html += '</div>';
+    return html;
+}
+
+// ============================================================
+// Section 22: Lore Pages
+// ============================================================
+
+function renderLore(subpage) {
+    if (subpage === 'valoria') return renderLoreValoria();
+    if (subpage === 'ashvane') return renderLoreAshvane();
+
+    // Index page
+    var html = '<div class="lore-page">';
+    html += '<h1>Lore van Valoria</h1>';
+    html += '<div class="lore-grid">';
+
+    html += '<a class="lore-card" href="#/lore/valoria">';
+    html += '<h3>De Wereld van Valoria</h3>';
+    html += '<p>Een overzicht van de wereld, haar landen, volkeren en magie.</p>';
+    html += '</a>';
+
+    html += '<a class="lore-card" href="#/lore/ashvane">';
+    html += '<h3>De Ashvane Tweeling</h3>';
+    html += '<p>Het verhaal van Ren en Saya, van straatkind tot avonturier.</p>';
+    html += '</a>';
+
+    html += '</div>';
+    html += '</div>';
+    return html;
+}
+
+function renderLoreValoria() {
+    var html = '<div class="lore-page lore-article">';
+    html += '<a class="btn btn-ghost btn-sm" href="#/lore">&larr; Terug naar Lore</a>';
+    html += '<h1>De Wereld van Valoria</h1>';
+
+    html += '<h2>Het Land</h2>';
+    html += '<p>Valoria is een uitgestrekt continent, doorsneden door rivieren en bergketens. In het hart ligt de Gouden Vlakte, omringd door oeroude bossen en ruige kustlijnen. Steden als Velthaven en Marrow\'s Rest vormen de centra van handel en politiek.</p>';
+
+    html += '<h2>Magie</h2>';
+    html += '<p>Magie is overal in Valoria \u2014 in de adem van de wind, in de wortels van oude bomen, in het bloed van zij die ervoor gekozen zijn. Maar magie is niet altijd welkom. Na de Magioorlog van een eeuw geleden wantrouwen veel gewone burgers alles wat gloeit of zweeft.</p>';
+
+    html += '<h2>De Slangenmars</h2>';
+    html += '<p>Twaalf jaar geleden trok een leger van slangachtige wezens door het zuiden van Valoria. Ze vernietigden dorpen, vermoordden honderden, en verdwenen toen weer in de nacht. Niemand weet waar ze vandaan kwamen. Niemand weet of ze terugkomen.</p>';
+
+    html += '<h2>Volkeren</h2>';
+    html += '<p>Valoria is de thuisbasis van mensen, elfen, halfelfen, halflings, tieflings, aasimar, en talloze andere volkeren. De meeste leven in relatieve vrede, maar oude vooroordelen sluimeren altijd onder het oppervlak.</p>';
+
+    html += '</div>';
+    return html;
+}
+
+function renderLoreAshvane() {
+    var html = '<div class="lore-page lore-article">';
+    html += '<a class="btn btn-ghost btn-sm" href="#/lore">&larr; Terug naar Lore</a>';
+    html += '<h1>De Ashvane Tweeling</h1>';
+
+    html += '<h2>Oorsprong</h2>';
+    html += '<p>Ren en Saya Ashvane werden geboren in een klein dorp aan de rand van het Slangenmoeras. Hun vader was een houtsnijder, hun moeder een voormalige avonturier die haar zwaard had neergelegd. Het was een rustig leven \u2014 tot de Slangenmars kwam.</p>';
+
+    html += '<h2>De Slangenmars</h2>';
+    html += '<p>Ze waren zeven toen de slangen kwamen. Hun ouders stierven die nacht. Ren herinnert zich het geluid \u2014 een zacht sissen dat overging in geschreeuw. Saya herinnert zich de stilte erna.</p>';
+
+    html += '<h2>Het Leven op Straat</h2>';
+    html += '<p>Ze overleefden. Dat is wat ze doen. In de sloppenwijken van Velthaven leerden ze stelen, rennen, en vertrouwen op niemand behalve elkaar. Ren werd de schaduw \u2014 stil, snel, dodelijk. Saya werd de vonk \u2014 chaotisch, briljant, oncontroleerbaar.</p>';
+
+    html += '<h2>De Magie</h2>';
+    html += '<p>Toen Saya dertien was, stak ze per ongeluk een marktkraam in brand. Niet met een fakkel. Met haar handen. De Wild Magic was altijd al in haar bloed geweest \u2014 het had alleen een reden nodig om wakker te worden.</p>';
+
+    html += '<h2>Nu</h2>';
+    html += '<p>Ze zijn negentien. Oud genoeg om te weten dat overleven niet genoeg is. Jong genoeg om te geloven dat er iets beters bestaat. Iets trekt hen weg uit Velthaven, richting Valoria, richting antwoorden.</p>';
+
+    html += '</div>';
+    return html;
+}
+
+// ============================================================
+// Section 23: Notes Page
+// ============================================================
+
+function renderNotes() {
+    var userId = currentUserId();
+    var savedNotes = localStorage.getItem('dw_notes_' + userId) || '';
+
+    var html = '<div class="notes-page">';
+    html += '<h1>Notities</h1>';
+    html += '<p class="block-note">Je persoonlijke sessie-notities. Automatisch opgeslagen.</p>';
+    html += '<textarea class="notes-textarea" data-action="save-notes" placeholder="Schrijf je notities hier...">' + escapeHtml(savedNotes) + '</textarea>';
+    html += '</div>';
+    return html;
+}
+
+// ============================================================
+// Section 24: Tooltip System
+// ============================================================
+
+var activeTooltip = null;
 
 function showTooltipPopup(html, anchorEl) {
     removeTooltipPopup();
-    const popup = document.createElement('div');
+    var popup = document.createElement('div');
     popup.className = 'stat-tooltip';
     popup.innerHTML = html;
     document.body.appendChild(popup);
 
-    // Position near the anchor element
-    const rect = anchorEl.getBoundingClientRect();
+    var rect = anchorEl.getBoundingClientRect();
     popup.style.position = 'fixed';
     popup.style.zIndex = '9999';
 
-    // Determine position: try below, then above
-    const popupRect = popup.getBoundingClientRect();
-    let top = rect.bottom + 8;
-    let left = rect.left + (rect.width / 2) - (popupRect.width / 2);
+    var popupRect = popup.getBoundingClientRect();
+    var top = rect.bottom + 8;
+    var left = rect.left + (rect.width / 2) - (popupRect.width / 2);
 
-    // Keep within viewport
     if (top + popupRect.height > window.innerHeight) {
         top = rect.top - popupRect.height - 8;
     }
@@ -1022,42 +1754,49 @@ function removeTooltipPopup() {
         activeTooltip.remove();
         activeTooltip = null;
     }
-    // Also remove any lingering ones
-    document.querySelectorAll('.stat-tooltip, .spell-tooltip-popup, .info-tooltip-popup').forEach(el => el.remove());
+    var lingering = document.querySelectorAll('.stat-tooltip, .spell-tooltip-popup, .info-tooltip-popup');
+    for (var i = 0; i < lingering.length; i++) {
+        lingering[i].remove();
+    }
 }
 
 function showSpellTooltip(spellName, anchorEl) {
-    // Find spell data
-    let spellData = null;
+    var spellData = null;
     if (DATA.spells && DATA.spells.sorcerer) {
-        for (let lvl = 0; lvl <= 9; lvl++) {
-            const spells = DATA.spells.sorcerer[lvl] || [];
-            const found = spells.find(s => s.name === spellName);
-            if (found) { spellData = found; break; }
+        for (var lvl = 0; lvl <= 9; lvl++) {
+            var spells = DATA.spells.sorcerer[lvl] || [];
+            for (var i = 0; i < spells.length; i++) {
+                if (spells[i].name === spellName) {
+                    spellData = spells[i];
+                    break;
+                }
+            }
+            if (spellData) break;
         }
     }
     if (!spellData) return;
 
-    const html = `
-        <div class="spell-tooltip-popup">
-            <h4>${escapeHtml(spellData.name)}</h4>
-            <p class="spell-desc">${escapeHtml(spellData.desc)}</p>
-        </div>
-    `;
+    var tooltipHtml = '<div class="spell-tooltip-popup">';
+    tooltipHtml += '<h4>' + escapeHtml(spellData.name) + '</h4>';
+    if (spellData.time) tooltipHtml += '<p class="spell-meta"><strong>Tijd:</strong> ' + escapeHtml(spellData.time) + '</p>';
+    if (spellData.range) tooltipHtml += '<p class="spell-meta"><strong>Range:</strong> ' + escapeHtml(spellData.range) + '</p>';
+    if (spellData.dur) tooltipHtml += '<p class="spell-meta"><strong>Duur:</strong> ' + escapeHtml(spellData.dur) + '</p>';
+    tooltipHtml += '<p class="spell-desc">' + escapeHtml(spellData.desc) + '</p>';
+    tooltipHtml += '</div>';
 
     removeTooltipPopup();
-    const popup = document.createElement('div');
+    var popup = document.createElement('div');
     popup.className = 'stat-tooltip spell-tooltip-popup-wrap';
-    popup.innerHTML = html;
+    popup.innerHTML = tooltipHtml;
     document.body.appendChild(popup);
 
-    const rect = anchorEl.getBoundingClientRect();
+    var rect = anchorEl.getBoundingClientRect();
     popup.style.position = 'fixed';
     popup.style.zIndex = '9999';
 
-    const popupRect = popup.getBoundingClientRect();
-    let top = rect.bottom + 8;
-    let left = rect.left + (rect.width / 2) - (popupRect.width / 2);
+    var popupRect = popup.getBoundingClientRect();
+    var top = rect.bottom + 8;
+    var left = rect.left + (rect.width / 2) - (popupRect.width / 2);
 
     if (top + popupRect.height > window.innerHeight) {
         top = rect.top - popupRect.height - 8;
@@ -1069,59 +1808,58 @@ function showSpellTooltip(spellName, anchorEl) {
 
     popup.style.top = top + 'px';
     popup.style.left = left + 'px';
-
     activeTooltip = popup;
 }
 
 function showAbilityTooltip(ability, config, state, anchorEl) {
-    const breakdown = getAbilityBreakdown(config, state, ability);
-    const abLabel = ability.toUpperCase();
+    var breakdown = getAbilityBreakdown(config, state, ability);
+    var abLabel = ability.toUpperCase();
 
-    let lines = `<strong>${abLabel} Breakdown</strong><br>`;
-    lines += `Base (Standard Array): ${breakdown.baseArray}<br>`;
+    var lines = '<strong>' + abLabel + ' Breakdown</strong><br>';
+    lines += 'Base (Standard Array): ' + breakdown.baseArray + '<br>';
     if (breakdown.racialBonus > 0) {
-        lines += `Half-Elf Racial: +${breakdown.racialBonus}<br>`;
+        lines += 'Racial: +' + breakdown.racialBonus + '<br>';
     }
     if (breakdown.asiDetails.length > 0) {
-        for (const detail of breakdown.asiDetails) {
-            lines += `${detail}<br>`;
+        for (var i = 0; i < breakdown.asiDetails.length; i++) {
+            lines += breakdown.asiDetails[i] + '<br>';
         }
     }
-    lines += `<strong>Totaal: ${breakdown.total}</strong>`;
+    lines += '<strong>Totaal: ' + breakdown.total + '</strong>';
 
     if (state.customAbilities && state.customAbilities[ability] !== undefined && state.customAbilities[ability] !== null) {
-        lines += `<br><em>(Handmatig overschreven naar ${state.customAbilities[ability]})</em>`;
+        lines += '<br><em>(Handmatig overschreven naar ' + state.customAbilities[ability] + ')</em>';
     }
 
     showTooltipPopup(lines, anchorEl);
 }
 
 function showInfoTooltip(value, anchorEl) {
-    const tip = TOOLTIPS[value];
+    var tip = TOOLTIPS[value];
     if (!tip) return;
-    showTooltipPopup(`<strong>${escapeHtml(value)}</strong><br>${escapeHtml(tip)}`, anchorEl);
+    showTooltipPopup('<strong>' + escapeHtml(value) + '</strong><br>' + escapeHtml(tip), anchorEl);
 }
 
 // ============================================================
-// Export / Import
+// Section 25: Export / Import / Reset
 // ============================================================
 
 function exportCharacter(charId, state) {
-    const data = JSON.stringify(state, null, 2);
-    const blob = new Blob([data], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    var data = JSON.stringify(state, null, 2);
+    var blob = new Blob([data], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
     a.href = url;
-    a.download = `${charId}_character.json`;
+    a.download = charId + '_character.json';
     a.click();
     URL.revokeObjectURL(url);
 }
 
 function importCharacter(charId, file, callback) {
-    const reader = new FileReader();
-    reader.onload = function (e) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
         try {
-            const imported = JSON.parse(e.target.result);
+            var imported = JSON.parse(e.target.result);
             callback(imported);
         } catch (err) {
             showWarning('Ongeldig JSON bestand.');
@@ -1130,47 +1868,35 @@ function importCharacter(charId, file, callback) {
     reader.readAsText(file);
 }
 
-// ============================================================
-// Reset Modal
-// ============================================================
-
-function showResetModal(charId, config, state, render) {
-    // Remove existing modal if any
-    const existing = document.getElementById('reset-modal');
+function showResetModal(charId, config, state) {
+    var existing = document.getElementById('reset-modal');
     if (existing) existing.remove();
 
-    const modal = document.createElement('div');
+    var modal = document.createElement('div');
     modal.id = 'reset-modal';
     modal.className = 'reset-modal-overlay';
-    modal.innerHTML = `
-        <div class="reset-modal-content">
-            <h3>Karakter Resetten</h3>
-            <p>Weet je het zeker? Dit zet het karakter terug naar level 1.</p>
-            <div class="reset-modal-actions">
-                <button class="reset-modal-btn" data-modal-action="save-then-reset">Opslaan voor reset</button>
-                <button class="reset-modal-btn reset-modal-btn-danger" data-modal-action="confirm-reset">Reset</button>
-                <button class="reset-modal-btn reset-modal-btn-cancel" data-modal-action="cancel-reset">Annuleren</button>
-            </div>
-        </div>
-    `;
+    modal.innerHTML = '<div class="reset-modal-content">' +
+        '<h3>Karakter Resetten</h3>' +
+        '<p>Weet je het zeker? Dit zet het karakter terug naar level 1.</p>' +
+        '<div class="reset-modal-actions">' +
+        '<button class="reset-modal-btn" data-modal-action="save-then-reset">Opslaan voor reset</button>' +
+        '<button class="reset-modal-btn reset-modal-btn-danger" data-modal-action="confirm-reset">Reset</button>' +
+        '<button class="reset-modal-btn reset-modal-btn-cancel" data-modal-action="cancel-reset">Annuleren</button>' +
+        '</div></div>';
     document.body.appendChild(modal);
 
-    modal.addEventListener('click', function (e) {
-        const action = e.target.dataset.modalAction;
+    modal.addEventListener('click', function(e) {
+        var action = e.target.dataset.modalAction;
         if (!action) {
-            // Click on overlay background
-            if (e.target === modal) {
-                modal.remove();
-            }
+            if (e.target === modal) modal.remove();
             return;
         }
         if (action === 'save-then-reset') {
             exportCharacter(charId, state);
-            // Then reset
-            performReset(charId, config, state, render);
+            performReset(charId);
             modal.remove();
         } else if (action === 'confirm-reset') {
-            performReset(charId, config, state, render);
+            performReset(charId);
             modal.remove();
         } else if (action === 'cancel-reset') {
             modal.remove();
@@ -1178,473 +1904,269 @@ function showResetModal(charId, config, state, render) {
     });
 }
 
-function performReset(charId, config, stateRef, render) {
-    localStorage.removeItem(`ashvane_${charId}`);
-    const newState = loadState(charId);
-    // Copy all properties to the existing state reference so render() uses the new state
-    for (const key of Object.keys(stateRef)) {
-        delete stateRef[key];
-    }
-    Object.assign(stateRef, newState);
+function performReset(charId) {
+    localStorage.removeItem('dw_char_' + charId);
+    // Also remove old key
+    localStorage.removeItem('ashvane_' + charId);
     spellFilter = 'all';
     abilityEditMode = false;
     editAbilities = null;
-    saveState(charId, stateRef);
-    render();
+    renderApp();
 }
 
 // ============================================================
-// Utility
+// Section 26: ASI Sub-dialogs
 // ============================================================
 
-function escapeAttr(str) {
-    return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+function showASIAbilityPicker(charId, config, state, level, mode) {
+    var el = document.getElementById('asi-content');
+    if (!el) return;
+
+    var abilities = getAllAbilityScores(config, state);
+    var abNames = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+    var abLabels = { str: 'STR', dex: 'DEX', con: 'CON', int: 'INT', wis: 'WIS', cha: 'CHA' };
+
+    var selected = {};
+    var maxPoints = 2;
+    var maxPerAbility = mode === 'asi-two' ? 2 : 1;
+
+    function renderPicker() {
+        var totalSpent = 0;
+        var selKeys = Object.keys(selected);
+        for (var sk = 0; sk < selKeys.length; sk++) totalSpent += selected[selKeys[sk]];
+
+        var html = '<div class="asi-panel" data-asi-level="' + level + '">';
+        html += '<h4>Level ' + level + ' \u2014 ' + (mode === 'asi-two' ? '+2 op 1 ability' : '+1 op 2 abilities') + '</h4>';
+        html += '<p class="block-note">Punten over: ' + (maxPoints - totalSpent) + '</p>';
+        html += '<div class="asi-ability-picker">';
+        for (var i = 0; i < abNames.length; i++) {
+            var ab = abNames[i];
+            var current = abilities[ab];
+            var added = selected[ab] || 0;
+            var canAdd = (current + added) < 20 && added < maxPerAbility && totalSpent < maxPoints;
+            html += '<div class="asi-ability-row">';
+            html += '<span>' + abLabels[ab] + ' (' + current + (added > 0 ? ' +' + added : '') + ')</span>';
+            html += '<button class="asi-ability-btn" data-ab="' + ab + '"' + (canAdd ? '' : ' disabled') + '>+1</button>';
+            html += '</div>';
+        }
+        html += '</div>';
+        html += '<div style="display:flex;gap:0.5rem;margin-top:0.75rem;">';
+        html += '<button class="asi-option" data-action="asi-confirm"' + (totalSpent === maxPoints ? '' : ' disabled') + '>Bevestigen</button>';
+        html += '<button class="asi-option asi-reset" data-action="asi-cancel">Annuleren</button>';
+        html += '</div></div>';
+
+        var panel = el.querySelector('[data-asi-level="' + level + '"]');
+        if (panel) {
+            panel.outerHTML = html;
+        } else {
+            el.innerHTML = html;
+        }
+
+        var newPanel = el.querySelector('[data-asi-level="' + level + '"]');
+        if (!newPanel) return;
+
+        var btns = newPanel.querySelectorAll('.asi-ability-btn');
+        for (var b = 0; b < btns.length; b++) {
+            btns[b].addEventListener('click', function() {
+                var aab = this.dataset.ab;
+                selected[aab] = (selected[aab] || 0) + 1;
+                renderPicker();
+            });
+        }
+
+        var confirmBtn = newPanel.querySelector('[data-action="asi-confirm"]');
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', function() {
+                state.asiChoices[level] = { type: 'asi', abilities: Object.assign({}, selected) };
+                saveCharState(charId, state);
+                renderApp();
+            });
+        }
+
+        var cancelBtn = newPanel.querySelector('[data-action="asi-cancel"]');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', function() {
+                renderApp();
+            });
+        }
+    }
+
+    renderPicker();
 }
 
-function escapeHtml(str) {
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+function showFeatPicker(charId, config, state, level) {
+    var el = document.getElementById('asi-content');
+    if (!el) return;
+
+    var abilities = getAllAbilityScores(config, state);
+    var feats = DATA.feats || [];
+
+    var html = '<div class="asi-panel" data-asi-level="' + level + '">';
+    html += '<h4>Level ' + level + ' \u2014 Feat kiezen</h4>';
+    html += '<div class="feat-grid">';
+
+    for (var i = 0; i < feats.length; i++) {
+        var feat = feats[i];
+        var meetsPrereq = checkPrerequisite(feat, abilities, config);
+        var cls = meetsPrereq ? 'feat-card' : 'feat-card unavailable';
+        html += '<button class="' + cls + '" data-feat="' + escapeAttr(feat.name) + '"' + (meetsPrereq ? '' : ' disabled') + ' title="' + escapeAttr(feat.desc || '') + '">';
+        html += '<strong>' + escapeHtml(feat.name) + '</strong>';
+        html += '</button>';
+    }
+
+    html += '</div>';
+    html += '<button class="asi-option asi-reset" data-action="feat-cancel" style="margin-top:0.75rem;">Annuleren</button>';
+    html += '</div>';
+
+    var panel = el.querySelector('[data-asi-level="' + level + '"]');
+    if (panel) {
+        panel.outerHTML = html;
+    } else {
+        el.innerHTML = html;
+    }
+
+    var newPanel = el.querySelector('[data-asi-level="' + level + '"]');
+    if (!newPanel) return;
+
+    var cards = newPanel.querySelectorAll('.feat-card:not(.unavailable)');
+    for (var c = 0; c < cards.length; c++) {
+        cards[c].addEventListener('click', function() {
+            state.asiChoices[level] = { type: 'feat', feat: this.dataset.feat };
+            saveCharState(charId, state);
+            renderApp();
+        });
+    }
+
+    var cancelBtn = newPanel.querySelector('[data-action="feat-cancel"]');
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', function() {
+            renderApp();
+        });
+    }
+}
+
+function checkPrerequisite(feat, abilities, config) {
+    if (!feat.prereq) return true;
+
+    // Object-style prereqs
+    if (typeof feat.prereq === 'object') {
+        var prereq = feat.prereq;
+        if (prereq.dex && abilities.dex < prereq.dex) return false;
+        if (prereq.str && abilities.str < prereq.str) return false;
+        if (prereq.cha && abilities.cha < prereq.cha) return false;
+        if (prereq.int && abilities.int < prereq.int) return false;
+        if (prereq.wis && abilities.wis < prereq.wis) return false;
+        if (prereq.con && abilities.con < prereq.con) return false;
+        if (prereq.intOrWis && abilities.int < prereq.intOrWis && abilities.wis < prereq.intOrWis) return false;
+        if (prereq.spellcasting) {
+            if (!hasSpellcasting(config.className)) return false;
+        }
+        return true;
+    }
+
+    // String-style prereqs (legacy)
+    var prereqStr = String(feat.prereq).toLowerCase();
+    if (prereqStr.indexOf('spellcasting') !== -1 || prereqStr.indexOf('spell') !== -1) {
+        if (!hasSpellcasting(config.className)) return false;
+    }
+
+    var abKeys = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+    for (var a = 0; a < abKeys.length; a++) {
+        var pattern = new RegExp(abKeys[a] + '\\s+(\\d+)', 'i');
+        var match = prereqStr.match(pattern);
+        if (match && abilities[abKeys[a]] < parseInt(match[1])) return false;
+    }
+
+    return true;
 }
 
 // ============================================================
-// Event Handling
+// Section 27: Spell / Cantrip / Metamagic Toggle Functions
 // ============================================================
 
-function bindEvents(charId, config, state, render) {
-
-    // Use event delegation on the main content area
-    document.addEventListener('click', function (e) {
-        const target = e.target;
-
-        // Options dropdown toggle
-        if (target.matches('[data-action="toggle-options"]') || target.closest('[data-action="toggle-options"]')) {
-            const dropdown = document.getElementById('options-dropdown');
-            if (dropdown) dropdown.classList.toggle('open');
-            return;
-        }
-
-        // Close dropdown when clicking elsewhere
-        if (!target.closest('.header-actions')) {
-            const dropdown = document.getElementById('options-dropdown');
-            if (dropdown) dropdown.classList.remove('open');
-        }
-
-        // Level up/down
-        if (target.matches('[data-action="level-up"]')) {
-            if (state.level < 20) {
-                state.level++;
-                saveState(charId, state);
-                render();
-            }
-            return;
-        }
-
-        if (target.matches('[data-action="level-down"]')) {
-            if (state.level > 1) {
-                // Clean up choices from the level being removed
-                cleanupLevelDown(config, state);
-                state.level--;
-                saveState(charId, state);
-                render();
-            }
-            return;
-        }
-
-        // Refresh quote
-        if (target.matches('[data-action="refresh-quote"]') || target.closest('[data-action="refresh-quote"]')) {
-            renderHeader(config, state);
-            return;
-        }
-
-        // Export character
-        if (target.matches('[data-action="export-char"]') || target.closest('[data-action="export-char"]')) {
-            exportCharacter(charId, state);
-            return;
-        }
-
-        // Reset character
-        if (target.matches('[data-action="reset-char"]') || target.closest('[data-action="reset-char"]')) {
-            showResetModal(charId, config, state, render);
-            return;
-        }
-
-        // Ability edit mode toggle
-        if (target.matches('[data-action="ability-edit"]') || target.closest('[data-action="ability-edit"]')) {
-            abilityEditMode = true;
-            editAbilities = null; // will be initialized from current scores
-            renderAbilityScores(config, state);
-            return;
-        }
-
-        // Ability adjustment in edit mode
-        if (target.matches('.ability-adj')) {
-            const ab = target.dataset.ab;
-            const dir = target.dataset.dir;
-            if (editAbilities && ab) {
-                if (dir === 'up' && editAbilities[ab] < 30) {
-                    editAbilities[ab]++;
-                } else if (dir === 'down' && editAbilities[ab] > 1) {
-                    editAbilities[ab]--;
-                }
-                renderAbilityScores(config, state);
-            }
-            return;
-        }
-
-        // Ability edit save
-        if (target.matches('[data-action="ability-save"]')) {
-            if (editAbilities) {
-                state.customAbilities = { ...editAbilities };
-                saveState(charId, state);
-            }
-            abilityEditMode = false;
-            editAbilities = null;
-            render();
-            return;
-        }
-
-        // Ability edit cancel
-        if (target.matches('[data-action="ability-cancel"]')) {
-            abilityEditMode = false;
-            editAbilities = null;
-            renderAbilityScores(config, state);
-            return;
-        }
-
-        // Spell star/favorite toggle
-        if (target.matches('[data-spell-star]') || target.closest('[data-spell-star]')) {
-            const starEl = target.matches('[data-spell-star]') ? target : target.closest('[data-spell-star]');
-            const spellName = starEl.dataset.spellStar;
-            if (spellName) {
-                if (!state.favorites) state.favorites = [];
-                const idx = state.favorites.indexOf(spellName);
-                if (idx >= 0) {
-                    state.favorites.splice(idx, 1);
-                } else {
-                    state.favorites.push(spellName);
-                }
-                saveState(charId, state);
-                renderSpellcasting(config, state);
-                e.stopPropagation();
-                return;
-            }
-        }
-
-        // Spell toggles (but not if clicking the star)
-        if ((target.matches('.spell-toggle') || target.closest('.spell-toggle')) && !target.matches('[data-spell-star]') && !target.closest('[data-spell-star]')) {
-            const btn = target.closest('.spell-toggle') || target;
-            const spellName = btn.dataset.spell;
-            const spellLevel = parseInt(btn.dataset.level);
-
-            if (spellLevel === 0) {
-                // Cantrip toggle
-                toggleCantrip(charId, config, state, spellName, render);
-            } else {
-                // Prepared spell toggle
-                togglePrepared(charId, config, state, spellName, render);
-            }
-            return;
-        }
-
-        // Filter bar clicks
-        if (target.matches('.filter-btn')) {
-            spellFilter = target.dataset.filter || 'all';
-            renderSpellcasting(config, state);
-            return;
-        }
-
-        // Metamagic toggle
-        if (target.matches('.metamagic-option') || target.closest('.metamagic-option')) {
-            const btn = target.closest('.metamagic-option') || target;
-            if (btn.classList.contains('locked')) return;
-            const mmName = btn.dataset.metamagic;
-            toggleMetamagic(charId, config, state, mmName, render);
-            return;
-        }
-
-        // ASI option buttons
-        if (target.matches('.asi-option') || target.closest('.asi-option')) {
-            const btn = target.closest('.asi-option') || target;
-            const level = parseInt(btn.dataset.asiLevel);
-            const type = btn.dataset.asiType;
-
-            if (type === 'reset') {
-                delete state.asiChoices[level];
-                saveState(charId, state);
-                render();
-                return;
-            }
-
-            if (type === 'asi-two') {
-                showASIAbilityPicker(charId, config, state, level, 'asi-two', render);
-                return;
-            }
-
-            if (type === 'asi-split') {
-                showASIAbilityPicker(charId, config, state, level, 'asi-split', render);
-                return;
-            }
-
-            if (type === 'feat') {
-                showFeatPicker(charId, config, state, level, render);
-                return;
-            }
-        }
-
-        // Item add button
-        if (target.matches('[data-action="add-item"]')) {
-            const form = document.querySelector('.item-add-form');
-            if (form) {
-                form.style.display = form.style.display === 'none' ? 'flex' : 'none';
-                if (form.style.display !== 'none') {
-                    const nameInput = form.querySelector('.item-name-input');
-                    if (nameInput) nameInput.focus();
-                }
-            }
-            return;
-        }
-
-        // Item confirm
-        if (target.matches('[data-action="confirm-item"]')) {
-            const form = document.querySelector('.item-add-form');
-            if (form) {
-                const nameInput = form.querySelector('.item-name-input');
-                const weightInput = form.querySelector('.item-weight-input');
-                const notesInput = form.querySelector('.item-notes-input');
-                const name = (nameInput ? nameInput.value : '').trim();
-                const weight = weightInput ? parseFloat(weightInput.value) || 0 : 0;
-                const notes = notesInput ? notesInput.value.trim() : '';
-                if (name) {
-                    if (!state.items) state.items = [];
-                    state.items.push({ name, weight, notes });
-                    saveState(charId, state);
-                    renderItems(config, state);
-                }
-            }
-            return;
-        }
-
-        // Item cancel
-        if (target.matches('[data-action="cancel-item"]')) {
-            const form = document.querySelector('.item-add-form');
-            if (form) form.style.display = 'none';
-            return;
-        }
-
-        // Item remove
-        if (target.matches('.item-remove')) {
-            const idx = parseInt(target.dataset.itemIdx);
-            if (!isNaN(idx) && state.items && state.items[idx] !== undefined) {
-                state.items.splice(idx, 1);
-                saveState(charId, state);
-                renderItems(config, state);
-            }
-            return;
-        }
-    });
-
-    // Import character file input
-    document.addEventListener('change', function (e) {
-        if (e.target.matches('[data-action="import-char"]')) {
-            const file = e.target.files && e.target.files[0];
-            if (file) {
-                importCharacter(charId, file, function (imported) {
-                    // Copy imported state to current state reference
-                    for (const key of Object.keys(state)) {
-                        delete state[key];
-                    }
-                    // Merge with defaults
-                    const config = CHARACTERS[charId];
-                    const defaults = {
-                        level: 1, skills: [], expertise: [], cantrips: [], prepared: [],
-                        metamagic: [], asiChoices: {}, favorites: [],
-                        items: [...(config.defaultItems || []).map(i => ({...i}))],
-                        customAbilities: null
-                    };
-                    for (const key of Object.keys(defaults)) {
-                        state[key] = imported[key] !== undefined ? imported[key] : defaults[key];
-                    }
-                    saveState(charId, state);
-                    spellFilter = 'all';
-                    abilityEditMode = false;
-                    editAbilities = null;
-                    render();
-                });
-            }
-            // Reset file input so same file can be re-selected
-            e.target.value = '';
-        }
-    });
-
-    // Tooltip event delegation using mouseenter/mouseleave
-    document.addEventListener('mouseover', function (e) {
-        const target = e.target;
-
-        // Ability score hover tooltip (not in edit mode)
-        if (!abilityEditMode) {
-            const abilityEl = target.closest('.ability[data-ability]');
-            if (abilityEl) {
-                const ab = abilityEl.dataset.ability;
-                if (ab) {
-                    showAbilityTooltip(ab, config, state, abilityEl);
-                    return;
-                }
-            }
-        }
-
-        // Spell button hover tooltip
-        const spellBtn = target.closest('.spell-toggle');
-        if (spellBtn && !target.matches('[data-spell-star]') && !target.closest('[data-spell-star]')) {
-            const spellName = spellBtn.dataset.spell;
-            if (spellName) {
-                showSpellTooltip(spellName, spellBtn);
-                return;
-            }
-        }
-
-        // Info item hover tooltip
-        const infoItem = target.closest('.info-item');
-        if (infoItem) {
-            const valueEl = infoItem.querySelector('.value');
-            if (valueEl) {
-                const value = valueEl.textContent.trim();
-                showInfoTooltip(value, infoItem);
-                return;
-            }
-        }
-    });
-
-    document.addEventListener('mouseout', function (e) {
-        const target = e.target;
-        const abilityEl = target.closest('.ability[data-ability]');
-        const spellBtn = target.closest('.spell-toggle');
-        const infoItem = target.closest('.info-item');
-        if (abilityEl || spellBtn || infoItem) {
-            // Check if we're moving to a child of the same element
-            const related = e.relatedTarget;
-            if (abilityEl && abilityEl.contains(related)) return;
-            if (spellBtn && spellBtn.contains(related)) return;
-            if (infoItem && infoItem.contains(related)) return;
-            removeTooltipPopup();
-        }
-    });
-
-    // Auto-fill weight when item name matches datalist
-    document.addEventListener('input', function (e) {
-        if (e.target.matches('.item-name-input')) {
-            const val = e.target.value.trim();
-            // Try to find weight from DATA.items
-            if (typeof DATA !== 'undefined' && DATA.items) {
-                for (const category of Object.keys(DATA.items)) {
-                    const items = DATA.items[category];
-                    if (Array.isArray(items)) {
-                        for (const item of items) {
-                            const itemName = typeof item === 'string' ? item : item.name;
-                            const itemWeight = typeof item === 'object' ? item.weight : undefined;
-                            if (itemName === val && itemWeight !== undefined) {
-                                const weightInput = document.querySelector('.item-weight-input');
-                                if (weightInput) weightInput.value = itemWeight;
-                                return;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    });
-}
-
-function toggleCantrip(charId, config, state, spellName, render) {
-    const idx = state.cantrips.indexOf(spellName);
+function toggleCantrip(charId, config, state, spellName) {
+    var idx = state.cantrips.indexOf(spellName);
     if (idx >= 0) {
         state.cantrips.splice(idx, 1);
     } else {
-        const maxCantrips = getMaxCantrips(state.level);
+        var maxCantrips = getMaxCantrips(state.level);
         if (state.cantrips.length >= maxCantrips) {
-            showWarning(`Maximum aantal cantrips bereikt (${maxCantrips}). Verwijder er eerst een.`);
+            showWarning('Maximum aantal cantrips bereikt (' + maxCantrips + '). Verwijder er eerst een.');
             return;
         }
         state.cantrips.push(spellName);
     }
-    saveState(charId, state);
-    render();
+    saveCharState(charId, state);
+    renderApp();
 }
 
-function togglePrepared(charId, config, state, spellName, render) {
-    const idx = state.prepared.indexOf(spellName);
+function togglePrepared(charId, config, state, spellName) {
+    var idx = state.prepared.indexOf(spellName);
     if (idx >= 0) {
         state.prepared.splice(idx, 1);
     } else {
-        const chaMod = getMod(getAbilityScore(config, state, 'cha'));
-        const maxPrepared = getMaxPrepared(state, chaMod);
+        var chaMod = getMod(getAbilityScore(config, state, 'cha'));
+        var maxPrepared = getMaxPrepared(state, chaMod);
         if (state.prepared.length >= maxPrepared) {
-            showWarning(`Maximum aantal voorbereide spells bereikt (${maxPrepared}). Verwijder er eerst een.`);
+            showWarning('Maximum aantal voorbereide spells bereikt (' + maxPrepared + '). Verwijder er eerst een.');
             return;
         }
         state.prepared.push(spellName);
     }
-    saveState(charId, state);
-    render();
+    saveCharState(charId, state);
+    renderApp();
 }
 
-function toggleMetamagic(charId, config, state, mmName, render) {
-    const idx = state.metamagic.indexOf(mmName);
+function toggleMetamagic(charId, config, state, mmName) {
+    var idx = state.metamagic.indexOf(mmName);
     if (idx >= 0) {
         state.metamagic.splice(idx, 1);
     } else {
-        // Check max
-        let maxChoices = 0;
+        var maxChoices = 0;
         if (state.level >= 2) maxChoices = 2;
         if (state.level >= 10) maxChoices = 3;
         if (state.level >= 17) maxChoices = 4;
         if (state.metamagic.length >= maxChoices) {
-            showWarning(`Maximum aantal metamagic opties bereikt (${maxChoices}).`);
+            showWarning('Maximum aantal metamagic opties bereikt (' + maxChoices + ').');
             return;
         }
         state.metamagic.push(mmName);
     }
-    saveState(charId, state);
-    render();
+    saveCharState(charId, state);
+    renderApp();
 }
 
 function cleanupLevelDown(config, state) {
-    const lvl = state.level; // the level being removed
-
-    // Remove ASI choice for this level
+    var lvl = state.level;
     delete state.asiChoices[lvl];
 
-    // Trim cantrips if over the new max
     if (config.className === 'sorcerer') {
-        const newMaxCantrips = getMaxCantrips(lvl - 1);
+        var newMaxCantrips = getMaxCantrips(lvl - 1);
         while (state.cantrips.length > newMaxCantrips) {
             state.cantrips.pop();
         }
 
-        // Trim prepared spells if over the new max
-        const chaMod = getMod(getAbilityScore(config, state, 'cha'));
-        const newMaxPrepared = Math.max(1, chaMod + (lvl - 1));
+        var chaMod = getMod(getAbilityScore(config, state, 'cha'));
+        var newMaxPrepared = Math.max(1, chaMod + (lvl - 1));
         while (state.prepared.length > newMaxPrepared) {
             state.prepared.pop();
         }
 
-        // Remove spells of now-unavailable levels
-        const newMaxSpellLevel = DATA.sorcerer.maxSpellLevel[lvl - 1] || 1;
-        state.prepared = state.prepared.filter(spellName => {
-            // Find the spell's level
-            for (let sl = 1; sl <= 9; sl++) {
-                const spells = DATA.spells.sorcerer[sl] || [];
-                if (spells.some(s => s.name === spellName)) {
-                    return sl <= newMaxSpellLevel;
+        var newMaxSpellLevel = DATA.sorcerer.maxSpellLevel[lvl - 1] || 1;
+        state.prepared = state.prepared.filter(function(spellName) {
+            for (var sl = 1; sl <= 9; sl++) {
+                var spells = (DATA.spells && DATA.spells.sorcerer && DATA.spells.sorcerer[sl]) ? DATA.spells.sorcerer[sl] : [];
+                for (var s = 0; s < spells.length; s++) {
+                    if (spells[s].name === spellName) {
+                        return sl <= newMaxSpellLevel;
+                    }
                 }
             }
             return true;
         });
 
-        // Trim metamagic if losing level 2
-        if (lvl - 1 < 2) {
-            state.metamagic = [];
-        }
-        // Trim extra metamagic choices
-        let maxMM = 0;
+        if (lvl - 1 < 2) state.metamagic = [];
+        var maxMM = 0;
         if (lvl - 1 >= 2) maxMM = 2;
         if (lvl - 1 >= 10) maxMM = 3;
         if (lvl - 1 >= 17) maxMM = 4;
@@ -1653,12 +2175,14 @@ function cleanupLevelDown(config, state) {
         }
     }
 
-    // Remove expertise gained at this level (rogue)
     if (config.className === 'rogue') {
-        const expertiseLevels = DATA.rogue.expertiseLevels || [1, 6];
-        if (expertiseLevels.includes(lvl)) {
-            // For simplicity, trim to previous count
-            const prevCount = expertiseLevels.filter(l => l < lvl).length * 2;
+        var expertiseLevels = (DATA.rogue && DATA.rogue.expertiseLevels) ? DATA.rogue.expertiseLevels : [1, 6];
+        if (expertiseLevels.indexOf(lvl) !== -1) {
+            var prevCount = 0;
+            for (var el2 = 0; el2 < expertiseLevels.length; el2++) {
+                if (expertiseLevels[el2] < lvl) prevCount++;
+            }
+            prevCount *= 2;
             while (state.expertise.length > prevCount) {
                 state.expertise.pop();
             }
@@ -1666,9 +2190,12 @@ function cleanupLevelDown(config, state) {
     }
 }
 
+// ============================================================
+// Section 28: Warning System
+// ============================================================
+
 function showWarning(message) {
-    // Create a temporary warning tooltip
-    let warning = document.getElementById('spell-warning');
+    var warning = document.getElementById('spell-warning');
     if (!warning) {
         warning = document.createElement('div');
         warning.id = 'spell-warning';
@@ -1679,43 +2206,586 @@ function showWarning(message) {
     warning.textContent = message;
     warning.style.opacity = '1';
     clearTimeout(warning._timeout);
-    warning._timeout = setTimeout(() => {
+    warning._timeout = setTimeout(function() {
         warning.style.opacity = '0';
     }, 2500);
 }
 
 // ============================================================
-// Initialization
+// Section 29: Image Upload Helpers
 // ============================================================
 
-document.addEventListener('DOMContentLoaded', () => {
-    const charId = document.body.dataset.character; // 'ren' or 'saya'
-    if (!charId || !CHARACTERS[charId]) return;
+function handleImageUpload(file, charId, type, maxSize) {
+    if (!file) return;
+    maxSize = maxSize || 500000; // 500KB default
 
-    const config = CHARACTERS[charId];
-    let state = loadState(charId);
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        var result = e.target.result;
 
-    function render() {
-        renderHeader(config, state);
-        renderAbilityScores(config, state);
-        renderCombatStats(config, state);
-        renderSavingThrows(config, state);
-        renderSkills(config, state);
+        // Compress if needed using canvas
+        var img = new Image();
+        img.onload = function() {
+            var canvas = document.createElement('canvas');
+            var maxDim = type === 'banner' ? 1200 : 400;
+            var w = img.width;
+            var h = img.height;
+            if (w > maxDim || h > maxDim) {
+                if (w > h) {
+                    h = Math.round(h * maxDim / w);
+                    w = maxDim;
+                } else {
+                    w = Math.round(w * maxDim / h);
+                    h = maxDim;
+                }
+            }
+            canvas.width = w;
+            canvas.height = h;
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            var compressed = canvas.toDataURL('image/jpeg', 0.7);
+            try {
+                saveImage(charId, type, compressed);
+                renderApp();
+            } catch (err) {
+                showWarning('Afbeelding te groot om op te slaan.');
+            }
+        };
+        img.src = result;
+    };
+    reader.readAsDataURL(file);
+}
 
-        if (config.className === 'rogue') {
-            renderWeapons(config, state);
-        }
-        if (config.className === 'sorcerer') {
-            renderSpellcasting(config, state);
-            renderMetamagic(config, state);
-        }
+// ============================================================
+// Section 30: Event Handling
+// ============================================================
 
-        renderFeatures(config, state);
-        renderASI(config, state);
-        renderItems(config, state);
-        saveState(charId, state);
+function bindPageEvents(route) {
+    var app = document.getElementById('app');
+    if (!app) return;
+
+    // Remove old listeners by re-cloning (simple approach for SPA)
+    // Instead, we use event delegation on #app and document
+
+    // Clean up any lingering tooltips
+    removeTooltipPopup();
+
+    // Determine context
+    var charId = null;
+    var config = null;
+    var state = null;
+
+    if (route.parts[0] === 'characters' && route.parts[1]) {
+        charId = route.parts[1];
+        config = loadCharConfig(charId);
+        state = loadCharState(charId);
     }
 
-    bindEvents(charId, config, state, render);
-    render();
+    // ---- Click delegation on #app ----
+    app.onclick = function(e) {
+        var target = e.target;
+
+        // --- Login page ---
+        if (route.path === '/login' || !currentUser()) {
+            // User card selection
+            var userCard = target.closest('.login-user-card');
+            if (userCard) {
+                var userId = userCard.dataset.userId;
+                if (userId) {
+                    // Show PIN input
+                    var pinArea = app.querySelector('.login-pin-area');
+                    var userGrid = app.querySelector('.login-user-grid');
+                    if (pinArea && userGrid) {
+                        userGrid.style.display = 'none';
+                        pinArea.style.display = 'block';
+                        pinArea.dataset.selectedUser = userId;
+                        var pinInput = pinArea.querySelector('.login-pin-input');
+                        if (pinInput) {
+                            pinInput.value = '';
+                            pinInput.focus();
+                        }
+                        // Update label
+                        var label = pinArea.querySelector('.login-pin-label');
+                        if (label) label.textContent = 'PIN voor ' + USERS[userId].name;
+                    }
+                }
+                return;
+            }
+
+            // Login confirm
+            if (target.matches('[data-action="login-confirm"]') || target.closest('[data-action="login-confirm"]')) {
+                var pinAreaEl = app.querySelector('.login-pin-area');
+                if (pinAreaEl) {
+                    var selUserId = pinAreaEl.dataset.selectedUser;
+                    var pinVal = (app.querySelector('.login-pin-input') || {}).value || '';
+                    var user = USERS[selUserId];
+                    if (user && pinVal === user.pin) {
+                        setSession(selUserId);
+                        navigate('/dashboard');
+                    } else {
+                        var errEl = app.querySelector('.login-error');
+                        if (errEl) {
+                            errEl.textContent = 'Onjuiste PIN.';
+                            errEl.style.display = 'block';
+                        }
+                    }
+                }
+                return;
+            }
+
+            // Login back
+            if (target.matches('[data-action="login-back"]') || target.closest('[data-action="login-back"]')) {
+                var pinAreaEl2 = app.querySelector('.login-pin-area');
+                var userGrid2 = app.querySelector('.login-user-grid');
+                if (pinAreaEl2) pinAreaEl2.style.display = 'none';
+                if (userGrid2) userGrid2.style.display = '';
+                return;
+            }
+            return;
+        }
+
+        // --- Navbar ---
+        // Logout
+        if (target.matches('[data-action="logout"]') || target.closest('[data-action="logout"]')) {
+            clearSession();
+            navigate('/login');
+            return;
+        }
+
+        // Mobile nav toggle
+        if (target.matches('[data-action="toggle-nav"]') || target.closest('[data-action="toggle-nav"]')) {
+            var navLinks = document.querySelector('.navbar-links');
+            if (navLinks) navLinks.classList.toggle('open');
+            return;
+        }
+
+        // --- Character Sheet Events ---
+        if (charId && config && state) {
+            // Tab switching
+            if (target.matches('.charsheet-tab')) {
+                activeTab = target.dataset.tab || 'overview';
+                renderApp();
+                return;
+            }
+
+            // Options dropdown toggle
+            if (target.matches('[data-action="toggle-options"]') || target.closest('[data-action="toggle-options"]')) {
+                var dropdown = document.getElementById('options-dropdown');
+                if (dropdown) dropdown.classList.toggle('open');
+                return;
+            }
+
+            // Close dropdown when clicking elsewhere
+            if (!target.closest('.charsheet-actions')) {
+                var dropdown2 = document.getElementById('options-dropdown');
+                if (dropdown2) dropdown2.classList.remove('open');
+            }
+
+            // Level up
+            if (target.matches('[data-action="level-up"]')) {
+                if (state.level < 20 && canEdit(charId)) {
+                    state.level++;
+                    saveCharState(charId, state);
+                    renderApp();
+                }
+                return;
+            }
+
+            // Level down
+            if (target.matches('[data-action="level-down"]')) {
+                if (state.level > 1 && canEdit(charId)) {
+                    cleanupLevelDown(config, state);
+                    state.level--;
+                    saveCharState(charId, state);
+                    renderApp();
+                }
+                return;
+            }
+
+            // Refresh quote
+            if (target.matches('[data-action="refresh-quote"]') || target.closest('[data-action="refresh-quote"]')) {
+                var quoteEl = app.querySelector('.char-quote-dynamic');
+                if (quoteEl && config.quotes && config.quotes.length > 0) {
+                    var newQuote = config.quotes[Math.floor(Math.random() * config.quotes.length)];
+                    quoteEl.innerHTML = '&ldquo;' + escapeHtml(newQuote) + '&rdquo;';
+                }
+                return;
+            }
+
+            // Export
+            if (target.matches('[data-action="export-char"]') || target.closest('[data-action="export-char"]')) {
+                exportCharacter(charId, state);
+                return;
+            }
+
+            // Reset
+            if (target.matches('[data-action="reset-char"]') || target.closest('[data-action="reset-char"]')) {
+                showResetModal(charId, config, state);
+                return;
+            }
+
+            // Ability edit mode toggle
+            if (target.matches('[data-action="ability-edit"]') || target.closest('[data-action="ability-edit"]')) {
+                abilityEditMode = true;
+                editAbilities = null;
+                renderApp();
+                return;
+            }
+
+            // Ability adjustment in edit mode
+            if (target.matches('.ability-adj')) {
+                var ab = target.dataset.ab;
+                var dir = target.dataset.dir;
+                if (editAbilities && ab) {
+                    if (dir === 'up' && editAbilities[ab] < 30) {
+                        editAbilities[ab]++;
+                    } else if (dir === 'down' && editAbilities[ab] > 1) {
+                        editAbilities[ab]--;
+                    }
+                    renderApp();
+                }
+                return;
+            }
+
+            // Ability edit save
+            if (target.matches('[data-action="ability-save"]')) {
+                if (editAbilities) {
+                    state.customAbilities = Object.assign({}, editAbilities);
+                    saveCharState(charId, state);
+                }
+                abilityEditMode = false;
+                editAbilities = null;
+                renderApp();
+                return;
+            }
+
+            // Ability edit cancel
+            if (target.matches('[data-action="ability-cancel"]')) {
+                abilityEditMode = false;
+                editAbilities = null;
+                renderApp();
+                return;
+            }
+
+            // Spell star/favorite toggle
+            if (target.matches('[data-spell-star]') || target.closest('[data-spell-star]')) {
+                var starEl = target.matches('[data-spell-star]') ? target : target.closest('[data-spell-star]');
+                var spellStarName = starEl.dataset.spellStar;
+                if (spellStarName && canEdit(charId)) {
+                    if (!state.favorites) state.favorites = [];
+                    var starIdx = state.favorites.indexOf(spellStarName);
+                    if (starIdx >= 0) {
+                        state.favorites.splice(starIdx, 1);
+                    } else {
+                        state.favorites.push(spellStarName);
+                    }
+                    saveCharState(charId, state);
+                    renderApp();
+                    e.stopPropagation();
+                    return;
+                }
+            }
+
+            // Spell toggle (not if clicking star)
+            if ((target.matches('.spell-toggle') || target.closest('.spell-toggle')) &&
+                !target.matches('[data-spell-star]') && !target.closest('[data-spell-star]')) {
+                if (!canEdit(charId)) return;
+                var btn = target.closest('.spell-toggle') || target;
+                var spellName = btn.dataset.spell;
+                var spellLevel = parseInt(btn.dataset.level);
+
+                if (spellLevel === 0) {
+                    toggleCantrip(charId, config, state, spellName);
+                } else {
+                    togglePrepared(charId, config, state, spellName);
+                }
+                return;
+            }
+
+            // Filter bar
+            if (target.matches('.filter-btn')) {
+                spellFilter = target.dataset.filter || 'all';
+                renderApp();
+                return;
+            }
+
+            // Metamagic toggle
+            if (target.matches('.metamagic-option') || target.closest('.metamagic-option')) {
+                if (!canEdit(charId)) return;
+                var mmBtn = target.closest('.metamagic-option') || target;
+                if (mmBtn.classList.contains('locked')) return;
+                var mmName = mmBtn.dataset.metamagic;
+                toggleMetamagic(charId, config, state, mmName);
+                return;
+            }
+
+            // ASI option buttons
+            if (target.matches('.asi-option') || target.closest('.asi-option')) {
+                if (!canEdit(charId)) return;
+                var asiBtn = target.closest('.asi-option') || target;
+                var asiLevel = parseInt(asiBtn.dataset.asiLevel);
+                var asiType = asiBtn.dataset.asiType;
+
+                if (asiType === 'reset') {
+                    delete state.asiChoices[asiLevel];
+                    saveCharState(charId, state);
+                    renderApp();
+                    return;
+                }
+                if (asiType === 'asi-two') {
+                    showASIAbilityPicker(charId, config, state, asiLevel, 'asi-two');
+                    return;
+                }
+                if (asiType === 'asi-split') {
+                    showASIAbilityPicker(charId, config, state, asiLevel, 'asi-split');
+                    return;
+                }
+                if (asiType === 'feat') {
+                    showFeatPicker(charId, config, state, asiLevel);
+                    return;
+                }
+            }
+
+            // Item add button
+            if (target.matches('[data-action="add-item"]')) {
+                var form = app.querySelector('.item-add-form');
+                if (form) {
+                    form.style.display = form.style.display === 'none' ? 'flex' : 'none';
+                    if (form.style.display !== 'none') {
+                        var nameInput = form.querySelector('.item-name-input');
+                        if (nameInput) nameInput.focus();
+                    }
+                }
+                return;
+            }
+
+            // Item confirm
+            if (target.matches('[data-action="confirm-item"]')) {
+                var formEl = app.querySelector('.item-add-form');
+                if (formEl) {
+                    var itemNameInput = formEl.querySelector('.item-name-input');
+                    var itemWeightInput = formEl.querySelector('.item-weight-input');
+                    var itemNotesInput = formEl.querySelector('.item-notes-input');
+                    var itemName = (itemNameInput ? itemNameInput.value : '').trim();
+                    var itemWeight = itemWeightInput ? parseFloat(itemWeightInput.value) || 0 : 0;
+                    var itemNotes = itemNotesInput ? itemNotesInput.value.trim() : '';
+                    if (itemName) {
+                        if (!state.items) state.items = [];
+                        state.items.push({ name: itemName, weight: itemWeight, notes: itemNotes });
+                        saveCharState(charId, state);
+                        renderApp();
+                    }
+                }
+                return;
+            }
+
+            // Item cancel
+            if (target.matches('[data-action="cancel-item"]')) {
+                var formEl2 = app.querySelector('.item-add-form');
+                if (formEl2) formEl2.style.display = 'none';
+                return;
+            }
+
+            // Item remove
+            if (target.matches('.item-remove')) {
+                var itemIdx = parseInt(target.dataset.itemIdx);
+                if (!isNaN(itemIdx) && state.items && state.items[itemIdx] !== undefined) {
+                    state.items.splice(itemIdx, 1);
+                    saveCharState(charId, state);
+                    renderApp();
+                }
+                return;
+            }
+        }
+    };
+
+    // ---- Change delegation ----
+    app.onchange = function(e) {
+        var target = e.target;
+
+        // Import character file
+        if (target.matches('[data-action="import-char"]')) {
+            if (!charId || !canEdit(charId)) return;
+            var file = target.files && target.files[0];
+            if (file) {
+                importCharacter(charId, file, function(imported) {
+                    var cfgLocal = loadCharConfig(charId);
+                    var defaults = {
+                        level: 1, skills: [], expertise: [], cantrips: [], prepared: [],
+                        metamagic: [], asiChoices: {}, favorites: [],
+                        items: (cfgLocal.defaultItems || []).map(function(itm) { return Object.assign({}, itm); }),
+                        customAbilities: null, gold: 0, notes: ''
+                    };
+                    var newState = {};
+                    var dkeys = Object.keys(defaults);
+                    for (var dk = 0; dk < dkeys.length; dk++) {
+                        newState[dkeys[dk]] = imported[dkeys[dk]] !== undefined ? imported[dkeys[dk]] : defaults[dkeys[dk]];
+                    }
+                    saveCharState(charId, newState);
+                    spellFilter = 'all';
+                    abilityEditMode = false;
+                    editAbilities = null;
+                    renderApp();
+                });
+            }
+            target.value = '';
+            return;
+        }
+
+        // Banner upload
+        if (target.matches('[data-action="upload-banner"]')) {
+            if (charId && canEdit(charId) && target.files && target.files[0]) {
+                handleImageUpload(target.files[0], charId, 'banner');
+            }
+            return;
+        }
+
+        // Portrait upload
+        if (target.matches('[data-action="upload-portrait"]')) {
+            if (charId && canEdit(charId) && target.files && target.files[0]) {
+                handleImageUpload(target.files[0], charId, 'portrait');
+            }
+            return;
+        }
+
+        // Appearance upload
+        if (target.matches('[data-action="upload-appearance"]')) {
+            if (charId && canEdit(charId) && target.files && target.files[0]) {
+                handleImageUpload(target.files[0], charId, 'appearance');
+            }
+            return;
+        }
+
+        // Map upload
+        if (target.matches('[data-action="upload-map"]')) {
+            if (isDM() && target.files && target.files[0]) {
+                var mapReader = new FileReader();
+                mapReader.onload = function(ev) {
+                    var count = parseInt(localStorage.getItem('dw_map_count') || '0');
+                    try {
+                        localStorage.setItem('dw_map_' + count, ev.target.result);
+                        localStorage.setItem('dw_map_count', String(count + 1));
+                        renderApp();
+                    } catch (err) {
+                        showWarning('Kaart te groot om op te slaan.');
+                    }
+                };
+                mapReader.readAsDataURL(target.files[0]);
+            }
+            return;
+        }
+    };
+
+    // ---- Input delegation ----
+    app.oninput = function(e) {
+        var target = e.target;
+
+        // Auto-fill weight from datalist
+        if (target.matches('.item-name-input')) {
+            var val = target.value.trim();
+            if (typeof DATA !== 'undefined' && DATA.items) {
+                var cats = Object.keys(DATA.items);
+                for (var ci = 0; ci < cats.length; ci++) {
+                    var catItems = DATA.items[cats[ci]];
+                    if (Array.isArray(catItems)) {
+                        for (var di = 0; di < catItems.length; di++) {
+                            var ditem = catItems[di];
+                            var iName = typeof ditem === 'string' ? ditem : ditem.name;
+                            var iWeight = typeof ditem === 'object' ? ditem.weight : undefined;
+                            if (iName === val && iWeight !== undefined) {
+                                var wInput = app.querySelector('.item-weight-input');
+                                if (wInput) wInput.value = iWeight;
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Gold input
+        if (target.matches('[data-action="update-gold"]') || target.matches('.gold-input')) {
+            if (charId && canEdit(charId)) {
+                var goldState = loadCharState(charId);
+                goldState.gold = parseInt(target.value) || 0;
+                saveCharState(charId, goldState);
+            }
+        }
+
+        // Notes auto-save
+        if (target.matches('.notes-textarea') || target.matches('[data-action="save-notes"]')) {
+            var uid = currentUserId();
+            if (uid) {
+                localStorage.setItem('dw_notes_' + uid, target.value);
+            }
+        }
+    };
+
+    // ---- Keydown for PIN ----
+    app.onkeydown = function(e) {
+        if (e.key === 'Enter' && e.target.matches('.login-pin-input')) {
+            var loginBtn = app.querySelector('[data-action="login-confirm"]');
+            if (loginBtn) loginBtn.click();
+        }
+    };
+
+    // ---- Tooltip events (on document for broader coverage) ----
+    document.onmouseover = function(e) {
+        var target = e.target;
+
+        // Ability score tooltip
+        if (!abilityEditMode && charId && config && state) {
+            var abilityEl = target.closest('.ability[data-ability]');
+            if (abilityEl) {
+                var ab = abilityEl.dataset.ability;
+                if (ab) {
+                    showAbilityTooltip(ab, config, state, abilityEl);
+                    return;
+                }
+            }
+        }
+
+        // Spell tooltip
+        var spellBtn = target.closest('.spell-toggle');
+        if (spellBtn && !target.matches('[data-spell-star]') && !target.closest('[data-spell-star]')) {
+            var spName = spellBtn.dataset.spell;
+            if (spName) {
+                showSpellTooltip(spName, spellBtn);
+                return;
+            }
+        }
+
+        // Info item tooltip
+        var infoItem = target.closest('.info-item');
+        if (infoItem) {
+            var valueEl = infoItem.querySelector('.value');
+            if (valueEl) {
+                var tipValue = valueEl.textContent.trim();
+                showInfoTooltip(tipValue, infoItem);
+                return;
+            }
+        }
+    };
+
+    document.onmouseout = function(e) {
+        var target = e.target;
+        var abilityEl = target.closest('.ability[data-ability]');
+        var spellBtn = target.closest('.spell-toggle');
+        var infoItem = target.closest('.info-item');
+        if (abilityEl || spellBtn || infoItem) {
+            var related = e.relatedTarget;
+            if (abilityEl && abilityEl.contains(related)) return;
+            if (spellBtn && spellBtn.contains(related)) return;
+            if (infoItem && infoItem.contains(related)) return;
+            removeTooltipPopup();
+        }
+    };
+}
+
+// ============================================================
+// Section 31: Initialization
+// ============================================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    initRouter();
 });

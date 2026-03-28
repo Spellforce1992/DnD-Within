@@ -12,6 +12,51 @@ const DATA = {
         ]
     },
 
+    // ===== HUMAN RACE (2024) =====
+    human: {
+        speed: 30,
+        features: [
+            { name: "Resourceful", desc: "Je krijgt Heroic Inspiration na elke long rest." },
+            { name: "Skillful", desc: "Je krijgt proficiency in 1 extra skill naar keuze." },
+            { name: "Versatile", desc: "Je krijgt een origin feat naar keuze." }
+        ]
+    },
+
+    // ===== HALFLING RACE (2024) =====
+    halfling: {
+        speed: 30,
+        features: [
+            { name: "Brave", desc: "Advantage op saving throws tegen frightened." },
+            { name: "Halfling Nimbleness", desc: "Je kunt door de ruimte van creatures bewegen die groter zijn dan jij (Medium of groter)." },
+            { name: "Luck", desc: "Als je een 1 rolt op een d20 voor een attack roll, ability check of saving throw, mag je opnieuw rollen en het nieuwe resultaat gebruiken." },
+            { name: "Naturally Stealthy", desc: "Je kunt je verbergen achter een creature dat minstens Medium is." }
+        ]
+    },
+
+    // ===== TIEFLING RACE (2024) =====
+    tiefling: {
+        speed: 30,
+        darkvision: 60,
+        features: [
+            { name: "Darkvision", desc: "Je kunt in dim light zien als bright light tot 60ft, en in duisternis als dim light." },
+            { name: "Fiendish Legacy", desc: "Kies een legacy: Abyssal (poison resistance), Chthonic (necrotic resistance), of Infernal (fire resistance). Je krijgt bijbehorende spells op hogere levels." },
+            { name: "Otherworldly Presence", desc: "Je kent de Thaumaturgy cantrip." }
+        ]
+    },
+
+    // ===== AASIMAR RACE (2024) =====
+    aasimar: {
+        speed: 30,
+        darkvision: 60,
+        features: [
+            { name: "Celestial Resistance", desc: "Je hebt resistance tegen necrotic en radiant damage." },
+            { name: "Darkvision", desc: "Je kunt in dim light zien als bright light tot 60ft, en in duisternis als dim light." },
+            { name: "Healing Hands", desc: "Als action, raak een creature aan om HP te herstellen gelijk aan je proficiency bonus. 1x per long rest." },
+            { name: "Light Bearer", desc: "Je kent de Light cantrip." },
+            { name: "Celestial Revelation", desc: "Vanaf level 3: kies Heavenly Wings (vliegende speed), Inner Radiance (extra radiant damage in een aura), of Necrotic Shroud (frightened aura + extra necrotic damage)." }
+        ]
+    },
+
     // ===== SORCERER CLASS =====
     sorcerer: {
         hitDie: 6,
@@ -202,6 +247,445 @@ const DATA = {
         }
     },
 
+    // ===== HALF-CASTER SPELL SLOTS =====
+    halfCasterSlots: {
+        2:  [2,0,0,0,0],
+        3:  [3,0,0,0,0],
+        4:  [3,0,0,0,0],
+        5:  [4,2,0,0,0],
+        6:  [4,2,0,0,0],
+        7:  [4,3,0,0,0],
+        8:  [4,3,0,0,0],
+        9:  [4,3,2,0,0],
+        10: [4,3,2,0,0],
+        11: [4,3,3,0,0],
+        12: [4,3,3,0,0],
+        13: [4,3,3,1,0],
+        14: [4,3,3,1,0],
+        15: [4,3,3,2,0],
+        16: [4,3,3,2,0],
+        17: [4,3,3,3,1],
+        18: [4,3,3,3,1],
+        19: [4,3,3,3,2],
+        20: [4,3,3,3,2]
+    },
+
+    // ===== RANGER CLASS =====
+    ranger: {
+        hitDie: 10,
+        savingThrows: ["str", "dex"],
+        skillOptions: ["animal handling", "athletics", "insight", "investigation", "nature", "perception", "stealth", "survival"],
+        skillCount: 3,
+        asiLevels: [4, 8, 12, 16, 19],
+
+        // Half caster: uses DATA.halfCasterSlots, starts at level 2
+        spellcasting: "half",
+        spellcastingStart: 2,
+
+        features: {
+            1: [
+                { name: "Favored Enemy", desc: "Je krijgt advantage op Survival checks om bepaalde creatures te tracken en op Intelligence checks om informatie over ze te herinneren." },
+                { name: "Deft Explorer", desc: "Je krijgt expertise in een skill waar je proficiency in hebt. Op hogere levels extra talen en climbing/swimming speed." }
+            ],
+            2: [
+                { name: "Fighting Style", desc: "Kies een fighting style: Archery (+2 ranged attacks), Defense (+1 AC in armor), Dueling (+2 melee damage met een wapen in één hand), Two-Weapon Fighting." },
+                { name: "Spellcasting", desc: "Je kunt ranger spells casten met WIS als spellcasting ability. Voorbereiden: WIS mod + half ranger level." }
+            ],
+            3: [
+                { name: "Primal Awareness", desc: "Je kunt bepaalde spells casten zonder een spell slot te gebruiken: Speak with Animals, en meer op hogere levels." }
+            ],
+            4: [
+                { name: "Ability Score Improvement", desc: "Verhoog één ability score met 2, of twee scores met 1. Of kies een feat." }
+            ],
+            5: [
+                { name: "Extra Attack", desc: "Je kunt twee keer aanvallen in plaats van één keer als je de Attack action neemt." }
+            ],
+            6: [
+                { name: "Roving", desc: "Je walking speed stijgt met 5ft. Je krijgt een climbing speed en swimming speed gelijk aan je walking speed." }
+            ],
+            8: [
+                { name: "Ability Score Improvement", desc: "Verhoog één ability score met 2, of twee scores met 1. Of kies een feat." }
+            ],
+            10: [
+                { name: "Nature's Veil", desc: "Als bonus action word je onzichtbaar tot het begin van je volgende beurt. Aantal keer per long rest = proficiency bonus." },
+                { name: "Tireless", desc: "Als action, krijg temporary HP gelijk aan 1d8 + WIS modifier. Aantal keer per long rest = proficiency bonus. Bij een short rest verminder je 1 level of exhaustion." }
+            ],
+            12: [
+                { name: "Ability Score Improvement", desc: "Verhoog één ability score met 2, of twee scores met 1. Of kies een feat." }
+            ],
+            16: [
+                { name: "Ability Score Improvement", desc: "Verhoog één ability score met 2, of twee scores met 1. Of kies een feat." }
+            ],
+            18: [
+                { name: "Feral Senses", desc: "Je hebt 30ft blindsight. Je bent ook bewust van de locatie van onzichtbare creatures binnen 30ft, mits ze niet verborgen zijn." }
+            ],
+            19: [
+                { name: "Ability Score Improvement", desc: "Verhoog één ability score met 2, of twee scores met 1. Of kies een feat." }
+            ],
+            20: [
+                { name: "Foe Slayer", desc: "Eén keer per beurt voeg je WIS modifier toe aan een attack roll of damage roll tegen een favored enemy." }
+            ]
+        },
+
+        subclasses: {
+            hunter: {
+                name: "Hunter",
+                level: 3,
+                features: {}
+            }
+        }
+    },
+
+    // ===== WIZARD CLASS =====
+    wizard: {
+        hitDie: 6,
+        savingThrows: ["int", "wis"],
+        skillOptions: ["arcana", "history", "insight", "investigation", "medicine", "religion"],
+        skillCount: 2,
+        asiLevels: [4, 8, 12, 16, 19],
+
+        // Full caster: uses same spell slot table as sorcerer
+        spellcasting: "full",
+        spellSlots: {
+            1:  [2,0,0,0,0,0,0,0,0],
+            2:  [3,0,0,0,0,0,0,0,0],
+            3:  [4,2,0,0,0,0,0,0,0],
+            4:  [4,3,0,0,0,0,0,0,0],
+            5:  [4,3,2,0,0,0,0,0,0],
+            6:  [4,3,3,0,0,0,0,0,0],
+            7:  [4,3,3,1,0,0,0,0,0],
+            8:  [4,3,3,2,0,0,0,0,0],
+            9:  [4,3,3,3,1,0,0,0,0],
+            10: [4,3,3,3,2,0,0,0,0],
+            11: [4,3,3,3,2,1,0,0,0],
+            12: [4,3,3,3,2,1,0,0,0],
+            13: [4,3,3,3,2,1,1,0,0],
+            14: [4,3,3,3,2,1,1,0,0],
+            15: [4,3,3,3,2,1,1,1,0],
+            16: [4,3,3,3,2,1,1,1,0],
+            17: [4,3,3,3,2,1,1,1,1],
+            18: [4,3,3,3,3,1,1,1,1],
+            19: [4,3,3,3,3,2,1,1,1],
+            20: [4,3,3,3,3,2,2,1,1]
+        },
+
+        cantripsKnown: { 1:3, 2:3, 3:3, 4:4, 5:4, 6:4, 7:4, 8:4, 9:4, 10:5, 11:5, 12:5, 13:5, 14:5, 15:5, 16:5, 17:5, 18:5, 19:5, 20:5 },
+        maxSpellLevel: { 1:1, 2:1, 3:2, 4:2, 5:3, 6:3, 7:4, 8:4, 9:5, 10:5, 11:6, 12:6, 13:7, 14:7, 15:8, 16:8, 17:9, 18:9, 19:9, 20:9 },
+
+        features: {
+            1: [
+                { name: "Spellcasting", desc: "Cast wizard spells met INT als spellcasting ability. Je bereidt spells voor uit je spellbook: INT mod + wizard level." },
+                { name: "Arcane Recovery", desc: "Eén keer per dag na een short rest: herstel spell slots met een totaal level gelijk aan de helft van je wizard level (afgerond naar boven)." }
+            ],
+            3: [
+                { name: "Arcane Tradition", desc: "Kies je subclass: een school of magic waarin je specialiseert." }
+            ],
+            4: [
+                { name: "Ability Score Improvement", desc: "Verhoog één ability score met 2, of twee scores met 1. Of kies een feat." }
+            ],
+            8: [
+                { name: "Ability Score Improvement", desc: "Verhoog één ability score met 2, of twee scores met 1. Of kies een feat." }
+            ],
+            12: [
+                { name: "Ability Score Improvement", desc: "Verhoog één ability score met 2, of twee scores met 1. Of kies een feat." }
+            ],
+            16: [
+                { name: "Ability Score Improvement", desc: "Verhoog één ability score met 2, of twee scores met 1. Of kies een feat." }
+            ],
+            18: [
+                { name: "Spell Mastery", desc: "Kies een 1st-level en een 2nd-level wizard spell. Je kunt ze casten op hun laagste level zonder een spell slot te gebruiken." }
+            ],
+            19: [
+                { name: "Ability Score Improvement", desc: "Verhoog één ability score met 2, of twee scores met 1. Of kies een feat." }
+            ],
+            20: [
+                { name: "Signature Spells", desc: "Kies twee 3rd-level wizard spells. Ze zijn altijd voorbereid en je kunt elk eens per short/long rest casten zonder spell slot." }
+            ]
+        },
+
+        subclasses: {
+            evocation: {
+                name: "School of Evocation",
+                level: 3,
+                features: {}
+            }
+        }
+    },
+
+    // ===== PALADIN CLASS =====
+    paladin: {
+        hitDie: 10,
+        savingThrows: ["wis", "cha"],
+        skillOptions: ["athletics", "insight", "intimidation", "medicine", "persuasion", "religion"],
+        skillCount: 2,
+        asiLevels: [4, 8, 12, 16, 19],
+
+        // Half caster: uses DATA.halfCasterSlots, starts at level 2
+        spellcasting: "half",
+        spellcastingStart: 2,
+
+        features: {
+            1: [
+                { name: "Divine Sense", desc: "Als action, detecteer celestials, fiends en undead binnen 60ft. Je weet het type maar niet de identiteit. Aantal keer = 1 + CHA mod per long rest." },
+                { name: "Lay on Hands", desc: "Je hebt een pool van healing gelijk aan 5x je paladin level. Als action, raak een creature aan en herstel HP uit de pool. 5 HP besteden cured een ziekte of neutraliseert een gif." }
+            ],
+            2: [
+                { name: "Fighting Style", desc: "Kies een fighting style: Defense (+1 AC), Dueling (+2 damage met een wapen), Great Weapon Fighting (herrol 1/2 op damage dice), Protection (disadvantage op attack tegen ally met shield)." },
+                { name: "Spellcasting", desc: "Cast paladin spells met CHA als spellcasting ability. Voorbereiden: CHA mod + half paladin level." },
+                { name: "Divine Smite", desc: "Als je een creature raakt met een melee weapon attack, besteed een spell slot voor 2d8 extra radiant damage (+1d8 per hoger slot, +1d8 vs undead/fiends). Max 5d8." }
+            ],
+            3: [
+                { name: "Divine Health", desc: "Je bent immuun voor ziektes." },
+                { name: "Channel Divinity", desc: "Je krijgt Channel Divinity opties van je Sacred Oath. Eén gebruik per short/long rest." }
+            ],
+            4: [
+                { name: "Ability Score Improvement", desc: "Verhoog één ability score met 2, of twee scores met 1. Of kies een feat." }
+            ],
+            5: [
+                { name: "Extra Attack", desc: "Je kunt twee keer aanvallen in plaats van één keer als je de Attack action neemt." }
+            ],
+            6: [
+                { name: "Aura of Protection", desc: "Jij en friendly creatures binnen 10ft krijgen een bonus op saving throws gelijk aan je CHA modifier (min +1). Op level 18 wordt dit 30ft." }
+            ],
+            8: [
+                { name: "Ability Score Improvement", desc: "Verhoog één ability score met 2, of twee scores met 1. Of kies een feat." }
+            ],
+            10: [
+                { name: "Aura of Courage", desc: "Jij en friendly creatures binnen 10ft kunnen niet frightened zijn terwijl je bij bewustzijn bent. Op level 18 wordt dit 30ft." }
+            ],
+            11: [
+                { name: "Improved Divine Smite", desc: "Al je melee weapon attacks doen een extra 1d8 radiant damage." }
+            ],
+            12: [
+                { name: "Ability Score Improvement", desc: "Verhoog één ability score met 2, of twee scores met 1. Of kies een feat." }
+            ],
+            14: [
+                { name: "Cleansing Touch", desc: "Als action, beëindig een spell op jezelf of een willing creature. Aantal keer per long rest = CHA modifier." }
+            ],
+            16: [
+                { name: "Ability Score Improvement", desc: "Verhoog één ability score met 2, of twee scores met 1. Of kies een feat." }
+            ],
+            19: [
+                { name: "Ability Score Improvement", desc: "Verhoog één ability score met 2, of twee scores met 1. Of kies een feat." }
+            ]
+        },
+
+        subclasses: {
+            devotion: {
+                name: "Oath of Devotion",
+                level: 3,
+                features: {}
+            }
+        }
+    },
+
+    // ===== DRUID CLASS =====
+    druid: {
+        hitDie: 8,
+        savingThrows: ["int", "wis"],
+        skillOptions: ["arcana", "animal handling", "insight", "medicine", "nature", "perception", "religion", "survival"],
+        skillCount: 2,
+        asiLevels: [4, 8, 12, 16, 19],
+
+        // Full caster
+        spellcasting: "full",
+        spellSlots: {
+            1:  [2,0,0,0,0,0,0,0,0],
+            2:  [3,0,0,0,0,0,0,0,0],
+            3:  [4,2,0,0,0,0,0,0,0],
+            4:  [4,3,0,0,0,0,0,0,0],
+            5:  [4,3,2,0,0,0,0,0,0],
+            6:  [4,3,3,0,0,0,0,0,0],
+            7:  [4,3,3,1,0,0,0,0,0],
+            8:  [4,3,3,2,0,0,0,0,0],
+            9:  [4,3,3,3,1,0,0,0,0],
+            10: [4,3,3,3,2,0,0,0,0],
+            11: [4,3,3,3,2,1,0,0,0],
+            12: [4,3,3,3,2,1,0,0,0],
+            13: [4,3,3,3,2,1,1,0,0],
+            14: [4,3,3,3,2,1,1,0,0],
+            15: [4,3,3,3,2,1,1,1,0],
+            16: [4,3,3,3,2,1,1,1,0],
+            17: [4,3,3,3,2,1,1,1,1],
+            18: [4,3,3,3,3,1,1,1,1],
+            19: [4,3,3,3,3,2,1,1,1],
+            20: [4,3,3,3,3,2,2,1,1]
+        },
+
+        cantripsKnown: { 1:4, 2:4, 3:4, 4:5, 5:5, 6:5, 7:5, 8:5, 9:5, 10:6, 11:6, 12:6, 13:6, 14:6, 15:6, 16:6, 17:6, 18:6, 19:6, 20:6 },
+        maxSpellLevel: { 1:1, 2:1, 3:2, 4:2, 5:3, 6:3, 7:4, 8:4, 9:5, 10:5, 11:6, 12:6, 13:7, 14:7, 15:8, 16:8, 17:9, 18:9, 19:9, 20:9 },
+
+        features: {
+            1: [
+                { name: "Druidic", desc: "Je kent Druidic, de geheime taal van druids. Je kunt verborgen berichten achterlaten die alleen andere druids begrijpen." },
+                { name: "Spellcasting", desc: "Cast druid spells met WIS als spellcasting ability. Voorbereiden: WIS mod + druid level." }
+            ],
+            2: [
+                { name: "Wild Shape", desc: "Als action, transformeer in een beast die je hebt gezien. Max CR en type afhankelijk van level. Duurt een aantal uren = half druid level." },
+                { name: "Wild Companion", desc: "Besteed een gebruik van Wild Shape om Find Familiar te casten zonder materiaalcomponenten." }
+            ],
+            3: [
+                { name: "Druid Subclass", desc: "Kies je Druid Circle, je subclass die bepaalt hoe je de natuur benadert." }
+            ],
+            4: [
+                { name: "Ability Score Improvement", desc: "Verhoog één ability score met 2, of twee scores met 1. Of kies een feat." }
+            ],
+            8: [
+                { name: "Ability Score Improvement", desc: "Verhoog één ability score met 2, of twee scores met 1. Of kies een feat." }
+            ],
+            12: [
+                { name: "Ability Score Improvement", desc: "Verhoog één ability score met 2, of twee scores met 1. Of kies een feat." }
+            ],
+            16: [
+                { name: "Ability Score Improvement", desc: "Verhoog één ability score met 2, of twee scores met 1. Of kies een feat." }
+            ],
+            19: [
+                { name: "Ability Score Improvement", desc: "Verhoog één ability score met 2, of twee scores met 1. Of kies een feat." }
+            ]
+        },
+
+        subclasses: {
+            land: {
+                name: "Circle of the Land",
+                level: 3,
+                features: {}
+            }
+        }
+    },
+
+    // ===== FIGHTER CLASS =====
+    fighter: {
+        hitDie: 10,
+        savingThrows: ["str", "con"],
+        skillOptions: ["acrobatics", "animal handling", "athletics", "history", "insight", "intimidation", "perception", "survival"],
+        skillCount: 2,
+        asiLevels: [4, 6, 8, 12, 14, 16, 19],
+
+        // No spellcasting by default (Eldritch Knight subclass adds it)
+        spellcasting: "none",
+
+        features: {
+            1: [
+                { name: "Fighting Style", desc: "Kies een fighting style: Archery, Defense, Dueling, Great Weapon Fighting, Protection, Two-Weapon Fighting, etc." },
+                { name: "Second Wind", desc: "Bonus action: herstel 1d10 + fighter level HP. Eén keer per short/long rest." }
+            ],
+            2: [
+                { name: "Action Surge", desc: "Eén keer per short/long rest neem je een extra action bovenop je normale action. Op level 17 krijg je twee gebruiken." }
+            ],
+            3: [
+                { name: "Martial Archetype", desc: "Kies je subclass: dit bepaalt je vechtspecialisatie." }
+            ],
+            4: [
+                { name: "Ability Score Improvement", desc: "Verhoog één ability score met 2, of twee scores met 1. Of kies een feat." }
+            ],
+            5: [
+                { name: "Extra Attack", desc: "Je kunt twee keer aanvallen in plaats van één keer als je de Attack action neemt." }
+            ],
+            6: [
+                { name: "Ability Score Improvement", desc: "Verhoog één ability score met 2, of twee scores met 1. Of kies een feat." }
+            ],
+            8: [
+                { name: "Ability Score Improvement", desc: "Verhoog één ability score met 2, of twee scores met 1. Of kies een feat." }
+            ],
+            9: [
+                { name: "Indomitable", desc: "Herrol een gefaalde saving throw. Eén keer per long rest. Op level 13: twee keer, level 17: drie keer." }
+            ],
+            11: [
+                { name: "Extra Attack (2)", desc: "Je kunt drie keer aanvallen in plaats van twee keer als je de Attack action neemt." }
+            ],
+            12: [
+                { name: "Ability Score Improvement", desc: "Verhoog één ability score met 2, of twee scores met 1. Of kies een feat." }
+            ],
+            14: [
+                { name: "Ability Score Improvement", desc: "Verhoog één ability score met 2, of twee scores met 1. Of kies een feat." }
+            ],
+            16: [
+                { name: "Ability Score Improvement", desc: "Verhoog één ability score met 2, of twee scores met 1. Of kies een feat." }
+            ],
+            19: [
+                { name: "Ability Score Improvement", desc: "Verhoog één ability score met 2, of twee scores met 1. Of kies een feat." }
+            ],
+            20: [
+                { name: "Extra Attack (3)", desc: "Je kunt vier keer aanvallen in plaats van drie keer als je de Attack action neemt." }
+            ]
+        },
+
+        subclasses: {
+            champion: {
+                name: "Champion",
+                level: 3,
+                features: {}
+            }
+        }
+    },
+
+    // ===== WARLOCK CLASS =====
+    warlock: {
+        hitDie: 8,
+        savingThrows: ["wis", "cha"],
+        skillOptions: ["arcana", "deception", "history", "intimidation", "investigation", "nature", "religion"],
+        skillCount: 2,
+        asiLevels: [4, 8, 12, 16, 19],
+
+        // Pact Magic: different from regular spellcasting
+        spellcasting: "pact",
+        pactSlots: { 1:1, 2:2, 3:2, 4:2, 5:2, 6:2, 7:2, 8:2, 9:2, 10:2, 11:3, 12:3, 13:3, 14:3, 15:3, 16:3, 17:4, 18:4, 19:4, 20:4 },
+        pactSlotLevel: { 1:1, 2:1, 3:2, 4:2, 5:3, 6:3, 7:4, 8:4, 9:5, 10:5, 11:5, 12:5, 13:5, 14:5, 15:5, 16:5, 17:5, 18:5, 19:5, 20:5 },
+        cantripsKnown: { 1:2, 2:2, 3:2, 4:3, 5:3, 6:3, 7:3, 8:3, 9:3, 10:4, 11:4, 12:4, 13:4, 14:4, 15:4, 16:4, 17:4, 18:4, 19:4, 20:4 },
+        // Mystic Arcanum: 1 spell each of these levels, castable 1x per long rest
+        mysticArcanum: { 11: 6, 13: 7, 15: 8, 17: 9 },
+
+        features: {
+            1: [
+                { name: "Pact Magic", desc: "Cast warlock spells met CHA als spellcasting ability. Je spell slots zijn altijd van hetzelfde level en herstellen na een short rest." }
+            ],
+            2: [
+                { name: "Eldritch Invocations", desc: "Kies 2 Eldritch Invocations: speciale magische vaardigheden die je cantrips en abilities verbeteren. Je leert meer op hogere levels." }
+            ],
+            3: [
+                { name: "Pact Boon", desc: "Kies een Pact Boon van je patron: Pact of the Blade (magisch wapen), Chain (verbeterde familiar), of Tome (extra cantrips)." }
+            ],
+            4: [
+                { name: "Ability Score Improvement", desc: "Verhoog één ability score met 2, of twee scores met 1. Of kies een feat." }
+            ],
+            8: [
+                { name: "Ability Score Improvement", desc: "Verhoog één ability score met 2, of twee scores met 1. Of kies een feat." }
+            ],
+            11: [
+                { name: "Mystic Arcanum (6th)", desc: "Kies een 6th-level warlock spell. Je kunt die eens per long rest casten zonder een spell slot. Op hogere levels krijg je 7th, 8th en 9th level Arcanum." }
+            ],
+            12: [
+                { name: "Ability Score Improvement", desc: "Verhoog één ability score met 2, of twee scores met 1. Of kies een feat." }
+            ],
+            13: [
+                { name: "Mystic Arcanum (7th)", desc: "Kies een 7th-level warlock spell. Je kunt die eens per long rest casten zonder een spell slot." }
+            ],
+            15: [
+                { name: "Mystic Arcanum (8th)", desc: "Kies een 8th-level warlock spell. Je kunt die eens per long rest casten zonder een spell slot." }
+            ],
+            16: [
+                { name: "Ability Score Improvement", desc: "Verhoog één ability score met 2, of twee scores met 1. Of kies een feat." }
+            ],
+            17: [
+                { name: "Mystic Arcanum (9th)", desc: "Kies een 9th-level warlock spell. Je kunt die eens per long rest casten zonder een spell slot." }
+            ],
+            19: [
+                { name: "Ability Score Improvement", desc: "Verhoog één ability score met 2, of twee scores met 1. Of kies een feat." }
+            ],
+            20: [
+                { name: "Eldritch Master", desc: "Eén keer per long rest kun je 1 minuut besteden om alle Pact Magic spell slots te herstellen." }
+            ]
+        },
+
+        subclasses: {
+            fiend: {
+                name: "The Fiend",
+                level: 1,
+                features: {}
+            }
+        }
+    },
+
     // ===== METAMAGIC OPTIONS =====
     metamagic: [
         { name: "Careful Spell", cost: 1, desc: "Kies een aantal creatures gelijk aan je CHA modifier (min 1). Ze slagen automatisch op de saving throw van je spell." },
@@ -268,6 +752,58 @@ const DATA = {
         { name: "Survival", ability: "wis" }
     ],
 
+    // ===== BACKGROUNDS =====
+    backgrounds: {
+        urchin: {
+            name: "Urchin",
+            abilityScores: ["DEX", "CON", "WIS"],
+            skills: ["Sleight of Hand", "Stealth"],
+            tool: "Thieves' Tools",
+            feat: "Lucky",
+            desc: "Opgegroeid op straat. Je kent de stad beter dan wie dan ook en je hebt geleerd te overleven met niets."
+        },
+        guide: {
+            name: "Guide",
+            abilityScores: ["DEX", "WIS", "CON"],
+            skills: ["Stealth", "Survival"],
+            tool: "Cartographer's Tools",
+            feat: "Magic Initiate (Druid)",
+            desc: "Je hebt je leven lang reizigers door de wildernis geleid. Je kent de paden en gevaren van de natuur."
+        },
+        sage: {
+            name: "Sage",
+            abilityScores: ["INT", "WIS", "CON"],
+            skills: ["Arcana", "History"],
+            tool: "Calligrapher's Supplies",
+            feat: "Magic Initiate (Wizard)",
+            desc: "Jarenlang heb je kennis vergaard uit boeken en bibliotheken. Je bent een expert in je vakgebied."
+        },
+        soldier: {
+            name: "Soldier",
+            abilityScores: ["STR", "DEX", "CON"],
+            skills: ["Athletics", "Intimidation"],
+            tool: "Gaming Set",
+            feat: "Savage Attacker",
+            desc: "Je hebt gediend in een leger of militie. Je kent de discipline van het slagveld en de kameraadschap van soldaten."
+        },
+        acolyte: {
+            name: "Acolyte",
+            abilityScores: ["INT", "WIS", "CHA"],
+            skills: ["Insight", "Religion"],
+            tool: "Calligrapher's Supplies",
+            feat: "Magic Initiate (Cleric)",
+            desc: "Je hebt je leven gewijd aan de dienst van een tempel of religieuze orde. Je kent de rituelen en overtuigingen van je geloof."
+        },
+        charlatan: {
+            name: "Charlatan",
+            abilityScores: ["DEX", "CON", "CHA"],
+            skills: ["Deception", "Sleight of Hand"],
+            tool: "Forgery Kit",
+            feat: "Skilled",
+            desc: "Je hebt altijd een talent gehad voor het misleiden van anderen. Valse identiteiten, oplichterij en bedrog zijn je specialiteit."
+        }
+    },
+
     // ===== TOOLTIPS =====
     tooltips: {
         halfElf: {
@@ -316,6 +852,148 @@ const DATA = {
             toolProf: "Disguise kit, Thieves' tools",
             feature: "City Secrets — Je kent geheime routes door de stad. Je reist twee keer zo snel door stedelijk gebied.",
             equipment: "Klein mes, kaart van de stad, huisdier (muis), set gewone kleding, buidel met 10gp"
+        },
+
+        // New race tooltips
+        human: {
+            title: "Human (2024)",
+            desc: "Veelzijdig en ambitieus. Mensen passen zich aan elke situatie aan.",
+            abilities: "+1 op drie ability scores naar keuze (via background), of +2/+1",
+            traits: "Resourceful (Heroic Inspiration op long rest), Skillful (1 extra skill proficiency), Versatile (origin feat naar keuze)",
+            languages: "Common, +1 naar keuze",
+            speed: "30ft",
+            size: "Medium"
+        },
+        halfling: {
+            title: "Halfling (2024)",
+            desc: "Klein maar dapper. Halflings zijn optimistisch en buitengewoon gelukkig.",
+            abilities: "+1 op drie ability scores naar keuze (via background), of +2/+1",
+            traits: "Brave (advantage vs frightened), Halfling Nimbleness (door grotere creatures bewegen), Luck (herrol nat 1), Naturally Stealthy (verbergen achter grotere creatures)",
+            languages: "Common, Halfling",
+            speed: "30ft",
+            size: "Small"
+        },
+        tiefling: {
+            title: "Tiefling (2024)",
+            desc: "Afstammeling van duivelse machten. Tieflings dragen de tekenen van hun erfgoed.",
+            abilities: "+1 op drie ability scores naar keuze (via background), of +2/+1",
+            traits: "Darkvision 60ft, Fiendish Legacy (kies Abyssal/Chthonic/Infernal voor resistance + spells), Otherworldly Presence (Thaumaturgy cantrip)",
+            languages: "Common, +1 naar keuze",
+            speed: "30ft",
+            size: "Medium"
+        },
+        aasimar: {
+            title: "Aasimar (2024)",
+            desc: "Gezegend met hemelse kracht. Aasimar hebben een goddelijke vonk in hun ziel.",
+            abilities: "+1 op drie ability scores naar keuze (via background), of +2/+1",
+            traits: "Celestial Resistance (necrotic + radiant resistance), Darkvision 60ft, Healing Hands (heal = prof bonus, 1x/long rest), Light Bearer (Light cantrip), Celestial Revelation (lvl 3: Wings/Radiance/Shroud)",
+            languages: "Common, +1 naar keuze",
+            speed: "30ft",
+            size: "Medium"
+        },
+
+        // New class tooltips
+        ranger: {
+            title: "Ranger",
+            desc: "Krijger van de wildernis die magie combineert met vechtkunst en overlevingsvaardigheden.",
+            hitDie: "d10",
+            primaryAbility: "Dexterity & Wisdom",
+            savingThrows: "Strength, Dexterity",
+            armorProf: "Light armor, medium armor, shields",
+            weaponProf: "Simple weapons, martial weapons",
+            spellcasting: "Half caster (WIS). Bereidt spells voor: WIS mod + half ranger level. Geen cantrips."
+        },
+        wizard: {
+            title: "Wizard",
+            desc: "Geleerde magiër die magie bestudeert vanuit boeken en eeuwenoude kennis.",
+            hitDie: "d6",
+            primaryAbility: "Intelligence",
+            savingThrows: "Intelligence, Wisdom",
+            armorProf: "Geen",
+            weaponProf: "Daggers, darts, slings, quarterstaffs, light crossbows",
+            spellcasting: "Full caster (INT). Bereidt spells voor uit spellbook: INT mod + wizard level."
+        },
+        paladin: {
+            title: "Paladin",
+            desc: "Heilige krijger die een eed heeft gezworen en goddelijke magie combineert met wapenkunst.",
+            hitDie: "d10",
+            primaryAbility: "Strength & Charisma",
+            savingThrows: "Wisdom, Charisma",
+            armorProf: "Alle armor, shields",
+            weaponProf: "Simple weapons, martial weapons",
+            spellcasting: "Half caster (CHA). Bereidt spells voor: CHA mod + half paladin level. Divine Smite voor extra radiant damage."
+        },
+        druid: {
+            title: "Druid",
+            desc: "Bewaker van de natuur die de kracht van de elementen en wilde dieren aanroept.",
+            hitDie: "d8",
+            primaryAbility: "Wisdom",
+            savingThrows: "Intelligence, Wisdom",
+            armorProf: "Light armor, medium armor, shields (geen metaal)",
+            weaponProf: "Clubs, daggers, darts, javelins, maces, quarterstaffs, scimitars, sickles, slings, spears",
+            spellcasting: "Full caster (WIS). Bereidt spells voor: WIS mod + druid level. Wild Shape om in dieren te transformeren."
+        },
+        fighter: {
+            title: "Fighter",
+            desc: "Meester van de wapens en tactiek. De meest veelzijdige vechtklasse.",
+            hitDie: "d10",
+            primaryAbility: "Strength of Dexterity",
+            savingThrows: "Strength, Constitution",
+            armorProf: "Alle armor, shields",
+            weaponProf: "Simple weapons, martial weapons",
+            spellcasting: "Geen (tenzij Eldritch Knight subclass). Krijgt meer ASIs dan andere klassen (7 totaal)."
+        },
+        warlock: {
+            title: "Warlock",
+            desc: "Magiër die zijn kracht ontleent aan een pact met een bovennatuurlijk wezen.",
+            hitDie: "d8",
+            primaryAbility: "Charisma",
+            savingThrows: "Wisdom, Charisma",
+            armorProf: "Light armor",
+            weaponProf: "Simple weapons",
+            spellcasting: "Pact Magic (CHA). Beperkte spell slots die herstellen na short rest. Alle slots zijn van hetzelfde level. Mystic Arcanum voor hogere spells."
+        },
+
+        // New background tooltips
+        guide: {
+            title: "Guide Background",
+            desc: "Je hebt je leven lang reizigers door de wildernis geleid. Je kent de paden en gevaren van de natuur.",
+            skillProf: "Stealth, Survival",
+            toolProf: "Cartographer's Tools",
+            feature: "Magic Initiate (Druid) — Leer 2 druid cantrips en 1 first-level druid spell.",
+            abilityScores: "+2/+1 verdeeld over DEX, WIS, CON"
+        },
+        sage: {
+            title: "Sage Background",
+            desc: "Jarenlang heb je kennis vergaard uit boeken en bibliotheken. Je bent een expert in je vakgebied.",
+            skillProf: "Arcana, History",
+            toolProf: "Calligrapher's Supplies",
+            feature: "Magic Initiate (Wizard) — Leer 2 wizard cantrips en 1 first-level wizard spell.",
+            abilityScores: "+2/+1 verdeeld over INT, WIS, CON"
+        },
+        soldier: {
+            title: "Soldier Background",
+            desc: "Je hebt gediend in een leger of militie. Je kent de discipline van het slagveld.",
+            skillProf: "Athletics, Intimidation",
+            toolProf: "Gaming Set",
+            feature: "Savage Attacker — Eén keer per beurt herrol melee weapon damage dice en kies het hoogste.",
+            abilityScores: "+2/+1 verdeeld over STR, DEX, CON"
+        },
+        acolyte: {
+            title: "Acolyte Background",
+            desc: "Je hebt je leven gewijd aan de dienst van een tempel of religieuze orde.",
+            skillProf: "Insight, Religion",
+            toolProf: "Calligrapher's Supplies",
+            feature: "Magic Initiate (Cleric) — Leer 2 cleric cantrips en 1 first-level cleric spell.",
+            abilityScores: "+2/+1 verdeeld over INT, WIS, CHA"
+        },
+        charlatan: {
+            title: "Charlatan Background",
+            desc: "Valse identiteiten, oplichterij en bedrog zijn je specialiteit.",
+            skillProf: "Deception, Sleight of Hand",
+            toolProf: "Forgery Kit",
+            feature: "Skilled — Proficiency in 3 extra skills of tools naar keuze.",
+            abilityScores: "+2/+1 verdeeld over DEX, CON, CHA"
         }
     },
 
@@ -333,13 +1011,40 @@ const DATA = {
             { name: "Sling", weight: 0 },
             { name: "Rapier", weight: 2 },
             { name: "Longsword", weight: 3 },
-            { name: "Handaxe", weight: 2 }
+            { name: "Handaxe", weight: 2 },
+            { name: "Greatsword", weight: 6 },
+            { name: "Greataxe", weight: 7 },
+            { name: "Warhammer", weight: 2 },
+            { name: "Battleaxe", weight: 4 },
+            { name: "Longbow", weight: 2 },
+            { name: "Maul", weight: 10 },
+            { name: "Morningstar", weight: 4 },
+            { name: "Scimitar", weight: 3 },
+            { name: "Javelin", weight: 2 },
+            { name: "Spear", weight: 3 },
+            { name: "Mace", weight: 4 },
+            { name: "Glaive", weight: 6 },
+            { name: "Halberd", weight: 6 },
+            { name: "Trident", weight: 4 },
+            { name: "War pick", weight: 2 },
+            { name: "Whip", weight: 3 },
+            { name: "Club", weight: 2 },
+            { name: "Sickle", weight: 2 }
         ],
         armor: [
             { name: "Leather armor", weight: 10 },
             { name: "Studded leather", weight: 13 },
             { name: "Shield", weight: 6 },
-            { name: "Padded armor", weight: 8 }
+            { name: "Padded armor", weight: 8 },
+            { name: "Hide armor", weight: 12 },
+            { name: "Chain shirt", weight: 20 },
+            { name: "Scale mail", weight: 45 },
+            { name: "Breastplate", weight: 20 },
+            { name: "Half plate", weight: 40 },
+            { name: "Ring mail", weight: 40 },
+            { name: "Chain mail", weight: 55 },
+            { name: "Splint armor", weight: 60 },
+            { name: "Plate armor", weight: 65 }
         ],
         adventuring: [
             { name: "Backpack", weight: 5 },
@@ -377,7 +1082,14 @@ const DATA = {
             { name: "Poisoner's kit", weight: 2 },
             { name: "Herbalism kit", weight: 3 },
             { name: "Navigator's tools", weight: 2 },
-            { name: "Gaming set", weight: 0 }
+            { name: "Gaming set", weight: 0 },
+            { name: "Cartographer's tools", weight: 6 },
+            { name: "Calligrapher's supplies", weight: 5 },
+            { name: "Druidic focus (totem)", weight: 0 },
+            { name: "Druidic focus (staff)", weight: 4 },
+            { name: "Holy symbol (amulet)", weight: 1 },
+            { name: "Holy symbol (emblem)", weight: 0 },
+            { name: "Holy symbol (reliquary)", weight: 2 }
         ],
         containers: [
             { name: "Pouch", weight: 1 },
