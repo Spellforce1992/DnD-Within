@@ -212,7 +212,7 @@ var CHAR_DEFAULTS = {
             flaw: "Vertrouwt niemand behalve Saya. Het kost hem weken om iemand binnen te laten.",
             fear: "Water. De rivier. Leeftijd 17."
         },
-        backstory: "Opgegroeid op straat na de dood van hun ouders bij de Slangenmars. Samen met zijn tweelingzus Saya heeft hij geleerd te overleven met niets dan hun verstand en hun messen.",
+        backstory: "Ren en Saya Ashvane werden geboren in een klein dorp aan de rand van het Slangenmoeras. Hun moeder Lira was een voormalige avonturier; hun vader Dorin een stille houtsnijder die drakenbeeldjes sneed bij het kampvuur.\n\nZe waren zeven toen de Slangenmars kwam. Slangenwezens verwoestten hun dorp in \u00e9\u00e9n nacht. Lira viel als laatste. Dorin stierf naast zijn draak-bondgenoot Vuuradem.\n\nDe tweeling overleefde. In de sloppenwijken van Velthaven leerden ze stelen, rennen, en vertrouwen op niemand behalve elkaar. Ren werd de schaduw \u2014 stil, snel, dodelijk met zijn dolken Woord en Daad.\n\nWat moeder altijd zei: \"Tel je messen. Tel je uitgangen. Tel je vrienden. In die volgorde.\"\n\nHij draagt nog steeds vaders leren jas en het houten drakenbeeldje. De jas is twee maten te groot. Het beeldje zit in de binnenzak, rechts, waar zijn hand het kan raken zonder dat iemand het ziet.",
         quotes: [
             "Er is altijd een uitweg. En als die er niet is, maak je er een.",
             "Vertrouwen is duur. Ik betaal liever met staal.",
@@ -260,7 +260,7 @@ var CHAR_DEFAULTS = {
             flaw: "Moet alles in kaart brengen. Als ze het niet kan tekenen, begrijpt ze het niet.",
             fear: "Stilte. Stilte is wat er was vlak voordat de slangen kwamen."
         },
-        backstory: "Tweelingzus van Ren. Haar Wild Magic manifesteerde zich toen ze 13 was \u2014 ze stak een marktkraam in brand. Sindsdien heeft ze zichzelf geleerd haar chaotische magie te beheersen.",
+        backstory: "Tweelingzus van Ren, geboren in hetzelfde dorp aan het Slangenmoeras. Waar Ren de schaduw werd, werd Saya de vonk.\n\nToen ze dertien was, stak ze per ongeluk een marktkraam in brand. Niet met een fakkel \u2014 met haar handen. De Wild Magic was altijd al in haar bloed geweest. Ze leerde zichzelf alles: geen academie, geen leraar, geen boeken.\n\nZe vult elke stilte, want stilte is wat er was vlak voordat de slangen kwamen. Ze tekent kaarten van alles en iedereen. Als ze het niet kan tekenen, begrijpt ze het niet.\n\nMoeders koperen ring hangt aan een gevlochten koord om haar nek. Ze raakt hem aan als ze nadenkt. Als een reflex.\n\nWat moeder altijd zei: \"Huilen mag. Maar huil terwijl je doorloopt.\"",
         quotes: [
             "Magie is niet iets wat ik heb geleerd. Het is iets wat weigerde om stil te zijn.",
             "Controle is een illusie. Maar het is m\u00edjn illusie, en ik ben er goed in.",
@@ -447,6 +447,7 @@ var activeTab = 'overview';
 var spellFilter = 'all';
 var abilityEditMode = false;
 var editAbilities = null;
+var activeChapter = 0;
 
 // ============================================================
 // Section 7: Utility Functions
@@ -541,7 +542,11 @@ function renderApp() {
         } else if (route.path === '/timeline') {
             html += renderTimeline();
         } else if (route.parts[0] === 'lore') {
-            html += renderLore(route.parts[1]);
+            if (route.parts[1] && route.parts[1].indexOf('edit-') === 0) {
+                html += renderLoreEditor(route.parts[1].substring(5));
+            } else {
+                html += renderLore(route.parts[1]);
+            }
         } else if (route.path === '/notes') {
             html += renderNotes();
         } else {
@@ -667,15 +672,22 @@ function renderDashboard() {
     // Quick navigation cards
     html += '<div class="dash-nav-cards">';
     html += '<a class="dash-nav-card" href="#/characters"><span class="dash-nav-icon">&#9876;</span><span class="dash-nav-title">Characters</span><span class="dash-nav-desc">Bekijk alle avonturiers</span></a>';
-    html += '<a class="dash-nav-card" href="#/timeline"><span class="dash-nav-icon">&#128337;</span><span class="dash-nav-title">Timeline</span><span class="dash-nav-desc">Geschiedenis van Valoria</span></a>';
+    html += '<a class="dash-nav-card" href="#/timeline"><span class="dash-nav-icon">&#128337;</span><span class="dash-nav-title">Timeline</span><span class="dash-nav-desc">Campagne gebeurtenissen</span></a>';
     html += '<a class="dash-nav-card" href="#/maps"><span class="dash-nav-icon">&#128506;</span><span class="dash-nav-title">Maps</span><span class="dash-nav-desc">Kaarten van de wereld</span></a>';
-    html += '<a class="dash-nav-card" href="#/lore"><span class="dash-nav-icon">&#128214;</span><span class="dash-nav-title">Lore</span><span class="dash-nav-desc">Wereld, volkeren en magie</span></a>';
+    html += '<a class="dash-nav-card" href="#/lore"><span class="dash-nav-icon">&#128214;</span><span class="dash-nav-title">Lore</span><span class="dash-nav-desc">Achtergrondverhalen en kennis</span></a>';
     html += '<a class="dash-nav-card" href="#/notes"><span class="dash-nav-icon">&#128221;</span><span class="dash-nav-title">Notes</span><span class="dash-nav-desc">Je sessie-aantekeningen</span></a>';
     html += '</div>';
 
-    // Recent timeline events (only show if there ARE events)
-    var tlEvents = getTimelineEvents();
-    var recentEvents = tlEvents.slice(-3).reverse();
+    // Recent timeline events (pull from ALL chapters)
+    var tlData = getTimelineData();
+    var allEvents = [];
+    for (var ci = 0; ci < (tlData.chapters || []).length; ci++) {
+        var chEvents = tlData.chapters[ci].events || [];
+        for (var ei = 0; ei < chEvents.length; ei++) {
+            allEvents.push(chEvents[ei]);
+        }
+    }
+    var recentEvents = allEvents.slice(-3).reverse();
     if (recentEvents.length > 0) {
         html += '<div class="dash-recent-section">';
         html += '<h2 class="section-title">Recente Gebeurtenissen</h2>';
@@ -683,7 +695,7 @@ function renderDashboard() {
         for (var ri = 0; ri < recentEvents.length; ri++) {
             var rev = recentEvents[ri];
             html += '<div class="dash-recent-event timeline-' + (rev.type || 'quest') + '">';
-            html += '<span class="timeline-date">' + escapeHtml(rev.date) + '</span>';
+            if (rev.session) html += '<span class="timeline-date">Sessie ' + escapeHtml(rev.session) + '</span>';
             html += '<strong>' + escapeHtml(rev.title) + '</strong>';
             html += '<p class="text-dim" style="margin:0;font-size:0.8rem;">' + escapeHtml(rev.desc) + '</p>';
             html += '</div>';
@@ -1857,53 +1869,116 @@ function renderMaps() {
 // Section 21: Timeline Page
 // ============================================================
 
-function getTimelineEvents() {
-    var defaultEvents = [
-        { date: 'Jaar 0', title: 'De Stichting van Velthaven', desc: 'De eerste nederzetting wordt gesticht aan de samenvloeiing van drie rivieren.', type: 'history' },
-        { date: '~100 jaar geleden', title: 'De Magioorlog', desc: 'Rivaliserende magi\u00ebrsgilden ontketenen een oorlog die steden verwoest en leidt tot strenge magie-regulatie.', type: 'danger' },
-        { date: '12 jaar geleden', title: 'De Slangenmars', desc: 'Slangenwezens trekken door het zuiden. Dorpen worden verwoest. Ren en Saya verliezen hun ouders.', type: 'danger' },
-        { date: '6 jaar geleden', title: 'Wild Magic Ontwaakt', desc: 'Saya\'s magie manifesteert zich. Een marktkraam op de markt van Velthaven gaat in vlammen op.', type: 'magic' },
-        { date: '2 jaar geleden', title: 'De Rivier', desc: 'Een incident bij de rivier buiten Velthaven. Ren is 17. Hij praat er niet over. Saya weet het.', type: 'danger' },
-        { date: 'Heden', title: 'Het Avontuur Begint', desc: 'Acht avonturiers vinden elkaar in Valoria. Iets groters dan hen allen brengt hen samen.', type: 'quest' }
-    ];
-    var customEvents = JSON.parse(localStorage.getItem('dw_timeline_events') || '[]');
-    return defaultEvents.concat(customEvents);
+function getTimelineData() {
+    var saved = localStorage.getItem('dw_timeline');
+    if (saved) {
+        try { return JSON.parse(saved); } catch(e) {}
+    }
+    return {
+        chapters: [
+            {
+                id: 'ch1',
+                name: 'New Beginnings',
+                events: [
+                    { id: 'ev1', title: 'Sign At The Crossroads', desc: 'De avonturiers ontmoeten elkaar bij een kruispunt. Een verweerd bord wijst in vier richtingen \u2014 maar iets trekt hen allemaal dezelfde kant op.', type: 'quest', session: '1' }
+                ]
+            }
+        ]
+    };
+}
+
+function saveTimelineData(data) {
+    localStorage.setItem('dw_timeline', JSON.stringify(data));
 }
 
 function renderTimeline() {
-    var events = getTimelineEvents();
+    var data = getTimelineData();
+    var chapters = data.chapters || [];
+
+    if (activeChapter >= chapters.length) activeChapter = Math.max(0, chapters.length - 1);
 
     var html = '<div class="timeline-page">';
-    html += '<h1>Tijdlijn van Valoria</h1>';
+    html += '<h1>Tijdlijn</h1>';
+
+    html += '<div class="timeline-layout">';
+
+    // Left sidebar: chapter tabs
+    html += '<div class="timeline-sidebar">';
+    html += '<div class="timeline-chapters">';
+    for (var i = 0; i < chapters.length; i++) {
+        var ch = chapters[i];
+        var activeClass = i === activeChapter ? ' active' : '';
+        html += '<button class="chapter-tab' + activeClass + '" data-action="select-chapter" data-chapter="' + i + '">';
+        html += '<span class="chapter-num">Chapter ' + (i + 1) + '</span>';
+        html += '<span class="chapter-name">' + escapeHtml(ch.name) + '</span>';
+        html += '</button>';
+    }
+    html += '</div>';
 
     if (isDM()) {
-        html += '<button class="btn btn-primary" data-action="add-timeline-event" style="margin-bottom:1.5rem;">+ Gebeurtenis Toevoegen</button>';
-        html += '<div id="timeline-add-form" style="display:none;margin-bottom:1.5rem;">';
-        html += '<div class="edit-form-grid">';
-        html += '<input type="text" class="edit-input" id="tl-date" placeholder="Datum (bijv. Sessie 3)">';
-        html += '<input type="text" class="edit-input" id="tl-title" placeholder="Titel">';
-        html += '<textarea class="edit-textarea" id="tl-desc" placeholder="Beschrijving" style="min-height:60px;"></textarea>';
-        html += '<select class="edit-input" id="tl-type"><option value="quest">Quest</option><option value="danger">Gevaar</option><option value="magic">Magie</option><option value="history">Geschiedenis</option></select>';
-        html += '<div class="edit-actions"><button class="edit-save" data-action="save-timeline-event">Opslaan</button><button class="edit-cancel" data-action="cancel-timeline-event">Annuleren</button></div>';
-        html += '</div></div>';
+        html += '<button class="btn btn-ghost btn-sm" data-action="add-chapter" style="margin-top:0.75rem;width:100%;">+ Chapter</button>';
+    }
+    html += '</div>';
+
+    // Right: events for active chapter
+    html += '<div class="timeline-main">';
+
+    if (chapters.length === 0) {
+        html += '<div class="timeline-empty">';
+        html += '<p class="text-dim">Nog geen chapters. De DM kan chapters toevoegen.</p>';
+        html += '</div>';
+    } else {
+        var ch = chapters[activeChapter];
+        html += '<div class="timeline-chapter-header">';
+        html += '<h2>Chapter ' + (activeChapter + 1) + ': ' + escapeHtml(ch.name) + '</h2>';
+        if (isDM()) {
+            html += '<button class="btn btn-primary btn-sm" data-action="add-event">+ Event</button>';
+        }
+        html += '</div>';
+
+        // Add event form (hidden by default)
+        if (isDM()) {
+            html += '<div class="timeline-add-form" id="event-add-form" style="display:none;">';
+            html += '<input type="text" class="edit-input" id="ev-title" placeholder="Event titel">';
+            html += '<textarea class="edit-textarea" id="ev-desc" placeholder="Beschrijving" style="min-height:60px;"></textarea>';
+            html += '<div style="display:flex;gap:0.5rem;">';
+            html += '<input type="text" class="edit-input" id="ev-session" placeholder="Sessie #" style="width:80px;">';
+            html += '<select class="edit-input" id="ev-type" style="flex:1;"><option value="quest">Quest</option><option value="danger">Gevaar</option><option value="magic">Magie</option><option value="discovery">Ontdekking</option><option value="social">Sociaal</option><option value="combat">Gevecht</option></select>';
+            html += '</div>';
+            html += '<div class="edit-actions">';
+            html += '<button class="edit-save" data-action="save-event">Opslaan</button>';
+            html += '<button class="edit-cancel" data-action="cancel-event">Annuleren</button>';
+            html += '</div>';
+            html += '</div>';
+        }
+
+        // Events
+        var events = ch.events || [];
+        if (events.length === 0) {
+            html += '<p class="text-dim" style="padding:2rem 0;">Nog geen events in dit chapter.</p>';
+        } else {
+            html += '<div class="timeline">';
+            for (var j = 0; j < events.length; j++) {
+                var ev = events[j];
+                html += '<div class="timeline-event timeline-' + (ev.type || 'quest') + '">';
+                html += '<div class="timeline-marker"></div>';
+                html += '<div class="timeline-content">';
+                if (ev.session) html += '<span class="timeline-session">Sessie ' + escapeHtml(ev.session) + '</span>';
+                html += '<h3>' + escapeHtml(ev.title) + '</h3>';
+                html += '<p>' + escapeHtml(ev.desc) + '</p>';
+                if (isDM()) {
+                    html += '<button class="btn btn-ghost btn-sm" data-action="delete-event" data-event="' + j + '" style="margin-top:0.5rem;font-size:0.7rem;">Verwijderen</button>';
+                }
+                html += '</div>';
+                html += '</div>';
+            }
+            html += '</div>';
+        }
     }
 
-    html += '<div class="timeline">';
-
-    for (var i = 0; i < events.length; i++) {
-        var ev = events[i];
-        html += '<div class="timeline-event timeline-' + (ev.type || 'quest') + '">';
-        html += '<div class="timeline-marker"></div>';
-        html += '<div class="timeline-content">';
-        html += '<span class="timeline-date">' + escapeHtml(ev.date) + '</span>';
-        html += '<h3>' + escapeHtml(ev.title) + '</h3>';
-        html += '<p>' + escapeHtml(ev.desc) + '</p>';
-        html += '</div>';
-        html += '</div>';
-    }
-
-    html += '</div>';
-    html += '</div>';
+    html += '</div>'; // timeline-main
+    html += '</div>'; // timeline-layout
+    html += '</div>'; // timeline-page
     return html;
 }
 
@@ -1911,198 +1986,128 @@ function renderTimeline() {
 // Section 22: Lore Pages
 // ============================================================
 
+function getLoreData() {
+    var saved = localStorage.getItem('dw_lore');
+    if (saved) {
+        try { return JSON.parse(saved); } catch(e) {}
+    }
+    return { articles: [] };
+}
+
+function saveLoreData(data) {
+    localStorage.setItem('dw_lore', JSON.stringify(data));
+}
+
 function renderLore(subpage) {
-    if (subpage === 'valoria') return renderLoreValoria();
-    if (subpage === 'ashvane') return renderLoreAshvane();
     if (subpage === 'party') return renderLoreParty();
 
+    // Check if viewing a specific article
+    if (subpage && subpage !== 'new') {
+        return renderLoreArticle(subpage);
+    }
+
+    // New article form (DM only)
+    if (subpage === 'new' && isDM()) {
+        return renderLoreEditor();
+    }
+
     // Index page
+    var data = getLoreData();
     var html = '<div class="lore-page">';
-    html += '<h1>Lore van Valoria</h1>';
+    html += '<div class="lore-header">';
+    html += '<h1>Lore</h1>';
+    if (isDM()) {
+        html += '<a class="btn btn-primary" href="#/lore/new">+ Artikel Toevoegen</a>';
+    }
+    html += '</div>';
+
+    // Always show party link
     html += '<div class="lore-grid">';
-
-    html += '<a class="lore-card" href="#/lore/valoria">';
-    html += '<h3>De Wereld van Valoria</h3>';
-    html += '<p>Een overzicht van de wereld, haar landen, volkeren en magie.</p>';
-    html += '</a>';
-
-    html += '<a class="lore-card" href="#/lore/ashvane">';
-    html += '<h3>De Ashvane Tweeling</h3>';
-    html += '<p>Het verhaal van Ren en Saya, van straatkind tot avonturier.</p>';
-    html += '</a>';
-
     html += '<a class="lore-card" href="#/lore/party">';
     html += '<h3>De Party</h3>';
-    html += '<p>Acht avonturiers. Verschillende achtergronden. E\u00e9n bestemming.</p>';
+    html += '<p>Alle avonturiers in de campagne.</p>';
     html += '</a>';
 
+    // DM-created articles
+    for (var i = 0; i < data.articles.length; i++) {
+        var art = data.articles[i];
+        html += '<a class="lore-card" href="#/lore/' + art.id + '">';
+        html += '<h3>' + escapeHtml(art.title) + '</h3>';
+        html += '<p>' + escapeHtml((art.content || '').substring(0, 100)) + '...</p>';
+        html += '</a>';
+    }
+
     html += '</div>';
     html += '</div>';
     return html;
 }
 
-function renderLoreValoria() {
+function renderLoreArticle(articleId) {
+    var data = getLoreData();
+    var article = null;
+    for (var i = 0; i < data.articles.length; i++) {
+        if (data.articles[i].id === articleId) { article = data.articles[i]; break; }
+    }
+
+    if (!article) return '<div class="page-placeholder"><h2>Artikel niet gevonden</h2><a class="btn btn-ghost" href="#/lore">Terug naar Lore</a></div>';
+
     var html = '<div class="lore-page lore-article">';
     html += '<a class="btn btn-ghost btn-sm" href="#/lore">&larr; Terug naar Lore</a>';
-    html += '<h1>De Wereld van Valoria</h1>';
+    html += '<h1>' + escapeHtml(article.title) + '</h1>';
 
-    html += '<div class="lore-toc">';
-    html += '<h3>Inhoud</h3>';
-    html += '<ul>';
-    html += '<li><a href="#geografie">Geografie</a></li>';
-    html += '<li><a href="#volkeren">Volkeren & Rassen</a></li>';
-    html += '<li><a href="#magie">Magie & De Magioorlog</a></li>';
-    html += '<li><a href="#slangenmars">De Slangenmars</a></li>';
-    html += '<li><a href="#steden">Belangrijke Steden</a></li>';
-    html += '<li><a href="#facties">Facties & Organisaties</a></li>';
-    html += '<li><a href="#goden">Goden & Geloof</a></li>';
-    html += '</ul>';
-    html += '</div>';
+    // Render content — split by double newlines for paragraphs
+    var paragraphs = article.content.split('\n\n');
+    for (var p = 0; p < paragraphs.length; p++) {
+        var text = paragraphs[p].trim();
+        if (!text) continue;
+        if (text.indexOf('## ') === 0) {
+            html += '<h2>' + escapeHtml(text.substring(3)) + '</h2>';
+        } else if (text.indexOf('# ') === 0) {
+            html += '<h2>' + escapeHtml(text.substring(2)) + '</h2>';
+        } else {
+            html += '<p>' + escapeHtml(text) + '</p>';
+        }
+    }
 
-    // Geografie
-    html += '<h2 id="geografie">Geografie</h2>';
-    html += '<p>Valoria is een uitgestrekt continent, doorsneden door de Zilveren Rivier die van het Ijzeren Gebergte in het noorden naar de Amberkleurige Zee in het zuiden stroomt. Het land is ruwweg verdeeld in vijf regio\'s:</p>';
-    html += '<ul class="lore-list">';
-    html += '<li><strong>De Gouden Vlakte</strong> \u2014 Het vruchtbare hart van het continent, waar de meeste steden liggen. Eindeloze graanvelden, handelsroutes, en de hoofdstad Velthaven.</li>';
-    html += '<li><strong>Het Slangenmoeras</strong> \u2014 Een uitgestrekt, giftig moerasgebied in het zuidoosten. Ooit de thuisbasis van de slangenwezens die de Slangenmars uitvoerden. Weinigen gaan er vrijwillig heen.</li>';
-    html += '<li><strong>De Fluisterbossen</strong> \u2014 Oeroude wouden in het westen, bewoond door elfengemeenschappen en oudere, onbekende wezens. De bomen zijn zo oud dat ze, zo zegt men, fluisteren in een vergeten taal.</li>';
-    html += '<li><strong>Het Ijzeren Gebergte</strong> \u2014 De noordelijke bergketen, rijk aan ertsen en edelstenen. Hier liggen de dwergenbolwerken en verlaten mijnen vol gevaar.</li>';
-    html += '<li><strong>De Gebroken Kust</strong> \u2014 De westelijke kustlijn, een doolhof van kliffen, grotten, en kleine vissersdorpen. Zeerovers en smokkelaars kennen elke grot.</li>';
-    html += '</ul>';
-
-    // Volkeren
-    html += '<h2 id="volkeren">Volkeren & Rassen</h2>';
-    html += '<p>Valoria is de thuisbasis van talloze volkeren die in relatieve \u2014 maar fragiele \u2014 vrede samenleven.</p>';
-    html += '<ul class="lore-list">';
-    html += '<li><strong>Mensen</strong> \u2014 De grootste bevolkingsgroep. Ambitieus, aanpasbaar, en overal te vinden. Ze domineren de politiek van de grote steden.</li>';
-    html += '<li><strong>Elfen</strong> \u2014 Bewoners van de Fluisterbossen en de oudere stadsdelen. Langlevend en soms arrogant, maar dragers van kennis die millennia overspant. Wood Elves leven dicht bij de natuur; High Elves bewaken magische tradities; Drow worden gewantrouwd.</li>';
-    html += '<li><strong>Halflings</strong> \u2014 Vrolijk, praktisch, en verrassend taai. Ze runnen herbergen, bakkerijen, en (zo fluistert men) een indrukwekkend informatienetwerk.</li>';
-    html += '<li><strong>Tieflings</strong> \u2014 Afstammelingen van duivelse bloedlijnen. Ze worden vaak met argwaan bekeken, maar velen bewijzen dat bloed niet bepaalt wie je bent. Drie tieflings in de huidige party bewijzen dat.</li>';
-    html += '<li><strong>Aasimar</strong> \u2014 Zeldzame wezens met een hemelse connectie. Ze stralen een subtiel licht uit dat anderen zowel aantrekt als ongemakkelijk maakt. Sommigen zien hen als gezegend; anderen als onnatuurlijk.</li>';
-    html += '<li><strong>Dragonborn, Dwergen, Gnomes</strong> \u2014 Minder talrijk maar even belangrijk. Dwergen in het Ijzeren Gebergte, gnomes in hun uitvinderswerkplaatsen, dragonborn in verspreide clans.</li>';
-    html += '</ul>';
-
-    // Magie
-    html += '<h2 id="magie">Magie & De Magioorlog</h2>';
-    html += '<p>Magie is overal in Valoria \u2014 in de adem van de wind, in de wortels van oude bomen, in het bloed van zij die ervoor gekozen zijn. Maar magie is niet altijd welkom.</p>';
-    html += '<p>Honderdtwintig jaar geleden woedde de <strong>Magioorlog</strong>: een conflict tussen magi\u00ebrsgilden dat hele steden verwoestte. De nasleep hiervan leeft voort in wetten die magie reguleren, registraties voor tovenaars, en een diepgeworteld wantrouwen jegens ongecontroleerde magie. Wild Magic gebruikers zoals Saya Ashvane worden met extra argwaan bekeken.</p>';
-    html += '<p>De <strong>Arcane Raad van Velthaven</strong> houdt toezicht op magiegebruik. Geregistreerde magi\u00ebrs dragen een <em>Merk van Binding</em> \u2014 een magische tatoeage die hun vermogen beperkt als ze de wet overtreden. Niet iedereen draagt er een. Niet iedereen die er een draagt, droeg hem vrijwillig.</p>';
-
-    // Slangenmars
-    html += '<h2 id="slangenmars">De Slangenmars</h2>';
-    html += '<p>Twaalf jaar geleden. Een nacht in de zomer. Ze kwamen uit het Slangenmoeras \u2014 duizenden slangachtige wezens, groter dan mensen, met schubben als obsidiaan en ogen die gloeiden als brandend amber.</p>';
-    html += '<p>Ze trokken als een golf door het zuiden van Valoria. Dorpen brandden. Families vluchtten. Soldaten vielen. In drie weken tijd verwoestten ze alles binnen een boog van vijftig mijl. En toen, net zo plotseling als ze kwamen, verdwenen ze weer in de nacht.</p>';
-    html += '<p>Niemand weet waarom ze kwamen. Niemand weet waar ze naartoe gingen. De enige zekerheid is de littekens die ze achterlieten \u2014 in het land, en in de mensen die het overleefden.</p>';
-    html += '<p><em>Ren en Saya Ashvane waren zeven jaar oud toen de slangen kwamen. Ze verloren alles die nacht, behalve elkaar.</em></p>';
-
-    // Steden
-    html += '<h2 id="steden">Belangrijke Steden</h2>';
-    html += '<ul class="lore-list">';
-    html += '<li><strong>Velthaven</strong> \u2014 De hoofdstad, gelegen aan de samenvloeiing van drie rivieren. Een stad van bruggen, markten, en politieke intriges. De Arcane Raad zetelt hier. Ren en Saya groeiden op in de sloppenwijken van het Onderkwartier.</li>';
-    html += '<li><strong>Marrow\'s Rest</strong> \u2014 Een havenstad aan de Gebroken Kust, bekend om haar scheepswerven en haar... flexibele houding ten opzichte van de wet. Smokkelaars, piraten, en avonturiers vinden hier een thuis.</li>';
-    html += '<li><strong>Thornwall</strong> \u2014 Een vestingstad aan de rand van de Fluisterbossen. De laatste verdedigingslinie tussen de beschaving en wat er in de bossen leeft.</li>';
-    html += '<li><strong>Ashenford</strong> \u2014 Een stad die herbouwd is op de ru\u00efnes van een dorp dat verwoest werd door de Slangenmars. Een monument voor veerkracht \u2014 of koppigheid.</li>';
-    html += '</ul>';
-
-    // Facties
-    html += '<h2 id="facties">Facties & Organisaties</h2>';
-    html += '<ul class="lore-list">';
-    html += '<li><strong>De Arcane Raad</strong> \u2014 Toezichthouder op magiegebruik in Velthaven en omstreken. Machtig, bureaucratisch, en niet altijd rechtvaardig.</li>';
-    html += '<li><strong>De Zilverklauwen</strong> \u2014 Een netwerk van dieven en informanten dat opereert vanuit de schaduwen van elke grote stad. Ze kennen elk geheim \u2014 voor de juiste prijs.</li>';
-    html += '<li><strong>Het Drakenverbond</strong> \u2014 Een oud genootschap van mensen die pacts hebben gesloten met draken. Bijna uitgestorven na de Slangenmars.</li>';
-    html += '<li><strong>De Wachters van de Rand</strong> \u2014 Rangers en dru\u00efden die de grenzen van de beschaving bewaken tegen de gevaren van de wildernis.</li>';
-    html += '</ul>';
-
-    // Goden
-    html += '<h2 id="goden">Goden & Geloof</h2>';
-    html += '<p>De goden van Valoria zijn niet abstract \u2014 ze zijn nabij. Soms letterlijk. Tempels staan in elke stad, en priesters claimen regelmatig goddelijke interventie. Of dat waar is, hangt af van wie je het vraagt.</p>';
-    html += '<p>De belangrijkste goden zijn <strong>Solarius</strong> (licht, waarheid, orde), <strong>Nythara</strong> (natuur, groei, de seizoenen), <strong>Mordain</strong> (kennis, magie, geheimen), en <strong>Kael</strong> (oorlog, eer, bescherming). Maar er zijn ook duistere goden \u2014 namen die niet hardop worden uitgesproken.</p>';
+    if (isDM()) {
+        html += '<div style="margin-top:2rem;display:flex;gap:0.5rem;">';
+        html += '<a class="btn btn-ghost btn-sm" href="#/lore/edit-' + article.id + '">Bewerken</a>';
+        html += '<button class="btn btn-ghost btn-sm" data-action="delete-lore" data-article-id="' + article.id + '" style="color:var(--danger);">Verwijderen</button>';
+        html += '</div>';
+    }
 
     html += '</div>';
     return html;
 }
 
-function renderLoreAshvane() {
-    var html = '<div class="lore-page lore-article">';
+function renderLoreEditor(editId) {
+    var title = '';
+    var content = '';
+    var isEdit = false;
+
+    if (editId) {
+        var data = getLoreData();
+        for (var i = 0; i < data.articles.length; i++) {
+            if (data.articles[i].id === editId) {
+                title = data.articles[i].title;
+                content = data.articles[i].content;
+                isEdit = true;
+                break;
+            }
+        }
+    }
+
+    var html = '<div class="lore-page">';
     html += '<a class="btn btn-ghost btn-sm" href="#/lore">&larr; Terug naar Lore</a>';
-    html += '<h1>De Ashvane Tweeling</h1>';
-    html += '<p class="section-intro">Twee kanten van dezelfde munt. Twee overlevenden van dezelfde nacht.</p>';
-
-    html += '<div class="lore-toc">';
-    html += '<h3>Inhoud</h3>';
-    html += '<ul>';
-    html += '<li><a href="#oorsprong">Oorsprong</a></li>';
-    html += '<li><a href="#ouders">Hun Ouders</a></li>';
-    html += '<li><a href="#slangenmars-ashvane">De Slangenmars</a></li>';
-    html += '<li><a href="#straat">Het Leven op Straat</a></li>';
-    html += '<li><a href="#magie-ashvane">De Magie</a></li>';
-    html += '<li><a href="#de-rivier">De Rivier</a></li>';
-    html += '<li><a href="#quirks">Eigenaardigheden</a></li>';
-    html += '<li><a href="#nu">Nu</a></li>';
-    html += '</ul>';
+    html += '<h1>' + (isEdit ? 'Artikel Bewerken' : 'Nieuw Artikel') + '</h1>';
+    html += '<div class="lore-editor">';
+    html += '<input type="text" class="edit-input" id="lore-title" placeholder="Titel" value="' + escapeAttr(title) + '">';
+    html += '<textarea class="edit-textarea lore-content-editor" id="lore-content" placeholder="Inhoud... (gebruik ## voor koppen, lege regels voor alinea\'s)">' + escapeHtml(content) + '</textarea>';
+    html += '<div class="edit-actions">';
+    html += '<button class="edit-save" data-action="save-lore"' + (isEdit ? ' data-edit-id="' + editId + '"' : '') + '>Opslaan</button>';
+    html += '<a class="edit-cancel" href="#/lore">Annuleren</a>';
     html += '</div>';
-
-    // Oorsprong
-    html += '<h2 id="oorsprong">Oorsprong</h2>';
-    html += '<p>Ren en Saya Ashvane werden geboren in een klein dorp aan de rand van het Slangenmoeras \u2014 een plek die geen naam meer heeft, omdat er niemand meer is om hem uit te spreken. Hun vader, Edric Ashvane, was een houtsnijder die meubels maakte voor de dorpelingen. Hun moeder, Lira Ashvane, was een voormalige avonturier die haar zwaard had neergelegd toen ze zwanger werd van de tweeling.</p>';
-    html += '<p>Het was een rustig leven. Simpel. Gelukkig. Tot de Slangenmars kwam.</p>';
-
-    // Ouders
-    html += '<h2 id="ouders">Hun Ouders</h2>';
-    html += '<ul class="lore-list">';
-    html += '<li><strong>Edric Ashvane</strong> \u2014 Een zachte man met sterke handen. Hij leerde Ren hoe je een mes vasthoudt \u2014 niet om te vechten, maar om hout te snijden. Ren gebruikt die grip nog steeds, al snijdt hij nu in andere dingen. Edric rook naar cederhout en vernis. Soms, als Ren een houtwinkel passeert, staat hij even stil.</li>';
-    html += '<li><strong>Lira Ashvane</strong> \u2014 Een vrouw die meer was dan ze liet zien. Ze vertelde de tweeling verhalen voor het slapengaan \u2014 verhalen over draken, over magie, over helden. Saya dacht altijd dat het verzonnen was. Later begreep ze dat haar moeder die dingen had gezien.</li>';
-    html += '</ul>';
-    html += '<p>Lira zei altijd drie dingen:</p>';
-    html += '<ul class="lore-list">';
-    html += '<li><em>"Vertrouw je instinct. Het liegt niet."</em></li>';
-    html += '<li><em>"Magie is niet goed of slecht. Het is een spiegel \u2014 het laat zien wie je bent."</em></li>';
-    html += '<li><em>"Pas op voor mensen die nooit bang zijn. Ze hebben ofwel niets te verliezen, ofwel niets om lief te hebben."</em></li>';
-    html += '</ul>';
-
-    // Slangenmars
-    html += '<h2 id="slangenmars-ashvane">De Slangenmars</h2>';
-    html += '<p>Ze waren zeven toen de slangen kwamen.</p>';
-    html += '<p>Het was midden in de nacht. Ren werd wakker van het geluid \u2014 een laag, ritmisch sissen, alsof de aarde zelf ademhaalde. Saya werd wakker van de stilte die erop volgde, toen het sissen stopte en het geschreeuw begon.</p>';
-    html += '<p>Hun moeder duwde hen onder het bed. <em>"Blijf stil. Wat er ook gebeurt, blijf stil."</em> Het waren de laatste woorden die ze tegen hen zei. Door de spleten in de vloerplanken zagen ze haar zwaard pakken \u2014 het zwaard dat altijd boven de schouw had gehangen, het zwaard waarvan ze zei dat ze het nooit meer zou gebruiken.</p>';
-    html += '<p>Ze hoorden haar vechten. Ze hoorden hun vader schreeuwen. En toen hoorden ze niets meer.</p>';
-    html += '<p>Ren en Saya bleven twee dagen onder dat bed liggen. Twee dagen in de stilte, in de geur van rook en iets ergers. Toen Ren eindelijk naar buiten keek, was het dorp er niet meer.</p>';
-
-    // Straat
-    html += '<h2 id="straat">Het Leven op Straat</h2>';
-    html += '<p>Ze overleefden. Dat is wat ze doen.</p>';
-    html += '<p>Twee zevenjarige kinderen, alleen, liepen drie weken tot ze Velthaven bereikten. De hoofdstad nam hen niet met open armen op. Niemand neemt weeskinderen met open armen op.</p>';
-    html += '<p>In de sloppenwijken van het Onderkwartier leerden ze de regels: steel om te eten, ren als je betrapt wordt, vertrouw niemand behalve elkaar. Ren werd de schaduw \u2014 stil, snel, onzichtbaar. Hij leerde sloten openen, zakken rollen, en verdwijnen in een menigte alsof hij er nooit was geweest. Saya werd de afleiding \u2014 luid, charmant, en zo nodig intimiderend.</p>';
-    html += '<p>Ze sliepen op daken, in steegjes, onder bruggen. Ze aten wat ze konden vinden of stelen. En elke nacht, voor ze insliepen, vertelde Saya dezelfde verhalen die hun moeder had verteld. Omdat verhalen het enige waren dat ze nog hadden.</p>';
-
-    // Magie
-    html += '<h2 id="magie-ashvane">De Magie</h2>';
-    html += '<p>Toen Saya dertien was, werd ze betrapt bij het stelen van brood op de markt. Een koopman greep haar pols. Ze raakte in paniek. En de marktkraam ging in vlammen op.</p>';
-    html += '<p>Niet met een fakkel. Met haar handen.</p>';
-    html += '<p>De Wild Magic was altijd al in haar bloed geweest \u2014 het had alleen een reden nodig om wakker te worden. In de weken die volgden, leerde ze dat haar moeder meer was geweest dan een avonturier. Lira Ashvane had magie gehad. En ze had die doorgegeven.</p>';
-    html += '<p>Het probleem met Wild Magic is dat het niet luistert. Het reageert op emotie, op angst, op woede. Saya leerde zichzelf beheersen \u2014 grotendeels. Maar er zijn momenten, wanneer de druk te groot wordt, dat de magie haar eigen keuzes maakt. En die keuzes zijn niet altijd... veilig.</p>';
-    html += '<p>Na het incident op de markt moesten ze het Onderkwartier verlaten. De Arcane Raad stuurde onderzoekers. Ren en Saya verdwenen, zoals ze altijd deden. Maar Ren begreep nu iets: zijn zus was niet alleen gevaarlijk voor anderen. Ze was gevaarlijk voor zichzelf.</p>';
-
-    // De Rivier
-    html += '<h2 id="de-rivier">De Rivier</h2>';
-    html += '<p>Twee jaar geleden. Ren was zeventien.</p>';
-    html += '<p>Er was een incident bij de rivier buiten Velthaven. De details zijn onduidelijk. Ren praat er niet over. Saya weet wat er is gebeurd, maar ze zwijgt ook. Wat bekend is: Ren ging de rivier in. Ren kwam er anders uit.</p>';
-    html += '<p>Sindsdien heeft hij een litteken op zijn linkeronderarm dat hij altijd bedekt houdt. Sindsdien slaapt hij lichter. Sindsdien is de schaduw in zijn ogen iets dieper geworden.</p>';
-
-    // Eigenaardigheden
-    html += '<h2 id="quirks">Eigenaardigheden</h2>';
-    html += '<ul class="lore-list">';
-    html += '<li><strong>Ren</strong> draait altijd een mes tussen zijn vingers als hij nadenkt. Hij eet nooit als eerste \u2014 hij wacht altijd tot iemand anders begint. Hij vertrouwt geen deuren die op slot zitten. En hij noemt Saya nooit bij haar volledige naam; het is altijd "Say".</li>';
-    html += '<li><strong>Saya</strong> praat tegen haar magie alsof het een persoon is. Ze noemt het "de vonk." Als ze nerveus is, vonken haar vingertoppen \u2014 kleine, onschuldige lichtjes, als vuurvliegjes. Ze verzamelt steentjes van elke plek die ze bezoekt. En ze slaapt nooit zonder licht in de kamer.</li>';
-    html += '<li><strong>Samen</strong> hebben ze een eigen taal \u2014 een mengelmoes van handgebaren, half afgemaakte zinnen, en blikken die een heel gesprek bevatten. Na twaalf jaar samen overleven weten ze precies wat de ander denkt. Dat is soms een zegen. Soms een vloek.</li>';
-    html += '</ul>';
-
-    // Nu
-    html += '<h2 id="nu">Nu</h2>';
-    html += '<p>Ze zijn negentien. Oud genoeg om te weten dat overleven niet genoeg is. Jong genoeg om te geloven dat er iets beters bestaat.</p>';
-    html += '<p>Iets trekt hen weg uit Velthaven. Geruchten over de slangenwezens die terugkeren. Een brief zonder afzender met hun moeders handschrift. Een droom die ze allebei hebben \u2014 dezelfde droom, elke nacht, van een plek die ze nooit hebben gezien.</p>';
-    html += '<p>Ze weten niet wat ze zoeken. Maar ze weten dat ze het samen zullen vinden. Zoals altijd.</p>';
-
+    html += '</div>';
     html += '</div>';
     return html;
 }
@@ -3782,37 +3787,116 @@ function bindPageEvents(route) {
             }
         }
 
-        // --- Timeline events (buttons, need click not change) ---
-        // Timeline: add event button
-        if (target.matches('[data-action="add-timeline-event"]') || target.closest('[data-action="add-timeline-event"]')) {
-            var tlForm = document.getElementById('timeline-add-form');
-            if (tlForm) tlForm.style.display = tlForm.style.display === 'none' ? 'block' : 'none';
+        // --- Timeline: chapter & event handlers ---
+        // Select chapter
+        if (target.matches('[data-action="select-chapter"]') || target.closest('[data-action="select-chapter"]')) {
+            var btn = target.closest('[data-action="select-chapter"]') || target;
+            activeChapter = parseInt(btn.dataset.chapter) || 0;
+            renderApp();
             return;
         }
 
-        // Timeline: save event
-        if (target.matches('[data-action="save-timeline-event"]') || target.closest('[data-action="save-timeline-event"]')) {
-            var tlDate = document.getElementById('tl-date');
-            var tlTitle = document.getElementById('tl-title');
-            var tlDesc = document.getElementById('tl-desc');
-            var tlType = document.getElementById('tl-type');
-            var dateVal = tlDate ? tlDate.value.trim() : '';
-            var titleVal = tlTitle ? tlTitle.value.trim() : '';
-            var descVal = tlDesc ? tlDesc.value.trim() : '';
-            var typeVal = tlType ? tlType.value : 'quest';
-            if (dateVal && titleVal) {
-                var customTlEvents = JSON.parse(localStorage.getItem('dw_timeline_events') || '[]');
-                customTlEvents.push({ date: dateVal, title: titleVal, desc: descVal, type: typeVal });
-                localStorage.setItem('dw_timeline_events', JSON.stringify(customTlEvents));
+        // Add chapter
+        if (target.matches('[data-action="add-chapter"]')) {
+            var chName = prompt('Naam van het nieuwe chapter:');
+            if (chName && chName.trim()) {
+                var tlData = getTimelineData();
+                tlData.chapters.push({ id: 'ch' + Date.now(), name: chName.trim(), events: [] });
+                saveTimelineData(tlData);
+                activeChapter = tlData.chapters.length - 1;
                 renderApp();
             }
             return;
         }
 
-        // Timeline: cancel
-        if (target.matches('[data-action="cancel-timeline-event"]') || target.closest('[data-action="cancel-timeline-event"]')) {
-            var tlForm2 = document.getElementById('timeline-add-form');
-            if (tlForm2) tlForm2.style.display = 'none';
+        // Add event (show form)
+        if (target.matches('[data-action="add-event"]')) {
+            var form = document.getElementById('event-add-form');
+            if (form) form.style.display = form.style.display === 'none' ? 'block' : 'none';
+            return;
+        }
+
+        // Save event
+        if (target.matches('[data-action="save-event"]')) {
+            var titleEl = document.getElementById('ev-title');
+            var descEl = document.getElementById('ev-desc');
+            var sessionEl = document.getElementById('ev-session');
+            var typeEl = document.getElementById('ev-type');
+            if (titleEl && titleEl.value.trim()) {
+                var tlData = getTimelineData();
+                if (tlData.chapters[activeChapter]) {
+                    tlData.chapters[activeChapter].events.push({
+                        id: 'ev' + Date.now(),
+                        title: titleEl.value.trim(),
+                        desc: descEl ? descEl.value.trim() : '',
+                        session: sessionEl ? sessionEl.value.trim() : '',
+                        type: typeEl ? typeEl.value : 'quest'
+                    });
+                    saveTimelineData(tlData);
+                    renderApp();
+                }
+            }
+            return;
+        }
+
+        // Cancel event
+        if (target.matches('[data-action="cancel-event"]')) {
+            var form = document.getElementById('event-add-form');
+            if (form) form.style.display = 'none';
+            return;
+        }
+
+        // Delete event
+        if (target.matches('[data-action="delete-event"]')) {
+            var evIdx = parseInt(target.dataset.event);
+            var tlData = getTimelineData();
+            if (tlData.chapters[activeChapter] && !isNaN(evIdx)) {
+                tlData.chapters[activeChapter].events.splice(evIdx, 1);
+                saveTimelineData(tlData);
+                renderApp();
+            }
+            return;
+        }
+
+        // --- Lore handlers ---
+        // Save lore article
+        if (target.matches('[data-action="save-lore"]')) {
+            var lTitleEl = document.getElementById('lore-title');
+            var lContentEl = document.getElementById('lore-content');
+            if (lTitleEl && lTitleEl.value.trim()) {
+                var loreData = getLoreData();
+                var editId = target.dataset.editId;
+                if (editId) {
+                    for (var li = 0; li < loreData.articles.length; li++) {
+                        if (loreData.articles[li].id === editId) {
+                            loreData.articles[li].title = lTitleEl.value.trim();
+                            loreData.articles[li].content = lContentEl ? lContentEl.value : '';
+                            break;
+                        }
+                    }
+                } else {
+                    loreData.articles.push({
+                        id: 'art' + Date.now(),
+                        title: lTitleEl.value.trim(),
+                        content: lContentEl ? lContentEl.value : '',
+                        createdBy: currentUserId()
+                    });
+                }
+                saveLoreData(loreData);
+                navigate('/lore');
+            }
+            return;
+        }
+
+        // Delete lore article
+        if (target.matches('[data-action="delete-lore"]')) {
+            var artId = target.dataset.articleId;
+            if (artId && confirm('Weet je zeker dat je dit artikel wilt verwijderen?')) {
+                var loreData = getLoreData();
+                loreData.articles = loreData.articles.filter(function(a) { return a.id !== artId; });
+                saveLoreData(loreData);
+                navigate('/lore');
+            }
             return;
         }
     };
