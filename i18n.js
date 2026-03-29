@@ -338,6 +338,9 @@ var TRANSLATIONS = {
         // Misc
         'page.notfound': 'Pagina niet gevonden',
         'page.notfound.desc': 'De pagina die je zoekt bestaat niet.',
+        'notes.notfound': 'Notitie niet gevonden',
+        'char.newcharacter': 'Nieuw Karakter',
+        'maps.worldmap': 'Wereldkaart',
         'banner.upload': 'Banner uploaden',
         'portrait.upload': 'Portret uploaden',
 
@@ -686,6 +689,9 @@ var TRANSLATIONS = {
         // Misc
         'page.notfound': 'Page not found',
         'page.notfound.desc': 'The page you are looking for does not exist.',
+        'notes.notfound': 'Note not found',
+        'char.newcharacter': 'New Character',
+        'maps.worldmap': 'World Map',
         'banner.upload': 'Upload banner',
         'portrait.upload': 'Upload portrait',
 
