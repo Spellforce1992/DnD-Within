@@ -703,6 +703,31 @@ function renderApp() {
 
     app.innerHTML = html;
     bindPageEvents(route);
+
+    // Initialize visual effects after DOM update
+    if (typeof LightningSystem !== 'undefined') {
+        LightningSystem.stop(); // always stop first
+    }
+
+    if (route.parts[0] === 'characters' && route.parts[1]) {
+        var effectCfg = loadCharConfig(route.parts[1]);
+        var effectState = loadCharState(route.parts[1]);
+        var effectLvl = effectState ? effectState.level : 1;
+        var effectColor = effectCfg ? effectCfg.accentColor : '#22d3ee';
+
+        // Init fusion flame particles (level 9+)
+        if (effectLvl >= 9 && typeof createFlameParticles === 'function') {
+            var fusionEl = document.getElementById('portrait-fusion-fire');
+            var particleCount = effectLvl >= 17 ? 20 : effectLvl >= 13 ? 16 : 12;
+            createFlameParticles(fusionEl, effectColor, particleCount);
+        }
+
+        // Init canvas lightning (level 20)
+        if (effectLvl >= 20 && typeof LightningSystem !== 'undefined') {
+            LightningSystem.init(effectColor);
+            LightningSystem.start(effectColor);
+        }
+    }
 }
 
 // ============================================================
@@ -1109,6 +1134,16 @@ function renderCharacterSheet(charId) {
 
     // Portrait overlapping banner
     html += '<div class="char-portrait-wrap">';
+
+    // Flame effects behind portrait (tier 3+)
+    if (lvl >= 9) {
+        html += '<div class="portrait-fire" id="portrait-fire"></div>';
+    }
+    // Fusion flame particles (tier 3+)
+    if (lvl >= 9) {
+        html += '<div class="portrait-fusion-fire" id="portrait-fusion-fire"></div>';
+    }
+
     html += '<div class="char-portrait">';
     if (portrait) {
         html += '<img src="' + portrait + '" alt="">';

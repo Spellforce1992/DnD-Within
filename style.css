@@ -5611,73 +5611,9 @@ body.modal-open {
     }
 }
 
-/* Upward rising flames using clip-path morphing */
-@keyframes flameRise1 {
-    0%, 100% {
-        clip-path: polygon(35% 100%, 20% 60%, 30% 30%, 45% 0%, 55% 5%, 50% 35%, 65% 55%, 80% 100%);
-        opacity: 0.7;
-    }
-    25% {
-        clip-path: polygon(30% 100%, 15% 55%, 35% 20%, 50% -5%, 60% 10%, 55% 40%, 70% 60%, 75% 100%);
-        opacity: 0.9;
-    }
-    50% {
-        clip-path: polygon(38% 100%, 22% 50%, 28% 25%, 42% 2%, 58% 8%, 52% 38%, 68% 52%, 78% 100%);
-        opacity: 0.6;
-    }
-    75% {
-        clip-path: polygon(32% 100%, 18% 58%, 32% 28%, 48% -2%, 56% 12%, 48% 42%, 62% 58%, 82% 100%);
-        opacity: 0.85;
-    }
-}
-
-@keyframes flameRise2 {
-    0%, 100% {
-        clip-path: polygon(25% 100%, 15% 65%, 25% 35%, 40% 5%, 55% 10%, 45% 40%, 60% 60%, 70% 100%);
-        opacity: 0.5;
-    }
-    33% {
-        clip-path: polygon(20% 100%, 10% 55%, 30% 25%, 45% 0%, 58% 15%, 48% 45%, 65% 55%, 75% 100%);
-        opacity: 0.7;
-    }
-    66% {
-        clip-path: polygon(28% 100%, 18% 60%, 22% 30%, 38% 8%, 52% 5%, 50% 35%, 58% 62%, 72% 100%);
-        opacity: 0.6;
-    }
-}
-
 @keyframes stormPulse {
-    0%, 100% { opacity: 0.35; filter: blur(4px); }
-    50% { opacity: 0.65; filter: blur(3px); }
-}
-
-/* Lightning bolt flash timing */
-@keyframes boltFlash {
-    0%, 100% { opacity: 0; }
-    3% { opacity: 0; }
-    4% { opacity: 1; }
-    6% { opacity: 0.2; }
-    7% { opacity: 0.9; }
-    9% { opacity: 0; }
-    50% { opacity: 0; }
-    51% { opacity: 0.8; }
-    52% { opacity: 0.1; }
-    53% { opacity: 1; }
-    55% { opacity: 0; }
-}
-
-@keyframes boltFlash2 {
-    0%, 100% { opacity: 0; }
-    25% { opacity: 0; }
-    26% { opacity: 0.9; }
-    28% { opacity: 0; }
-    29% { opacity: 0.7; }
-    30% { opacity: 0; }
-    72% { opacity: 0; }
-    73% { opacity: 1; }
-    74% { opacity: 0.2; }
-    75% { opacity: 0.8; }
-    77% { opacity: 0; }
+    0%, 100% { opacity: 0.35; }
+    50% { opacity: 0.65; }
 }
 
 .character-page { position: relative; }
@@ -5756,212 +5692,111 @@ body.modal-open {
     filter: blur(4px);
 }
 
-/* --- Tier 3: Level 9-12 — ACTUAL UPWARD FLAMES --- */
+/* --- Tier 3: Level 9-12 — SVG turbulence flames --- */
 .level-tier-3 .char-portrait {
     border-color: var(--char-accent, var(--accent));
-    box-shadow: 0 0 20px var(--char-accent, var(--accent)), 0 -5px 30px 2px var(--char-accent, var(--accent));
+    box-shadow: 0 0 20px var(--char-accent, var(--accent));
 }
-/* Main flame — rises upward behind portrait */
-.level-tier-3 .char-portrait-wrap::before {
-    content: '';
+.level-tier-3 .portrait-fire {
     position: absolute;
-    left: -15px;
-    right: -15px;
-    bottom: 10px;
-    height: 140px;
-    background: var(--char-accent, var(--accent));
-    filter: blur(8px);
-    opacity: 0.6;
-    animation: flameRise1 1.2s ease-in-out infinite;
+    inset: -20px;
+    border-radius: 50%;
+    background: radial-gradient(circle, transparent 40%, var(--char-accent, var(--accent)) 55%, transparent 75%);
+    filter: url(#flame-warp);
+    opacity: 0.7;
     pointer-events: none;
     z-index: -1;
-}
-/* Secondary flame — offset timing for organic look */
-.level-tier-3 .char-portrait-wrap::after {
-    content: '';
-    position: absolute;
-    left: -8px;
-    right: -8px;
-    bottom: 15px;
-    height: 120px;
-    background: var(--char-accent, var(--accent));
-    filter: blur(12px);
-    opacity: 0.4;
-    animation: flameRise2 1.6s ease-in-out infinite 0.3s;
-    pointer-events: none;
-    z-index: -1;
+    animation: flamePulse 2s ease-in-out infinite alternate;
 }
 
-/* --- Tier 4: Level 13-16 — Intense flames + storm aura --- */
+/* --- Tier 4: Level 13-16 — Intense SVG flames --- */
 .level-tier-4 .char-portrait {
     border-color: var(--char-accent, var(--accent));
-    box-shadow: 0 0 25px var(--char-accent, var(--accent)), 0 -8px 35px 4px var(--char-accent, var(--accent));
+    box-shadow: 0 0 28px var(--char-accent, var(--accent));
 }
-.level-tier-4 .char-portrait-wrap::before {
-    content: '';
+.level-tier-4 .portrait-fire {
     position: absolute;
-    left: -20px;
-    right: -20px;
-    bottom: 5px;
-    height: 170px;
-    background: var(--char-accent, var(--accent));
-    filter: blur(10px);
-    opacity: 0.65;
-    animation: flameRise1 1s ease-in-out infinite;
+    inset: -28px;
+    border-radius: 50%;
+    background: radial-gradient(circle, transparent 35%, var(--char-accent, var(--accent)) 48%, var(--char-accent, var(--accent)) 58%, transparent 72%);
+    filter: url(#flame-warp-intense);
+    opacity: 0.75;
     pointer-events: none;
     z-index: -1;
-}
-.level-tier-4 .char-portrait-wrap::after {
-    content: '';
-    position: absolute;
-    left: -14px;
-    right: -14px;
-    bottom: 10px;
-    height: 150px;
-    background: var(--char-accent, var(--accent));
-    filter: blur(14px);
-    opacity: 0.4;
-    animation: flameRise2 1.4s ease-in-out infinite 0.2s;
-    pointer-events: none;
-    z-index: -1;
+    animation: flamePulse 1.8s ease-in-out infinite alternate;
 }
 .level-tier-4 .char-banner::after {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, transparent 60%, rgba(var(--accent-rgb, 34,211,238), 0.08));
-    animation: stormPulse 2.5s ease-in-out infinite;
+    background: linear-gradient(180deg, transparent 50%, rgba(var(--accent-rgb, 34,211,238), 0.06));
+    animation: stormPulse 3s ease-in-out infinite;
     pointer-events: none;
 }
 
-/* --- Tier 5: Level 17-19 — Blazing inferno + banner haze --- */
+/* --- Tier 5: Level 17-19 — Inferno SVG flames --- */
 .level-tier-5 .char-portrait {
     border-color: var(--char-accent, var(--accent));
-    box-shadow: 0 0 30px var(--char-accent, var(--accent)), 0 -10px 45px 6px var(--char-accent, var(--accent)),
-                0 -20px 60px 4px rgba(var(--accent-rgb, 34,211,238), 0.2);
+    box-shadow: 0 0 35px var(--char-accent, var(--accent)), 0 0 60px rgba(var(--accent-rgb, 34,211,238), 0.2);
 }
-.level-tier-5 .char-portrait-wrap::before {
-    content: '';
+.level-tier-5 .portrait-fire {
     position: absolute;
-    left: -25px;
-    right: -25px;
-    bottom: 0;
-    height: 200px;
-    background: var(--char-accent, var(--accent));
-    filter: blur(12px);
-    opacity: 0.6;
-    animation: flameRise1 0.8s ease-in-out infinite;
+    inset: -35px;
+    border-radius: 50%;
+    background: radial-gradient(circle, transparent 30%, var(--char-accent, var(--accent)) 42%, var(--char-accent, var(--accent)) 55%, transparent 68%);
+    filter: url(#flame-warp-inferno);
+    opacity: 0.8;
     pointer-events: none;
     z-index: -1;
-}
-.level-tier-5 .char-portrait-wrap::after {
-    content: '';
-    position: absolute;
-    left: -18px;
-    right: -18px;
-    bottom: 5px;
-    height: 180px;
-    background: var(--char-accent, var(--accent));
-    filter: blur(16px);
-    opacity: 0.35;
-    animation: flameRise2 1.2s ease-in-out infinite 0.15s;
-    pointer-events: none;
-    z-index: -1;
+    animation: flamePulse 1.5s ease-in-out infinite alternate;
 }
 .level-tier-5 .char-banner::after {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, transparent 40%, rgba(var(--accent-rgb, 34,211,238), 0.12));
+    background: linear-gradient(180deg, transparent 40%, rgba(var(--accent-rgb, 34,211,238), 0.1));
     animation: stormPulse 2s ease-in-out infinite;
     pointer-events: none;
 }
 
-/* --- Level 20: FORKED LIGHTNING BOLTS --- */
+/* --- Level 20: Inferno + Canvas lightning (JS handles lightning) --- */
 .level-20 .char-portrait {
     box-shadow:
-        0 0 35px var(--char-accent, var(--accent)),
-        0 -15px 50px 8px var(--char-accent, var(--accent)),
-        0 -30px 80px 4px rgba(var(--accent-rgb, 34,211,238), 0.3);
+        0 0 40px var(--char-accent, var(--accent)),
+        0 0 80px var(--char-accent, var(--accent)),
+        0 0 120px rgba(var(--accent-rgb, 34,211,238), 0.3);
 }
-/* Lightning bolt 1 — long forked shape */
-.level-20::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 10%;
-    width: 120px;
-    height: 100vh;
-    pointer-events: none;
-    z-index: 50;
-    clip-path: polygon(
-        52px 0, 58px 0,
-        54px 80px, 62px 82px,
-        48px 180px, 56px 182px,
-        42px 300px, 50px 302px,
-        38px 420px, 46px 422px,
-        32px 560px, 40px 562px,
-        30px 700px, 38px 700px,
-        36px 560px, 28px 558px,
-        34px 420px, 26px 418px,
-        40px 300px, 32px 298px,
-        46px 180px, 38px 178px,
-        50px 82px, 42px 80px
-    );
-    background: var(--char-accent, var(--accent));
-    filter: blur(1px) brightness(1.5);
-    animation: boltFlash 5s ease-in-out infinite;
-}
-/* Lightning bolt 2 — right side, different timing */
-.level-20::after {
-    content: '';
-    position: fixed;
-    top: 0;
-    right: 8%;
-    width: 100px;
-    height: 100vh;
-    pointer-events: none;
-    z-index: 50;
-    clip-path: polygon(
-        48px 0, 54px 0,
-        56px 100px, 64px 102px,
-        50px 220px, 58px 222px,
-        44px 350px, 52px 352px,
-        40px 480px, 48px 482px,
-        36px 620px, 44px 622px,
-        34px 700px, 42px 700px,
-        40px 620px, 32px 618px,
-        38px 480px, 30px 478px,
-        42px 350px, 34px 348px,
-        48px 222px, 40px 220px,
-        52px 102px, 44px 100px
-    );
-    background: var(--char-accent, var(--accent));
-    filter: blur(1px) brightness(1.5);
-    animation: boltFlash2 5s ease-in-out infinite;
+.level-20 .portrait-fire {
+    inset: -40px;
+    opacity: 0.85;
 }
 
-/* Branch forks off bolt 1 */
-.level-20 .char-banner::before {
-    content: '';
-    position: fixed;
-    top: 20%;
-    left: calc(10% + 60px);
-    width: 80px;
-    height: 200px;
+/* Fusion flame particles — blur+contrast trick for organic blobs */
+.portrait-fusion-fire {
+    position: absolute;
+    inset: -25px;
+    border-radius: 50%;
+    overflow: hidden;
+    filter: blur(5px) contrast(18);
+    background: #000;
+    mix-blend-mode: screen;
     pointer-events: none;
-    z-index: 50;
-    clip-path: polygon(
-        0 0, 6px 0,
-        20px 50px, 28px 52px,
-        40px 120px, 48px 122px,
-        55px 200px, 63px 200px,
-        52px 122px, 44px 120px,
-        24px 52px, 16px 50px
-    );
-    background: var(--char-accent, var(--accent));
-    filter: blur(1px) brightness(1.3);
-    animation: boltFlash 5s ease-in-out infinite;
+    z-index: -1;
+}
+.flame-spark {
+    position: absolute;
+    bottom: 35%;
+    border-radius: 50%;
+    animation: sparkRise 1.2s ease-in infinite;
+}
+@keyframes sparkRise {
+    0% { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-65px) scale(0.2); }
+}
+
+@keyframes flamePulse {
+    0% { opacity: 0.6; transform: scale(0.96); }
+    100% { opacity: 0.85; transform: scale(1.04); }
 }
 
 /* Ensure portrait-wrap stacking */
