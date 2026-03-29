@@ -8,6 +8,7 @@
 // ============================================================
 
 const USERS = {
+    admin:   { name: "Admin", role: "admin", characterId: null, password: "admin" },
     dm:      { name: "Dungeon Master", role: "dm", characterId: null, password: "dm" },
     ren:     { name: "Joshua", role: "player", characterId: "ren", password: "ren" },
     saya:    { name: "Speler 2", role: "player", characterId: "saya", password: "saya" },
@@ -41,19 +42,23 @@ function currentUserId() {
     return s ? s.userId : null;
 }
 
+function isAdmin() {
+    var u = currentUser();
+    return u && u.role === 'admin';
+}
+
 function isDM() {
     var u = currentUser();
-    return u && u.role === 'dm';
+    return u && (u.role === 'dm' || u.role === 'admin');
 }
 
 function canEdit(charId) {
-    // Only the character's own player can edit their character page
     var u = currentUser();
+    if (u && u.role === 'admin') return true;
     return u && u.characterId === charId;
 }
 
 function canEditWorld() {
-    // Only the DM can edit world content (maps, lore, timeline, etc.)
     return isDM();
 }
 
@@ -1050,7 +1055,17 @@ function renderCharacterSheet(charId) {
     var banner = loadImage(charId, 'banner');
     var portrait = loadImage(charId, 'portrait');
 
-    var html = '<div class="character-page" data-char-id="' + charId + '">';
+    // Level tier for visual effects
+    var lvl = state.level || 1;
+    var tierClass = '';
+    if (lvl >= 20) tierClass = ' level-tier-5 level-20';
+    else if (lvl >= 17) tierClass = ' level-tier-5';
+    else if (lvl >= 13) tierClass = ' level-tier-4';
+    else if (lvl >= 9) tierClass = ' level-tier-3';
+    else if (lvl >= 5) tierClass = ' level-tier-2';
+    else tierClass = ' level-tier-1 level-sub-' + lvl;
+
+    var html = '<div class="character-page' + tierClass + '" data-char-id="' + charId + '" style="--char-accent:' + (config.accentColor || 'var(--accent)') + '">';
 
     // Banner section
     html += '<div class="char-banner">';

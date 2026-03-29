@@ -5492,3 +5492,228 @@ body.modal-open {
 .editable-field .field-display {
     max-width: 680px;
 }
+
+/* ============================================================
+   Level-Based Portrait Effects
+   ============================================================ */
+
+/* --- Keyframes --- */
+@keyframes portraitPulse {
+    0%, 100% { box-shadow: 0 0 8px var(--char-accent, var(--accent)); }
+    50% { box-shadow: 0 0 20px var(--char-accent, var(--accent)), 0 0 40px rgba(var(--accent-rgb, 34,211,238), 0.2); }
+}
+
+@keyframes auraPulse {
+    0%, 100% { transform: scale(1); opacity: 0.5; }
+    50% { transform: scale(1.08); opacity: 0.8; }
+}
+
+@keyframes flameFlicker {
+    0% { transform: scaleY(1) translateY(0); opacity: 0.7; }
+    25% { transform: scaleY(1.1) translateY(-2px); opacity: 0.9; }
+    50% { transform: scaleY(0.95) translateY(1px); opacity: 0.6; }
+    75% { transform: scaleY(1.05) translateY(-1px); opacity: 0.85; }
+    100% { transform: scaleY(1) translateY(0); opacity: 0.7; }
+}
+
+@keyframes stormRotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes crackle {
+    0%, 90%, 100% { opacity: 0; }
+    92% { opacity: 0.8; transform: translateX(-2px); }
+    94% { opacity: 0; }
+    96% { opacity: 0.6; transform: translateX(1px) translateY(-1px); }
+    98% { opacity: 0; }
+}
+
+@keyframes bannerEdgeGlow {
+    0%, 100% { border-image-source: linear-gradient(90deg, transparent, var(--char-accent, var(--accent)), transparent); }
+    50% { border-image-source: linear-gradient(90deg, var(--char-accent, var(--accent)), transparent, var(--char-accent, var(--accent))); }
+}
+
+/* --- Tier 1: Level 1-4 — Growing border glow --- */
+.level-tier-1 .char-portrait {
+    border-color: var(--char-accent, var(--accent));
+    transition: box-shadow 0.3s;
+}
+.level-sub-1 .char-portrait { box-shadow: 0 0 4px rgba(var(--accent-rgb, 34,211,238), 0.15); }
+.level-sub-2 .char-portrait { box-shadow: 0 0 6px rgba(var(--accent-rgb, 34,211,238), 0.25); }
+.level-sub-3 .char-portrait { box-shadow: 0 0 10px rgba(var(--accent-rgb, 34,211,238), 0.35); }
+.level-sub-4 .char-portrait,
+.level-tier-1:not(.level-sub-1):not(.level-sub-2):not(.level-sub-3) .char-portrait {
+    box-shadow: 0 0 14px rgba(var(--accent-rgb, 34,211,238), 0.45);
+}
+
+/* --- Tier 2: Level 5-8 — Pulsing aura ring --- */
+.level-tier-2 .char-portrait {
+    border-color: var(--char-accent, var(--accent));
+    box-shadow: 0 0 16px var(--char-accent, var(--accent));
+    animation: portraitPulse 3s ease-in-out infinite;
+}
+.level-tier-2 .char-portrait-wrap::before {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 2px solid var(--char-accent, var(--accent));
+    opacity: 0.4;
+    animation: auraPulse 3s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* --- Tier 3: Level 9-12 — Flames + aura --- */
+.level-tier-3 .char-portrait {
+    border-color: var(--char-accent, var(--accent));
+    box-shadow: 0 0 20px var(--char-accent, var(--accent)), 0 0 40px rgba(var(--accent-rgb, 34,211,238), 0.15);
+    animation: portraitPulse 2.5s ease-in-out infinite;
+}
+.level-tier-3 .char-portrait-wrap::before {
+    content: '';
+    position: absolute;
+    inset: -10px;
+    border-radius: 50%;
+    border: 2px solid var(--char-accent, var(--accent));
+    opacity: 0.5;
+    animation: auraPulse 2.5s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
+}
+.level-tier-3 .char-portrait-wrap::after {
+    content: '';
+    position: absolute;
+    inset: -14px;
+    border-radius: 50%;
+    background: radial-gradient(circle, transparent 55%, var(--char-accent, var(--accent)) 70%, transparent 85%);
+    opacity: 0;
+    animation: flameFlicker 1.5s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* --- Tier 4: Level 13-16 — Storm aura + animated banner bg --- */
+.level-tier-4 .char-portrait {
+    border-color: var(--char-accent, var(--accent));
+    box-shadow: 0 0 25px var(--char-accent, var(--accent)), 0 0 50px rgba(var(--accent-rgb, 34,211,238), 0.2);
+    animation: portraitPulse 2s ease-in-out infinite;
+}
+.level-tier-4 .char-portrait-wrap::before {
+    content: '';
+    position: absolute;
+    inset: -12px;
+    border-radius: 50%;
+    border: 2px solid var(--char-accent, var(--accent));
+    opacity: 0.6;
+    animation: auraPulse 2s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
+}
+.level-tier-4 .char-portrait-wrap::after {
+    content: '';
+    position: absolute;
+    inset: -18px;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, transparent, var(--char-accent, var(--accent)), transparent, var(--char-accent, var(--accent)), transparent);
+    opacity: 0.3;
+    animation: stormRotate 6s linear infinite;
+    pointer-events: none;
+    z-index: 0;
+}
+.level-tier-4 .char-banner::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(var(--accent-rgb, 34,211,238), 0.05), transparent 40%, rgba(var(--accent-rgb, 34,211,238), 0.08));
+    animation: shimmer 4s ease-in-out infinite;
+    pointer-events: none;
+}
+
+/* --- Tier 5: Level 17-19 — Intense storm + banner edge glow --- */
+.level-tier-5 .char-portrait {
+    border-color: var(--char-accent, var(--accent));
+    box-shadow: 0 0 30px var(--char-accent, var(--accent)), 0 0 60px rgba(var(--accent-rgb, 34,211,238), 0.3);
+    animation: portraitPulse 1.8s ease-in-out infinite;
+}
+.level-tier-5 .char-portrait-wrap::before {
+    content: '';
+    position: absolute;
+    inset: -14px;
+    border-radius: 50%;
+    border: 3px solid var(--char-accent, var(--accent));
+    opacity: 0.7;
+    animation: auraPulse 1.8s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
+}
+.level-tier-5 .char-portrait-wrap::after {
+    content: '';
+    position: absolute;
+    inset: -22px;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, transparent, var(--char-accent, var(--accent)), transparent, var(--char-accent, var(--accent)), transparent, var(--char-accent, var(--accent)), transparent);
+    opacity: 0.35;
+    animation: stormRotate 4s linear infinite;
+    pointer-events: none;
+    z-index: 0;
+}
+.level-tier-5 .char-banner {
+    border-bottom: 3px solid transparent;
+    border-image-slice: 1;
+    animation: bannerEdgeGlow 3s ease-in-out infinite;
+    border-image-source: linear-gradient(90deg, transparent, var(--char-accent, var(--accent)), transparent);
+}
+.level-tier-5 .char-banner::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(var(--accent-rgb, 34,211,238), 0.08), transparent 30%, rgba(var(--accent-rgb, 34,211,238), 0.1));
+    animation: shimmer 3s ease-in-out infinite;
+    pointer-events: none;
+}
+
+/* --- Level 20: Full page magic crackle --- */
+.level-20 .char-portrait {
+    box-shadow: 0 0 35px var(--char-accent, var(--accent)), 0 0 70px rgba(var(--accent-rgb, 34,211,238), 0.4), 0 0 100px rgba(var(--accent-rgb, 34,211,238), 0.15);
+}
+.level-20::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 50;
+    background:
+        radial-gradient(2px 40px at 15% 20%, var(--char-accent, var(--accent)), transparent),
+        radial-gradient(2px 30px at 85% 35%, var(--char-accent, var(--accent)), transparent),
+        radial-gradient(1px 50px at 45% 80%, var(--char-accent, var(--accent)), transparent),
+        radial-gradient(2px 35px at 70% 65%, var(--char-accent, var(--accent)), transparent),
+        radial-gradient(1px 45px at 25% 55%, var(--char-accent, var(--accent)), transparent);
+    opacity: 0;
+    animation: crackle 4s ease-in-out infinite;
+}
+.level-20::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 50;
+    background:
+        radial-gradient(1px 35px at 55% 15%, var(--char-accent, var(--accent)), transparent),
+        radial-gradient(2px 45px at 30% 75%, var(--char-accent, var(--accent)), transparent),
+        radial-gradient(1px 40px at 80% 50%, var(--char-accent, var(--accent)), transparent);
+    opacity: 0;
+    animation: crackle 4s ease-in-out infinite 2s;
+}
+
+/* Ensure portrait-wrap is positioned for pseudo-elements */
+.level-tier-2 .char-portrait-wrap,
+.level-tier-3 .char-portrait-wrap,
+.level-tier-4 .char-portrait-wrap,
+.level-tier-5 .char-portrait-wrap {
+    z-index: 2;
+}
+.character-page {
+    position: relative;
+}
