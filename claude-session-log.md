@@ -1,5 +1,32 @@
 # Session Log — D&D Within
 
+### Recap — 2026-03-29 (sessie 3)
+
+**What was done:**
+- CRITICAL FIX: `var t` loop variabele in tab rendering overschreef de globale `t()` vertaalfunctie → alle character pages crashten
+- Hernoemd naar `var ti` om de shadowing te voorkomen
+- TOOLTIPS tweetalig gemaakt (NL/EN) met language-aware lookup
+- "Nieuw Karakter" default namen nu dynamisch vertaald via `t('char.newcharacter')`
+- "Wereldkaart" default map naam nu vertaald via `t('maps.worldmap')`
+- Missend `notes.notfound` translation key toegevoegd
+- Node.js test suite gebouwd om alle 8 character sheets te renderen en te valideren
+
+**Files modified:**
+- `app.js` — `var t` → `var ti` fix, TOOLTIPS NL/EN, Nieuw Karakter → null + fallback, Wereldkaart → t() call
+- `i18n.js` — Nieuwe keys: notes.notfound, char.newcharacter, maps.worldmap
+
+**Current state:**
+- Alle 8 character sheets renderen succesvol (geverifieerd via Node.js tests)
+- Taalwisseling werkt voor UI, tooltips, en default data
+- Character-specifieke content (backstory, quotes, personality) blijft onvertaald
+
+**Next steps:**
+- Browser testen van alle pagina's in beide talen
+- Eventueel data.js feature descriptions ook tweetalig maken (class/race features)
+- Verifiëren dat level-up modal correct werkt in beide talen
+
+---
+
 ### Recap — 2026-03-29 (sessie 2)
 
 **What was done:**
