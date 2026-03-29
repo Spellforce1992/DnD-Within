@@ -6075,3 +6075,53 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     border-bottom: 1px solid rgba(255,255,255,0.06);
 }
 .item-cat-count { font-weight: 400; opacity: 0.6; }
+
+/* ============================================================
+   Combat Log
+   ============================================================ */
+.combat-log-section { margin-top: 0.25rem; }
+.combat-log { display: flex; flex-direction: column; gap: 0.15rem; margin-top: 0.3rem; }
+.combat-log-entry {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.2rem 0.4rem;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    border-radius: 4px;
+}
+.combat-log-damage { color: var(--danger); }
+.combat-log-heal { color: var(--success); }
+.combat-log-rest { color: var(--accent); }
+.combat-log-time { margin-left: auto; opacity: 0.5; font-size: 0.65rem; }
+
+/* ============================================================
+   NPC Tracker
+   ============================================================ */
+.npc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+}
+.npc-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--text-dim);
+    border-radius: var(--radius);
+    padding: 1rem;
+}
+.npc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.3rem;
+}
+.npc-header strong { font-size: 1rem; }
+.npc-disposition {
+    font-size: 0.75rem;
+    text-transform: capitalize;
+    font-weight: 600;
+}
+.npc-location { font-size: 0.8rem; color: var(--text-dim); margin: 0.2rem 0; }
+.npc-notes { font-size: 0.85rem; color: var(--text-dim); line-height: 1.5; margin: 0.3rem 0; }
+.npc-actions { display: flex; gap: 0.4rem; margin-top: 0.5rem; }

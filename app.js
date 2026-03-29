@@ -673,6 +673,11 @@ function renderApp() {
         } else if (route.path === '/characters') {
             html += renderCharacterList();
         } else if (route.parts[0] === 'characters' && route.parts[1]) {
+            // Deep link: #/characters/ren/combat sets activeTab
+            if (route.parts[2]) {
+                var validTabs = ['overview', 'stats', 'combat', 'spells', 'story', 'inventory'];
+                if (validTabs.indexOf(route.parts[2]) >= 0) activeTab = route.parts[2];
+            }
             html += renderCharacterSheet(route.parts[1]);
         } else if (route.path === '/maps') {
             html += renderMaps();
@@ -1770,6 +1775,22 @@ function renderTabCombat(charId, config, state) {
         html += '</div>';
     }
     html += '</div>';
+
+    // === Combat Log ===
+    var combatLog = state.combatLog || [];
+    if (combatLog.length > 0) {
+        html += '<details class="combat-log-section"><summary class="text-dim" style="cursor:pointer;font-size:0.8rem;margin-top:0.5rem;">Combat Log (' + combatLog.length + ')</summary>';
+        html += '<div class="combat-log">';
+        for (var cli = 0; cli < Math.min(combatLog.length, 10); cli++) {
+            var logE = combatLog[cli];
+            var logIcon = logE.type === 'damage' ? '&#128308;' : logE.type === 'heal' ? '&#128994;' : '&#128564;';
+            var logText = logE.type === 'damage' ? '-' + logE.amount + ' damage' : logE.type === 'heal' ? '+' + logE.amount + ' healed' : logE.source || 'Rest';
+            if (logE.source && logE.type !== 'rest') logText += ' (' + logE.source + ')';
+            var logTime = logE.time ? new Date(logE.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+            html += '<div class="combat-log-entry combat-log-' + logE.type + '">' + logIcon + ' ' + logText + '<span class="combat-log-time">' + logTime + '</span></div>';
+        }
+        html += '</div></details>';
+    }
 
     // === Death Saves (only when HP <= 0) ===
     if (currentHP <= 0) {
@@ -2915,6 +2936,7 @@ function saveLoreData(data) {
 
 function renderLore(subpage) {
     if (subpage === 'party') return renderLoreParty();
+    if (subpage === 'npcs') return renderNPCTracker();
 
     // Check if viewing a specific article
     if (subpage && subpage !== 'new') {
@@ -2936,11 +2958,15 @@ function renderLore(subpage) {
     }
     html += '</div>';
 
-    // Always show party link
+    // Always show party + NPC links
     html += '<div class="lore-grid">';
     html += '<a class="lore-card" href="#/lore/party">';
     html += '<h3>' + t('lore.theparty') + '</h3>';
     html += '<p>' + t('lore.theparty.desc') + '</p>';
+    html += '</a>';
+    html += '<a class="lore-card" href="#/lore/npcs">';
+    html += '<h3>NPCs</h3>';
+    html += '<p>Known characters and contacts</p>';
     html += '</a>';
 
     // DM-created articles
@@ -3023,6 +3049,57 @@ function renderLoreEditor(editId) {
     html += '<a class="edit-cancel" href="#/lore">' + t('generic.cancel') + '</a>';
     html += '</div>';
     html += '</div>';
+    html += '</div>';
+    return html;
+}
+
+function getNPCData() {
+    var saved = localStorage.getItem('dw_npcs');
+    if (saved) { try { return JSON.parse(saved); } catch(e) {} }
+    return { npcs: [] };
+}
+function saveNPCData(data) {
+    localStorage.setItem('dw_npcs', JSON.stringify(data));
+    if (typeof syncUpload === 'function') syncUpload('dw_npcs');
+}
+
+function renderNPCTracker() {
+    var data = getNPCData();
+    var npcs = data.npcs || [];
+    var html = '<div class="lore-page">';
+    html += '<a class="btn btn-ghost btn-sm" href="#/lore">&larr; Back to Lore</a>';
+    html += '<div class="lore-header" style="margin-top:0.5rem;">';
+    html += '<h1>NPCs</h1>';
+    if (isDM()) {
+        html += '<button class="btn btn-primary" data-action="add-npc">+ Add NPC</button>';
+    }
+    html += '</div>';
+
+    if (npcs.length === 0) {
+        html += '<p class="text-dim">No NPCs yet.</p>';
+    } else {
+        html += '<div class="npc-grid">';
+        for (var ni = 0; ni < npcs.length; ni++) {
+            var npc = npcs[ni];
+            var dispColor = npc.disposition === 'friendly' ? 'var(--success)' : npc.disposition === 'hostile' ? 'var(--danger)' : npc.disposition === 'neutral' ? 'var(--warning)' : 'var(--text-dim)';
+            html += '<div class="npc-card" style="border-left-color:' + dispColor + '">';
+            html += '<div class="npc-header">';
+            html += '<strong>' + escapeHtml(npc.name) + '</strong>';
+            if (npc.disposition) html += '<span class="npc-disposition" style="color:' + dispColor + '">' + escapeHtml(npc.disposition) + '</span>';
+            html += '</div>';
+            if (npc.location) html += '<p class="npc-location">&#128205; ' + escapeHtml(npc.location) + '</p>';
+            if (npc.notes) html += '<p class="npc-notes">' + escapeHtml(npc.notes) + '</p>';
+            if (isDM()) {
+                html += '<div class="npc-actions">';
+                html += '<button class="btn btn-ghost btn-sm" data-action="edit-npc" data-npc-idx="' + ni + '">Edit</button>';
+                html += '<button class="btn btn-ghost btn-sm" data-action="delete-npc" data-npc-idx="' + ni + '" style="color:var(--danger);">Delete</button>';
+                html += '</div>';
+            }
+            html += '</div>';
+        }
+        html += '</div>';
+    }
+
     html += '</div>';
     return html;
 }
@@ -4721,6 +4798,49 @@ function bindPageEvents(route) {
             return;
         }
 
+        // --- NPC handlers ---
+        if (target.matches('[data-action="add-npc"]')) {
+            var npcName = prompt('NPC name:');
+            if (npcName && npcName.trim()) {
+                var npcLoc = prompt('Location (optional):') || '';
+                var npcDisp = prompt('Disposition (friendly/neutral/hostile/unknown):') || 'unknown';
+                var npcNotes = prompt('Notes (optional):') || '';
+                var npcData = getNPCData();
+                npcData.npcs.push({ name: npcName.trim(), location: npcLoc.trim(), disposition: npcDisp.trim().toLowerCase(), notes: npcNotes.trim(), id: 'npc' + Date.now() });
+                saveNPCData(npcData);
+                renderApp();
+            }
+            return;
+        }
+        if (target.matches('[data-action="edit-npc"]')) {
+            var npcIdx = parseInt(target.dataset.npcIdx);
+            var npcData = getNPCData();
+            if (npcData.npcs[npcIdx]) {
+                var npc = npcData.npcs[npcIdx];
+                var nName = prompt('Name:', npc.name); if (nName === null) return;
+                var nLoc = prompt('Location:', npc.location); if (nLoc === null) return;
+                var nDisp = prompt('Disposition (friendly/neutral/hostile/unknown):', npc.disposition); if (nDisp === null) return;
+                var nNotes = prompt('Notes:', npc.notes); if (nNotes === null) return;
+                npc.name = nName.trim() || npc.name;
+                npc.location = nLoc.trim();
+                npc.disposition = nDisp.trim().toLowerCase();
+                npc.notes = nNotes.trim();
+                saveNPCData(npcData);
+                renderApp();
+            }
+            return;
+        }
+        if (target.matches('[data-action="delete-npc"]')) {
+            if (confirm('Delete this NPC?')) {
+                var npcIdx = parseInt(target.dataset.npcIdx);
+                var npcData = getNPCData();
+                npcData.npcs.splice(npcIdx, 1);
+                saveNPCData(npcData);
+                renderApp();
+            }
+            return;
+        }
+
         // Remove note image
         if (target.matches('[data-action="remove-note-image"]')) {
             var noteImgPreview = document.querySelector('.note-image-preview');
@@ -4990,6 +5110,9 @@ function bindPageEvents(route) {
             // Tab switching
             if (target.matches('.tab-btn')) {
                 activeTab = target.dataset.tab || 'overview';
+                // Update URL for deep linking without triggering hashchange
+                var newHash = '#/characters/' + charId + '/' + activeTab;
+                history.replaceState(null, '', newHash);
                 renderApp();
                 return;
             }
@@ -5500,6 +5623,9 @@ function bindPageEvents(route) {
                 } else {
                     state.currentHP = curHP;
                 }
+                if (!state.combatLog) state.combatLog = [];
+                state.combatLog.unshift({ type: 'damage', amount: parseInt(dmgInput.value), time: Date.now() });
+                if (state.combatLog.length > 20) state.combatLog.length = 20;
                 saveCharState(charId, state);
                 renderApp();
                 return;
@@ -5514,6 +5640,9 @@ function bindPageEvents(route) {
                 var maxHPHeal = getHP(config, state);
                 var curHPHeal = (state.currentHP === null || state.currentHP === undefined) ? maxHPHeal : state.currentHP;
                 state.currentHP = Math.min(maxHPHeal, curHPHeal + healVal);
+                if (!state.combatLog) state.combatLog = [];
+                state.combatLog.unshift({ type: 'heal', amount: healVal, time: Date.now() });
+                if (state.combatLog.length > 20) state.combatLog.length = 20;
                 saveCharState(charId, state);
                 renderApp();
                 return;
@@ -5645,9 +5774,30 @@ function bindPageEvents(route) {
             // Short rest
             if (target.matches('[data-action="short-rest"]') || target.closest('[data-action="short-rest"]')) {
                 if (!canEdit(charId)) return;
+                // Warlock: recover pact slots
                 if (config.className === 'warlock') {
                     if (!state.spellSlotsUsed) state.spellSlotsUsed = {};
                     state.spellSlotsUsed['pact'] = 0;
+                }
+                // Spend hit dice to heal
+                var hdAvailable = state.level - (state.hitDiceUsed || 0);
+                if (hdAvailable > 0 && state.currentHP !== null) {
+                    var maxHP = getHP(config, state);
+                    if (state.currentHP < maxHP) {
+                        var hdToSpend = Math.min(hdAvailable, Math.ceil((maxHP - state.currentHP) / 6));
+                        var conMod = getMod(getAbilityScore(config, state, 'con'));
+                        var classHD = DATA.classes[config.className] ? DATA.classes[config.className].hitDie : 8;
+                        var healed = 0;
+                        for (var hdi = 0; hdi < hdToSpend; hdi++) {
+                            healed += Math.max(1, Math.floor(Math.random() * classHD) + 1 + conMod);
+                        }
+                        state.currentHP = Math.min(maxHP, state.currentHP + healed);
+                        state.hitDiceUsed = (state.hitDiceUsed || 0) + hdToSpend;
+                        // Log
+                        if (!state.combatLog) state.combatLog = [];
+                        state.combatLog.unshift({ type: 'heal', amount: healed, source: 'Short Rest (' + hdToSpend + ' HD)', time: Date.now() });
+                        if (state.combatLog.length > 20) state.combatLog.length = 20;
+                    }
                 }
                 saveCharState(charId, state);
                 renderApp();
@@ -5663,8 +5813,13 @@ function bindPageEvents(route) {
                 state.deathSaves = { successes: 0, failures: 0 };
                 state.conditions = [];
                 state.spellSlotsUsed = {};
+                state.concentrating = null;
                 var hitDiceToRestore = Math.ceil(state.level / 2);
                 state.hitDiceUsed = Math.max(0, (state.hitDiceUsed || 0) - hitDiceToRestore);
+                // Log
+                if (!state.combatLog) state.combatLog = [];
+                state.combatLog.unshift({ type: 'rest', source: 'Long Rest — Full recovery', time: Date.now() });
+                if (state.combatLog.length > 20) state.combatLog.length = 20;
                 saveCharState(charId, state);
                 renderApp();
                 return;
