@@ -707,12 +707,12 @@ function renderLogin() {
 function renderNavbar(route) {
     var user = currentUser();
     var links = [
-        { path: '/dashboard', label: t('nav.dashboard'), icon: '&#9733;' },
-        { path: '/characters', label: t('nav.characters'), icon: '&#9876;' },
-        { path: '/maps', label: t('nav.maps'), icon: '&#9873;' },
-        { path: '/timeline', label: t('nav.timeline'), icon: '&#128337;' },
-        { path: '/lore', label: t('nav.lore'), icon: '&#128214;' },
-        { path: '/notes', label: t('nav.notes'), icon: '&#128221;' }
+        { path: '/dashboard', label: t('nav.dashboard'), icon: '\ud83c\udfe0' },
+        { path: '/characters', label: t('nav.characters'), icon: '\u2694\ufe0f' },
+        { path: '/maps', label: t('nav.maps'), icon: '\ud83d\uddfa\ufe0f' },
+        { path: '/timeline', label: t('nav.timeline'), icon: '\u23f3' },
+        { path: '/lore', label: t('nav.lore'), icon: '\ud83d\udcda' },
+        { path: '/notes', label: t('nav.notes'), icon: '\ud83d\uddd2\ufe0f' }
     ];
 
     var html = '<nav class="navbar">';
@@ -726,7 +726,7 @@ function renderNavbar(route) {
         if (link.path === '/characters' && route.parts[0] === 'characters') isActive = true;
         if (link.path === '/lore' && route.parts[0] === 'lore') isActive = true;
         if (link.path === '/notes' && route.parts[0] === 'notes') isActive = true;
-        html += '<a class="nav-link' + (isActive ? ' active' : '') + '" href="#' + link.path + '">' + link.icon + ' ' + link.label + '</a>';
+        html += '<a class="nav-link' + (isActive ? ' active' : '') + '" href="#' + link.path + '"><span class="nav-icon">' + link.icon + '</span>' + link.label + '</a>';
     }
 
     html += '</div>';
@@ -2839,7 +2839,8 @@ function renderNotes() {
             if (note.tags && note.tags.length > 0) {
                 html += '<div class="note-card-tags">';
                 for (var ti = 0; ti < Math.min(note.tags.length, 4); ti++) {
-                    html += '<span class="note-tag">' + escapeHtml(note.tags[ti]) + '</span>';
+                    var tagText = typeof note.tags[ti] === 'object' ? note.tags[ti].text : note.tags[ti];
+                    html += '<span class="note-tag">' + escapeHtml(tagText) + '</span>';
                 }
                 if (note.tags.length > 4) html += '<span class="note-tag">+' + (note.tags.length - 4) + '</span>';
                 html += '</div>';
@@ -3073,7 +3074,15 @@ function renderNoteView(noteId) {
     if (note.tags && note.tags.length > 0) {
         html += '<div class="note-view-tags">';
         for (var ti = 0; ti < note.tags.length; ti++) {
-            html += '<span class="note-tag">' + escapeHtml(note.tags[ti]) + '</span>';
+            var tagItem = note.tags[ti];
+            var tagText = typeof tagItem === 'object' ? tagItem.text : tagItem;
+            var tagCatId = typeof tagItem === 'object' ? tagItem.category : 'other';
+            var tagCatObj = null;
+            for (var tci = 0; tci < TAG_CATEGORIES.length; tci++) {
+                if (TAG_CATEGORIES[tci].id === tagCatId) { tagCatObj = TAG_CATEGORIES[tci]; break; }
+            }
+            if (!tagCatObj) tagCatObj = TAG_CATEGORIES[5];
+            html += '<span class="note-tag" style="border-left:3px solid ' + tagCatObj.color + ';padding-left:0.4rem;">' + tagCatObj.icon + ' ' + escapeHtml(tagText) + '</span>';
         }
         html += '</div>';
     }

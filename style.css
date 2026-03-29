@@ -173,6 +173,13 @@ a { color: inherit; text-decoration: none; }
     position: relative;
     padding-bottom: 4px;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+.nav-icon {
+    font-size: 1.25em;
+    line-height: 1;
 }
 
 .nav-links a:hover,
