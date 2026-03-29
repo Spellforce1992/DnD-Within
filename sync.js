@@ -188,6 +188,7 @@ function initFirebaseSync() {
         syncDownloadAll(function() {
             console.log('[Sync] Download voltooid.');
             syncStartListeners();
+            initPresence();
             if (typeof renderApp === 'function') renderApp();
         });
 
@@ -421,4 +422,44 @@ function getSyncStatus() {
     if (!FIREBASE_CONFIG.apiKey || !FIREBASE_CONFIG.databaseURL) return 'not-configured';
     if (!syncReady) return 'offline';
     return 'online';
+}
+
+// ===== Real-time Presence =====
+var onlineUsers = {};
+
+function initPresence() {
+    if (!syncDb) return;
+    var userId = typeof currentUserId === 'function' ? currentUserId() : null;
+    if (!userId) return;
+
+    var presenceRef = syncDb.ref('presence/' + userId);
+    var connectedRef = syncDb.ref('.info/connected');
+
+    connectedRef.on('value', function(snap) {
+        if (snap.val() === true) {
+            presenceRef.set({ online: true, lastSeen: firebase.database.ServerValue.TIMESTAMP });
+            presenceRef.onDisconnect().set({ online: false, lastSeen: firebase.database.ServerValue.TIMESTAMP });
+        }
+    });
+
+    // Listen for all presence changes
+    syncDb.ref('presence').on('value', function(snap) {
+        onlineUsers = snap.val() || {};
+        if (typeof renderApp === 'function') {
+            // Only re-render dashboard elements, not the whole app
+            var dots = document.querySelectorAll('.presence-dot');
+            dots.forEach(function(dot) {
+                var uid = dot.dataset.userId;
+                if (onlineUsers[uid] && onlineUsers[uid].online) {
+                    dot.classList.add('online');
+                } else {
+                    dot.classList.remove('online');
+                }
+            });
+        }
+    });
+}
+
+function isUserOnline(userId) {
+    return onlineUsers[userId] && onlineUsers[userId].online;
 }

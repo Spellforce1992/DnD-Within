@@ -269,8 +269,8 @@ var SEED_DATA = {
         defaultSkills: ["stealth", "sleight of hand", "perception", "acrobatics", "investigation", "athletics"],
         defaultExpertise: ["stealth", "sleight of hand"],
         weapons: [
-            { name: 'Shortsword "Stil Maar"', hit: null, dmg: "1d6", type: "piercing", finesse: true },
-            { name: 'Shortsword "Slaap Zacht"', hit: null, dmg: "1d6", type: "piercing", finesse: true },
+            { name: 'Shortsword "Advies"', hit: null, dmg: "1d6", type: "piercing", finesse: true },
+            { name: 'Shortsword "Aandacht"', hit: null, dmg: "1d6", type: "piercing", finesse: true },
             { name: 'Shortbow', hit: null, dmg: "1d6", type: "piercing" },
             { name: 'Dagger (thrown)', hit: null, dmg: "1d4", type: "piercing", finesse: true }
         ],
@@ -285,7 +285,7 @@ var SEED_DATA = {
             flaw: "Vertrouwt niemand behalve Saya. Het kost hem weken om iemand binnen te laten.",
             fear: "Water. De rivier. Leeftijd 17."
         },
-        backstory: "Ren en Saya Ashvane werden geboren in een klein dorp aan de rand van het Slangenmoeras. Hun moeder Lira was een voormalige avonturier; hun vader Dorin een stille houtsnijder die drakenbeeldjes sneed bij het kampvuur.\n\nZe waren zeven toen de Slangenmars kwam. Slangenwezens verwoestten hun dorp in \u00e9\u00e9n nacht. Lira viel als laatste. Dorin stierf naast zijn draak-bondgenoot Vuuradem.\n\nDe tweeling overleefde. In de sloppenwijken van Velthaven leerden ze stelen, rennen, en vertrouwen op niemand behalve elkaar. Ren werd de schaduw \u2014 stil, snel, dodelijk met zijn dolken Stil Maar en Slaap Zacht.\n\nWat moeder altijd zei: \"Tel je messen. Tel je uitgangen. Tel je vrienden. In die volgorde.\"\n\nHij draagt nog steeds vaders leren jas en het houten drakenbeeldje. De jas is twee maten te groot. Het beeldje zit in de binnenzak, rechts, waar zijn hand het kan raken zonder dat iemand het ziet.",
+        backstory: "Ren en Saya Ashvane werden geboren in een klein dorp aan de rand van het Slangenmoeras. Hun moeder Lira was een voormalige avonturier; hun vader Dorin een stille houtsnijder die drakenbeeldjes sneed bij het kampvuur.\n\nZe waren zeven toen de Slangenmars kwam. Slangenwezens verwoestten hun dorp in \u00e9\u00e9n nacht. Lira viel als laatste. Dorin stierf naast zijn draak-bondgenoot Vuuradem.\n\nDe tweeling overleefde. In de sloppenwijken van Velthaven leerden ze stelen, rennen, en vertrouwen op niemand behalve elkaar. Ren werd de schaduw \u2014 stil, snel, dodelijk met zijn dolken Advies en Aandacht.\n\nWat moeder altijd zei: \"Tel je messen. Tel je uitgangen. Tel je vrienden. In die volgorde.\"\n\nHij draagt nog steeds vaders leren jas en het houten drakenbeeldje. De jas is twee maten te groot. Het beeldje zit in de binnenzak, rechts, waar zijn hand het kan raken zonder dat iemand het ziet.",
         quotes: [
             "Er is altijd een uitweg. En als die er niet is, maak je er een.",
             "Vertrouwen is duur. Ik betaal liever met staal.",
@@ -296,8 +296,8 @@ var SEED_DATA = {
         ],
         defaultItems: [
             { name: 'Studded leather armor', weight: 13, notes: 'Zelf in elkaar gezet' },
-            { name: 'Shortsword "Stil Maar"', weight: 2, notes: '' },
-            { name: 'Shortsword "Slaap Zacht"', weight: 2, notes: '' },
+            { name: 'Shortsword "Advies"', weight: 2, notes: '' },
+            { name: 'Shortsword "Aandacht"', weight: 2, notes: '' },
             { name: 'Shortbow', weight: 2, notes: '' },
             { name: 'Arrows (20)', weight: 1, notes: '' },
             { name: 'Dagger', weight: 1, notes: '' },
@@ -759,26 +759,32 @@ function renderApp() {
 }
 
 function postRenderEffects(route) {
-    // Initialize visual effects after DOM update
-    if (typeof LightningSystem !== 'undefined') {
-        LightningSystem.stop();
-    }
+    if (typeof LightningSystem !== 'undefined') LightningSystem.stop();
+    if (typeof AmbientSystem !== 'undefined') AmbientSystem.stop();
 
     if (route.parts[0] === 'characters' && route.parts[1]) {
         var effectCfg = loadCharConfig(route.parts[1]);
         var effectState = loadCharState(route.parts[1]);
         var effectLvl = effectState ? effectState.level : 1;
         var effectColor = effectCfg ? effectCfg.accentColor : '#22d3ee';
+        var effectClass = effectCfg ? effectCfg.className : '';
 
+        // Flame particles (level 9+)
         if (effectLvl >= 9 && typeof createFlameParticles === 'function') {
             var fusionEl = document.getElementById('portrait-fusion-fire');
-            var particleCount = effectLvl >= 17 ? 20 : effectLvl >= 13 ? 16 : 12;
-            createFlameParticles(fusionEl, effectColor, particleCount);
+            createFlameParticles(fusionEl, effectColor, effectLvl >= 17 ? 20 : effectLvl >= 13 ? 16 : 12);
         }
 
+        // Canvas lightning (level 20)
         if (effectLvl >= 20 && typeof LightningSystem !== 'undefined') {
             LightningSystem.init(effectColor);
             LightningSystem.start(effectColor);
+        }
+
+        // Class ambient particles
+        if (typeof AmbientSystem !== 'undefined') {
+            AmbientSystem.init(effectClass, effectColor);
+            AmbientSystem.start();
         }
     }
 }
@@ -1183,7 +1189,9 @@ function renderCharCard(cid, cfg, state, isOwn) {
     var banner = loadImage(cid, 'banner');
     var imgSrc = portrait || banner || '';
 
+    var isOnline = typeof isUserOnline === 'function' && isUserOnline(cfg.player || cid);
     var html = '<a class="char-card" href="#/characters/' + cid + '" style="--card-accent:' + cfg.accentColor + '">';
+    html += '<div class="presence-dot' + (isOnline ? ' online' : '') + '" data-user-id="' + (cfg.player || cid) + '"></div>';
     html += '<div class="char-card-img">';
     if (imgSrc) {
         html += '<img src="' + imgSrc + '" alt="">';
@@ -1256,6 +1264,7 @@ function renderCharacterSheet(charId) {
     else tierClass = ' level-tier-1 level-sub-' + lvl;
 
     var html = '<div class="character-page' + tierClass + '" data-char-id="' + charId + '" style="--char-accent:' + (config.accentColor || 'var(--accent)') + '">';
+    html += '<canvas id="ambient-canvas" class="ambient-canvas"></canvas>';
 
     // Banner section
     html += '<div class="char-banner">';

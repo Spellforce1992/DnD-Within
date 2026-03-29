@@ -6217,3 +6217,39 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 .whisper-card p { margin: 0; font-size: 0.9rem; color: var(--text-main); flex: 1; }
 .dash-whisper-send { margin-bottom: 1.5rem; }
+
+/* ============================================================
+   Ambient Canvas (Class Particles)
+   ============================================================ */
+.ambient-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    display: none;
+}
+.character-page { position: relative; overflow: hidden; }
+
+/* ============================================================
+   Presence Indicators
+   ============================================================ */
+.presence-dot {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    border: 2px solid var(--bg-card);
+    z-index: 5;
+    opacity: 0.4;
+    transition: all 0.3s;
+}
+.presence-dot.online {
+    background: var(--success);
+    opacity: 1;
+    box-shadow: 0 0 6px var(--success);
+}
