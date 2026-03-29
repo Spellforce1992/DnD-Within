@@ -19,6 +19,7 @@
     --text-dim: #8a8a9a;
     --text-bright: #ffffff;
     --accent: #22d3ee;
+    --accent-rgb: 34, 211, 238;
     --accent-glow: rgba(34, 211, 238, 0.15);
     --accent-dark: #0891b2;
     --gold: #f0c040;
@@ -329,6 +330,8 @@ a { color: inherit; text-decoration: none; }
     margin-bottom: 2.5rem;
     border-radius: var(--radius-lg);
     background: linear-gradient(135deg, var(--bg-card), var(--bg-elevated));
+    background-size: cover;
+    background-position: center;
     border: 1px solid var(--border);
     position: relative;
     overflow: hidden;
@@ -5090,14 +5093,8 @@ body.modal-open {
 }
 
 /* ============================================================
-   Dashboard Banner
+   Dashboard Banner (extends .welcome-banner from line ~327)
    ============================================================ */
-.welcome-banner {
-    position: relative;
-    background-size: cover;
-    background-position: center;
-    overflow: hidden;
-}
 .welcome-banner.has-banner {
     min-height: 220px;
     display: flex;
@@ -5692,6 +5689,31 @@ body.modal-open {
     filter: blur(4px);
 }
 
+/* --- Base flame classes --- */
+.portrait-fire {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: -1;
+}
+.portrait-fusion-fire {
+    position: absolute;
+    inset: -25px;
+    border-radius: 50%;
+    overflow: hidden;
+    filter: blur(5px) contrast(18);
+    background: #000;
+    mix-blend-mode: screen;
+    pointer-events: none;
+    z-index: -1;
+}
+.flame-spark {
+    position: absolute;
+    bottom: 35%;
+    border-radius: 50%;
+    animation: sparkRise 1.2s ease-in infinite;
+}
+
 /* --- Tier 3: Level 9-12 — SVG turbulence flames --- */
 .level-tier-3 .char-portrait {
     border-color: var(--char-accent, var(--accent));
@@ -5771,24 +5793,16 @@ body.modal-open {
     opacity: 0.85;
 }
 
-/* Fusion flame particles — blur+contrast trick for organic blobs */
-.portrait-fusion-fire {
-    position: absolute;
-    inset: -25px;
-    border-radius: 50%;
-    overflow: hidden;
-    filter: blur(5px) contrast(18);
-    background: #000;
-    mix-blend-mode: screen;
-    pointer-events: none;
-    z-index: -1;
+/* Accessibility: focus-visible for keyboard navigation */
+:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
 }
-.flame-spark {
-    position: absolute;
-    bottom: 35%;
-    border-radius: 50%;
-    animation: sparkRise 1.2s ease-in infinite;
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
 }
+
 @keyframes sparkRise {
     0% { opacity: 1; transform: translateY(0) scale(1); }
     100% { opacity: 0; transform: translateY(-65px) scale(0.2); }

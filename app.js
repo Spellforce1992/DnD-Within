@@ -1755,7 +1755,7 @@ function renderTabCombat(charId, config, state) {
         var preparedSpells = state.prepared || [];
         if (preparedSpells.length > 0) {
             html += '<div class="sheet-block">';
-            html += '<h2>' + t('combat.preparedspells') || 'Prepared Spells' + '</h2>';
+            html += '<h2>' + (t('combat.preparedspells') || 'Prepared Spells') + '</h2>';
             html += '<div class="prepared-spells-compact">';
             for (var psi = 0; psi < preparedSpells.length; psi++) {
                 html += '<span class="prepared-spell-tag">' + escapeHtml(preparedSpells[psi]) + '</span>';
