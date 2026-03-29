@@ -1,5 +1,79 @@
 # Session Log — D&D Within
 
+### Recap — 2026-03-29 (sessie 5)
+
+**What was done:**
+- Firebase volledig opgezet en geconfigureerd (project: dnd-within-firebase)
+- Volledige data refactor: CHAR_DEFAULTS → SEED_DATA, Firebase authoritative
+- Permission model: spelers = eigen character, DM = world, admin = alles
+- Background capitalisatie gefixt (Wayfarer, Guide, Sage, etc.)
+- PowerPoint-style layouts voor timeline events (6 layouts: text, image-top, left/right, full-image, banner)
+- Dashboard aanpasbaar: banner image + bewerkbare campaign naam
+- Session kan 0 zijn
+- Map categorieën (DM kan maps groeperen)
+- Notes tag systeem met categorieën (kies categorie + tagnaam)
+- Inline event editing (geen popup meer)
+- Fix [object Object] bug in note tag rendering
+- DM notes verplaatst naar Ren via Firebase REST API
+- Navbar iconen vervangen door grotere emoji's
+- Prepared spells quick reference in combat tab
+- Character timeline in story tab (age/event entries)
+- Family & Connections sectie in story tab
+- Layout cleanup: max-width op tekst blocks
+- Level-based portrait effecten (5 tiers + level 20 crackle)
+- Admin mode (admin/admin login, kan alles bewerken)
+- Ren & Saya family + timeline data geseeded in Firebase
+
+**Files modified:**
+- `app.js` — Grote refactor: SEED_DATA, Firebase loading, layouts, admin, portrait tiers, timeline, family
+- `sync.js` — Volledig herschreven: nieuwe padstructuur, dashboard sync
+- `style.css` — Event layouts, dashboard banner, map categories, tag styles, portrait effects (6 keyframes), timeline, family tree
+- `i18n.js` — Geen wijzigingen nodig
+
+**Current state:**
+- Alle features werkend en gepusht naar GitHub Pages
+- Firebase database gevuld met correcte data
+- Admin mode beschikbaar (admin/admin)
+- Level portrait effecten actief (test door level te wijzigen)
+- Test mode Firebase rules verlopen 2026-04-28
+
+**Next steps:**
+- Browser testen van alle nieuwe features
+- Firebase security rules verfijnen voor productie
+- Meer character content toevoegen (andere spelers vullen hun pages)
+- Eventueel: markdown support in notes, image lightbox
+
+---
+
+### Recap — 2026-03-29 (sessie 4)
+
+**What was done:**
+- Firebase project aangemaakt en geconfigureerd (dnd-within-firebase)
+- Volledige refactor: campaign data verplaatst van hardcoded CHAR_DEFAULTS naar Firebase Realtime Database
+- Nieuwe Firebase mappenstructuur: characters/<id>/config|state|images|notes, world/maps|timeline|lore, dm/initiative|notes, campaign/session_number
+- CHAR_DEFAULTS hernoemd naar SEED_DATA (fallback voor eerste gebruik)
+- loadCharConfig leest nu uit localStorage (gevuld door Firebase sync), niet meer uit hardcoded data
+- Permission model: spelers kunnen alleen eigen character bewerken, DM alleen world content
+- Background capitalisatie gefixt (wayfarer → Wayfarer, guide → Guide, etc.)
+- Firebase geseeded via REST API met alle 8 characters, maps, timeline, lore defaults
+
+**Files modified:**
+- `sync.js` — Volledig herschreven: nieuwe padmapping, folder structuur, syncSeedCampaign()
+- `app.js` — CHAR_DEFAULTS → SEED_DATA, loadCharConfig/saveCharConfigField refactor, canEdit permission model, getCharacterIds dynamisch
+
+**Current state:**
+- Firebase database gevuld met correcte mappenstructuur
+- App werkt als platform dat data uit Firebase laadt
+- DM kan alleen world content bewerken, spelers alleen eigen character
+- Gepusht naar GitHub Pages
+
+**Next steps:**
+- Browser testen of Firebase sync correct werkt (inloggen, data laden)
+- Eventueel Firebase security rules verfijnen (nu open test mode tot 28 april)
+- Character page content uitbreiden (nieuwe tabs, items)
+
+---
+
 ### Recap — 2026-03-29 (sessie 3)
 
 **What was done:**
