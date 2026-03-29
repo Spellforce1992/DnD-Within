@@ -253,8 +253,8 @@ var SEED_DATA = {
         defaultSkills: ["stealth", "sleight of hand", "perception", "acrobatics", "investigation", "athletics"],
         defaultExpertise: ["stealth", "sleight of hand"],
         weapons: [
-            { name: 'Shortsword "Woord"', hit: null, dmg: "1d6", type: "piercing", finesse: true },
-            { name: 'Shortsword "Daad"', hit: null, dmg: "1d6", type: "piercing", finesse: true },
+            { name: 'Shortsword "Stil Maar"', hit: null, dmg: "1d6", type: "piercing", finesse: true },
+            { name: 'Shortsword "Slaap Zacht"', hit: null, dmg: "1d6", type: "piercing", finesse: true },
             { name: 'Shortbow', hit: null, dmg: "1d6", type: "piercing" },
             { name: 'Dagger (thrown)', hit: null, dmg: "1d4", type: "piercing", finesse: true }
         ],
@@ -269,7 +269,7 @@ var SEED_DATA = {
             flaw: "Vertrouwt niemand behalve Saya. Het kost hem weken om iemand binnen te laten.",
             fear: "Water. De rivier. Leeftijd 17."
         },
-        backstory: "Ren en Saya Ashvane werden geboren in een klein dorp aan de rand van het Slangenmoeras. Hun moeder Lira was een voormalige avonturier; hun vader Dorin een stille houtsnijder die drakenbeeldjes sneed bij het kampvuur.\n\nZe waren zeven toen de Slangenmars kwam. Slangenwezens verwoestten hun dorp in \u00e9\u00e9n nacht. Lira viel als laatste. Dorin stierf naast zijn draak-bondgenoot Vuuradem.\n\nDe tweeling overleefde. In de sloppenwijken van Velthaven leerden ze stelen, rennen, en vertrouwen op niemand behalve elkaar. Ren werd de schaduw \u2014 stil, snel, dodelijk met zijn dolken Woord en Daad.\n\nWat moeder altijd zei: \"Tel je messen. Tel je uitgangen. Tel je vrienden. In die volgorde.\"\n\nHij draagt nog steeds vaders leren jas en het houten drakenbeeldje. De jas is twee maten te groot. Het beeldje zit in de binnenzak, rechts, waar zijn hand het kan raken zonder dat iemand het ziet.",
+        backstory: "Ren en Saya Ashvane werden geboren in een klein dorp aan de rand van het Slangenmoeras. Hun moeder Lira was een voormalige avonturier; hun vader Dorin een stille houtsnijder die drakenbeeldjes sneed bij het kampvuur.\n\nZe waren zeven toen de Slangenmars kwam. Slangenwezens verwoestten hun dorp in \u00e9\u00e9n nacht. Lira viel als laatste. Dorin stierf naast zijn draak-bondgenoot Vuuradem.\n\nDe tweeling overleefde. In de sloppenwijken van Velthaven leerden ze stelen, rennen, en vertrouwen op niemand behalve elkaar. Ren werd de schaduw \u2014 stil, snel, dodelijk met zijn dolken Stil Maar en Slaap Zacht.\n\nWat moeder altijd zei: \"Tel je messen. Tel je uitgangen. Tel je vrienden. In die volgorde.\"\n\nHij draagt nog steeds vaders leren jas en het houten drakenbeeldje. De jas is twee maten te groot. Het beeldje zit in de binnenzak, rechts, waar zijn hand het kan raken zonder dat iemand het ziet.",
         quotes: [
             "Er is altijd een uitweg. En als die er niet is, maak je er een.",
             "Vertrouwen is duur. Ik betaal liever met staal.",
@@ -280,8 +280,8 @@ var SEED_DATA = {
         ],
         defaultItems: [
             { name: 'Studded leather armor', weight: 13, notes: 'Zelf in elkaar gezet' },
-            { name: 'Shortsword "Woord"', weight: 2, notes: '' },
-            { name: 'Shortsword "Daad"', weight: 2, notes: '' },
+            { name: 'Shortsword "Stil Maar"', weight: 2, notes: '' },
+            { name: 'Shortsword "Slaap Zacht"', weight: 2, notes: '' },
             { name: 'Shortbow', weight: 2, notes: '' },
             { name: 'Arrows (20)', weight: 1, notes: '' },
             { name: 'Dagger', weight: 1, notes: '' },
@@ -738,13 +738,14 @@ function renderLogin() {
 
 function renderNavbar(route) {
     var user = currentUser();
+    var svgI = function(d) { return '<svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>'; };
     var links = [
-        { path: '/dashboard', label: t('nav.dashboard'), icon: '\ud83c\udfe0' },
-        { path: '/characters', label: t('nav.characters'), icon: '\u2694\ufe0f' },
-        { path: '/maps', label: t('nav.maps'), icon: '\ud83d\uddfa\ufe0f' },
-        { path: '/timeline', label: t('nav.timeline'), icon: '\u23f3' },
-        { path: '/lore', label: t('nav.lore'), icon: '\ud83d\udcda' },
-        { path: '/notes', label: t('nav.notes'), icon: '\ud83d\uddd2\ufe0f' }
+        { path: '/dashboard', label: t('nav.dashboard'), icon: svgI('<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>') },
+        { path: '/characters', label: t('nav.characters'), icon: svgI('<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>') },
+        { path: '/maps', label: t('nav.maps'), icon: svgI('<polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>') },
+        { path: '/timeline', label: t('nav.timeline'), icon: svgI('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>') },
+        { path: '/lore', label: t('nav.lore'), icon: svgI('<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>') },
+        { path: '/notes', label: t('nav.notes'), icon: svgI('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>') }
     ];
 
     var html = '<nav class="navbar">';
