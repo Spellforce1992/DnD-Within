@@ -4265,7 +4265,7 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--a
 
 /* Notes Page */
 /* Notes Page — Full Notes System */
-.notes-page { max-width: 900px; margin: 0 auto; padding: 2rem; }
+.notes-page { max-width: 900px; margin: 0 auto; padding: 76px 2rem 2rem; }
 .notes-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; gap: 1rem; flex-wrap: wrap; }
 .notes-header h1 { margin: 0; }
 
@@ -4314,20 +4314,44 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--a
 .note-tags-section { display: flex; flex-direction: column; gap: 0.3rem; }
 .note-editor-actions { display: flex; gap: 0.75rem; }
 
-/* Note View */
-.note-view-meta { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; }
-.note-view-cat { font-size: 0.8rem; }
+/* Note View — Blog-style presentation */
+.note-view {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    animation: fadeUp 0.4s ease-out;
+}
+.note-view-meta { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.75rem; }
+.note-view-cat { font-size: 0.8rem; padding: 0.2rem 0.6rem; border-radius: 100px; background: var(--bg-block); }
 .note-view-date { font-size: 0.75rem; color: var(--text-dim); }
 .note-view-pin { font-size: 0.75rem; color: var(--gold); }
-.note-view h1 { margin-bottom: 1rem; }
-.note-view p { color: var(--text-dim); line-height: 1.7; margin-bottom: 0.75rem; }
+.note-view h1 { margin-bottom: 1rem; font-size: 1.8rem; line-height: 1.3; }
+.note-view p { color: var(--text-dim); line-height: 1.8; margin-bottom: 1rem; font-size: 0.95rem; }
+.note-view p:first-of-type::first-line { color: var(--text-main); font-weight: 500; }
 .note-view-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border); }
-.note-view-img img { width: 100%; border-radius: var(--radius); margin-bottom: 1rem; }
+.note-view-text { flex: 1; padding: 2rem; }
+
+/* Image-top: hero banner style */
+.note-layout-image-top .note-view-img { position: relative; }
+.note-layout-image-top .note-view-img img { width: 100%; max-height: 360px; object-fit: cover; display: block; border-radius: 0; margin-bottom: 0; }
+.note-layout-image-top .note-view-img::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 80px; background: linear-gradient(transparent, var(--bg-card)); }
+
+/* Image-right / Image-left: magazine column style */
+.note-layout-image-right .note-view-content, .note-layout-image-left .note-view-content { display: flex; gap: 0; }
 .note-view-img-side { flex-shrink: 0; width: 280px; }
-.note-view-img-side img { width: 100%; border-radius: var(--radius); }
-.note-layout-image-right .note-view-content, .note-layout-image-left .note-view-content { display: flex; gap: 1.5rem; }
+.note-view-img-side img { width: 100%; height: 100%; min-height: 300px; object-fit: cover; display: block; border-radius: 0; }
 .note-layout-image-left .note-view-img-side { order: -1; }
-.note-view-text { flex: 1; }
+.note-layout-image-right .note-view-text,
+.note-layout-image-left .note-view-text { padding: 2rem; }
+
+/* Text-only: clean article style with accent border */
+.note-layout-text-only .note-view-text { padding: 2rem; border-left: 3px solid var(--accent); margin: 1.5rem; border-radius: 0; background: transparent; }
+.note-layout-text-only { background: var(--bg-card); }
+
+/* Gallery layout: masonry-like presentation */
+.note-layout-gallery .note-view-text { padding: 2rem; }
+
 .notes-header-right { display: flex; gap: 0.5rem; align-items: center; }
 
 /* Note Card — Pin & Date */
@@ -4365,10 +4389,12 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--a
 .note-gallery-add:hover { border-color: var(--accent); color: var(--accent); }
 
 /* Gallery View */
-.note-view-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem; }
-.note-view-gallery-img { border-radius: var(--radius); overflow: hidden; aspect-ratio: 4/3; }
-.note-view-gallery-img img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; transition: transform 0.2s; }
-.note-view-gallery-img img:hover { transform: scale(1.02); }
+.note-view-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 4px; overflow: hidden; }
+.note-view-gallery-img { overflow: hidden; aspect-ratio: 4/3; }
+.note-view-gallery-img img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; transition: transform 0.3s, filter 0.3s; display: block; }
+.note-view-gallery-img img:hover { transform: scale(1.05); filter: brightness(1.1); }
+/* First image spans full width for hero effect */
+.note-view-gallery .note-view-gallery-img:first-child:nth-last-child(n+3) { grid-column: 1 / -1; aspect-ratio: 21/9; }
 
 /* Checklist Editor */
 .note-checklist-section { margin-top: 0.5rem; }
