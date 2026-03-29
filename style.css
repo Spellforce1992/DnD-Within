@@ -5821,3 +5821,167 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .level-tier-5 .char-portrait-wrap {
     z-index: 2;
 }
+
+/* ============================================================
+   Global Dice Roller
+   ============================================================ */
+.dice-fab {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--bg-elevated);
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    cursor: pointer;
+    z-index: 90;
+    transition: all 0.2s;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+.dice-fab:hover {
+    border-color: var(--accent);
+    transform: scale(1.1);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 12px var(--accent-glow);
+}
+.dice-panel {
+    position: fixed;
+    bottom: 5rem;
+    right: 1.5rem;
+    width: 260px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    z-index: 91;
+    flex-direction: column;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    overflow: hidden;
+}
+.dice-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+.dice-panel-close {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+.dice-panel-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    padding: 0.75rem 1rem;
+}
+.dice-panel-btn {
+    flex: 1;
+    min-width: 44px;
+    padding: 0.5rem;
+    background: var(--bg-block);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-main);
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+}
+.dice-panel-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(var(--accent-rgb), 0.1);
+}
+.dice-panel-btn:active { transform: scale(0.92); }
+.dice-panel-result {
+    padding: 0.75rem 1rem;
+    text-align: center;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+.dice-roll-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--accent);
+}
+.dice-roll-value.nat20 { color: var(--gold); text-shadow: 0 0 12px var(--gold); }
+.dice-roll-value.nat1 { color: var(--danger); }
+.dice-roll-label { font-size: 0.8rem; color: var(--text-dim); }
+.dice-animate { animation: diceRollBounce 0.4s ease-out; }
+@keyframes diceRollBounce {
+    0% { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+    60% { transform: scale(1.2) rotate(5deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0deg); }
+}
+.dice-panel-log {
+    padding: 0 1rem 0.75rem;
+    max-height: 80px;
+    overflow-y: auto;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+}
+.dice-log-entry { padding: 0.1rem 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+
+/* ============================================================
+   Page Transitions
+   ============================================================ */
+.main-content {
+    animation: pageEnter 0.25s ease-out;
+}
+.page-exit {
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.12s, transform 0.12s;
+}
+.page-enter {
+    animation: pageEnter 0.25s ease-out;
+}
+@keyframes pageEnter {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   Party Gold Card
+   ============================================================ */
+.party-gold-card .gold-input {
+    background: var(--bg-block);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--gold);
+    font-family: inherit;
+    font-size: 0.8rem;
+    padding: 0.15rem;
+}
+
+/* ============================================================
+   Concentration Tracking
+   ============================================================ */
+.concentration-block { }
+.concentration-active {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+.concentration-spell {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--accent);
+    padding: 0.4rem 0.8rem;
+    background: rgba(var(--accent-rgb), 0.1);
+    border: 1px solid rgba(var(--accent-rgb), 0.25);
+    border-radius: var(--radius-sm);
+}

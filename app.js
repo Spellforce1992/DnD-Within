@@ -699,14 +699,48 @@ function renderApp() {
         }
 
         html += '</main>';
+
+        // Global dice roller (all users)
+        html += '<div class="dice-fab" data-action="toggle-dice-panel" title="Roll Dice">&#127922;</div>';
+        html += '<div class="dice-panel" id="dice-panel" style="display:none;">';
+        html += '<div class="dice-panel-header"><span>Dice Roller</span><button class="dice-panel-close" data-action="toggle-dice-panel">&times;</button></div>';
+        html += '<div class="dice-panel-buttons">';
+        var diceTypes = [4, 6, 8, 10, 12, 20, 100];
+        for (var di = 0; di < diceTypes.length; di++) {
+            html += '<button class="dice-panel-btn" data-action="roll-dice-global" data-die="' + diceTypes[di] + '">d' + diceTypes[di] + '</button>';
+        }
+        html += '</div>';
+        html += '<div class="dice-panel-result" id="dice-panel-result"></div>';
+        html += '<div class="dice-panel-log" id="dice-panel-log"></div>';
+        html += '</div>';
     }
 
+    // Page transition
+    var mainEl = app.querySelector('.main-content');
+    if (mainEl && !app._firstRender) {
+        mainEl.classList.add('page-exit');
+        setTimeout(function() {
+            app.innerHTML = html;
+            bindPageEvents(route);
+            var newMain = app.querySelector('.main-content');
+            if (newMain) {
+                newMain.classList.add('page-enter');
+                setTimeout(function() { newMain.classList.remove('page-enter'); }, 300);
+            }
+            postRenderEffects(route);
+        }, 120);
+        return;
+    }
+    app._firstRender = false;
     app.innerHTML = html;
     bindPageEvents(route);
+    postRenderEffects(route);
+}
 
+function postRenderEffects(route) {
     // Initialize visual effects after DOM update
     if (typeof LightningSystem !== 'undefined') {
-        LightningSystem.stop(); // always stop first
+        LightningSystem.stop();
     }
 
     if (route.parts[0] === 'characters' && route.parts[1]) {
@@ -715,14 +749,12 @@ function renderApp() {
         var effectLvl = effectState ? effectState.level : 1;
         var effectColor = effectCfg ? effectCfg.accentColor : '#22d3ee';
 
-        // Init fusion flame particles (level 9+)
         if (effectLvl >= 9 && typeof createFlameParticles === 'function') {
             var fusionEl = document.getElementById('portrait-fusion-fire');
             var particleCount = effectLvl >= 17 ? 20 : effectLvl >= 13 ? 16 : 12;
             createFlameParticles(fusionEl, effectColor, particleCount);
         }
 
-        // Init canvas lightning (level 20)
         if (effectLvl >= 20 && typeof LightningSystem !== 'undefined') {
             LightningSystem.init(effectColor);
             LightningSystem.start(effectColor);
@@ -886,6 +918,20 @@ function renderDashboard() {
     }
     html += '</div>';
     html += '<div class="dash-stat-card"><span class="dash-stat-value">' + partySize + '</span><span class="dash-stat-label">' + t('dash.party') + '</span></div>';
+
+    // Party gold
+    var partyGold = parseInt(localStorage.getItem('dw_party_gold') || '0');
+    html += '<div class="dash-stat-card party-gold-card">';
+    html += '<span class="dash-stat-value" style="color:var(--gold);">' + partyGold + '</span>';
+    html += '<span class="dash-stat-label">Party Gold</span>';
+    if (isDM()) {
+        html += '<div class="session-controls">';
+        html += '<button class="session-btn" data-action="party-gold-minus">&minus;</button>';
+        html += '<input type="number" class="gold-input" id="party-gold-input" value="10" min="1" style="width:50px;text-align:center;">';
+        html += '<button class="session-btn" data-action="party-gold-plus">+</button>';
+        html += '</div>';
+    }
+    html += '</div>';
     html += '<div class="dash-stat-card"><span class="dash-stat-value">' + groupLevel + '</span><span class="dash-stat-label">' + t('dash.level') + '</span></div>';
     html += '</div>';
 
@@ -1770,7 +1816,53 @@ function renderTabCombat(charId, config, state) {
     }
 
     // === Conditions ===
-    var allConditions = ['Blinded','Charmed','Deafened','Frightened','Grappled','Incapacitated','Invisible','Paralyzed','Petrified','Poisoned','Prone','Restrained','Stunned','Unconscious'];
+    // === Concentration Tracking ===
+    if (hasSpellcasting(config.className)) {
+        var concentrating = state.concentrating || null;
+        html += '<div class="sheet-block concentration-block">';
+        html += '<h2>Concentration</h2>';
+        if (concentrating) {
+            html += '<div class="concentration-active">';
+            html += '<span class="concentration-spell">' + escapeHtml(concentrating) + '</span>';
+            if (editable) {
+                html += '<button class="btn btn-ghost btn-sm" data-action="drop-concentration" style="color:var(--danger);">Drop</button>';
+            }
+            html += '</div>';
+        } else {
+            html += '<p class="text-dim" style="font-size:0.85rem;">No active concentration</p>';
+        }
+        if (editable) {
+            var prepSpells = state.prepared || [];
+            var concSpells = prepSpells.filter(function(s) { return s; }); // all prepared as options
+            if (concSpells.length > 0) {
+                html += '<select class="edit-input" data-action="set-concentration" style="margin-top:0.5rem;">';
+                html += '<option value="">Set concentration...</option>';
+                for (var csi = 0; csi < concSpells.length; csi++) {
+                    html += '<option value="' + escapeAttr(concSpells[csi]) + '">' + escapeHtml(concSpells[csi]) + '</option>';
+                }
+                html += '</select>';
+            }
+        }
+        html += '</div>';
+    }
+
+    var CONDITION_DESC = {
+        'Blinded': 'Auto-fail sight checks. Attack rolls have disadvantage. Attacks against you have advantage.',
+        'Charmed': "Can't attack the charmer. Charmer has advantage on social checks against you.",
+        'Deafened': 'Auto-fail hearing checks.',
+        'Frightened': 'Disadvantage on ability checks and attacks while source of fear is in line of sight. Cannot move closer to source.',
+        'Grappled': 'Speed becomes 0. Ends if grappler is incapacitated or moved out of reach.',
+        'Incapacitated': "Can't take actions or reactions.",
+        'Invisible': "Can't be seen. Advantage on attacks. Attacks against you have disadvantage.",
+        'Paralyzed': "Incapacitated, can't move or speak. Auto-fail STR/DEX saves. Attacks have advantage. Melee hits are auto-crits.",
+        'Petrified': 'Turned to stone. Weight x10. Incapacitated, unaware. Attacks have advantage. Auto-fail STR/DEX saves. Resistance to all damage.',
+        'Poisoned': 'Disadvantage on attack rolls and ability checks.',
+        'Prone': 'Disadvantage on attacks. Melee attacks against you have advantage. Ranged attacks against you have disadvantage. Must use half movement to stand.',
+        'Restrained': 'Speed 0. Attacks have disadvantage. Attacks against you have advantage. Disadvantage on DEX saves.',
+        'Stunned': "Incapacitated, can't move, can barely speak. Auto-fail STR/DEX saves. Attacks against you have advantage.",
+        'Unconscious': "Incapacitated, can't move or speak, unaware. Drop what you're holding, fall prone. Auto-fail STR/DEX saves. Attacks have advantage. Melee hits are auto-crits."
+    };
+    var allConditions = Object.keys(CONDITION_DESC);
     var activeConditions = state.conditions || [];
     html += '<div class="sheet-block">';
     html += '<h2>' + t('combat.conditions') + '</h2>';
@@ -1778,7 +1870,7 @@ function renderTabCombat(charId, config, state) {
     for (var ci = 0; ci < allConditions.length; ci++) {
         var cond = allConditions[ci];
         var isActive = activeConditions.indexOf(cond) !== -1;
-        html += '<span class="condition-tag' + (isActive ? ' active' : '') + '" data-action="toggle-condition" data-condition="' + escapeAttr(cond) + '">' + escapeHtml(cond) + '</span>';
+        html += '<span class="condition-tag' + (isActive ? ' active' : '') + '" data-action="toggle-condition" data-condition="' + escapeAttr(cond) + '" data-tip="' + escapeAttr(CONDITION_DESC[cond]) + '">' + escapeHtml(cond) + '</span>';
     }
     html += '</div></div>';
 
@@ -4728,6 +4820,37 @@ function bindPageEvents(route) {
         }
 
         // Dice roller
+        // Global dice panel toggle
+        if (target.matches('[data-action="toggle-dice-panel"]') || target.closest('[data-action="toggle-dice-panel"]')) {
+            var panel = document.getElementById('dice-panel');
+            if (panel) panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
+            return;
+        }
+
+        // Global dice roller
+        if (target.matches('[data-action="roll-dice-global"]')) {
+            var die = parseInt(target.dataset.die);
+            var result = Math.floor(Math.random() * die) + 1;
+            var resultEl = document.getElementById('dice-panel-result');
+            var logEl = document.getElementById('dice-panel-log');
+            if (resultEl) {
+                var isNat20 = die === 20 && result === 20;
+                var isNat1 = die === 20 && result === 1;
+                resultEl.innerHTML = '<span class="dice-roll-value' + (isNat20 ? ' nat20' : '') + (isNat1 ? ' nat1' : '') + '">' + result + '</span><span class="dice-roll-label">d' + die + (isNat20 ? ' — NATURAL 20!' : '') + (isNat1 ? ' — Critical Fail!' : '') + '</span>';
+                resultEl.classList.add('dice-animate');
+                setTimeout(function() { resultEl.classList.remove('dice-animate'); }, 400);
+            }
+            if (logEl) {
+                var logEntry = document.createElement('div');
+                logEntry.className = 'dice-log-entry';
+                logEntry.textContent = 'd' + die + ': ' + result;
+                logEl.insertBefore(logEntry, logEl.firstChild);
+                if (logEl.children.length > 10) logEl.removeChild(logEl.lastChild);
+            }
+            return;
+        }
+
+        // DM dice roller (legacy)
         if (target.matches('[data-action="roll-dice"]')) {
             var die = parseInt(target.dataset.die);
             var result = Math.floor(Math.random() * die) + 1;
@@ -5326,6 +5449,24 @@ function bindPageEvents(route) {
                 return;
             }
 
+            // Set concentration
+            if (target.matches('[data-action="set-concentration"]')) {
+                if (!canEdit(charId)) return;
+                state.concentrating = target.value || null;
+                saveCharState(charId, state);
+                renderApp();
+                return;
+            }
+
+            // Drop concentration
+            if (target.matches('[data-action="drop-concentration"]')) {
+                if (!canEdit(charId)) return;
+                state.concentrating = null;
+                saveCharState(charId, state);
+                renderApp();
+                return;
+            }
+
             // Toggle spell slot
             if (target.matches('[data-action="toggle-spell-slot"]')) {
                 if (!canEdit(charId)) return;
@@ -5393,6 +5534,24 @@ function bindPageEvents(route) {
             var n = parseInt(localStorage.getItem('dw_session_number') || '0');
             if (n > 0) localStorage.setItem('dw_session_number', String(n - 1));
             if (typeof syncUpload === 'function') syncUpload('dw_session_number');
+            renderApp();
+            return;
+        }
+
+        // --- Dashboard: party gold ---
+        if (target.matches('[data-action="party-gold-plus"]')) {
+            var amt = parseInt(document.getElementById('party-gold-input').value) || 10;
+            var pg = parseInt(localStorage.getItem('dw_party_gold') || '0');
+            localStorage.setItem('dw_party_gold', String(pg + amt));
+            if (typeof syncUpload === 'function') syncUpload('dw_party_gold');
+            renderApp();
+            return;
+        }
+        if (target.matches('[data-action="party-gold-minus"]')) {
+            var amt = parseInt(document.getElementById('party-gold-input').value) || 10;
+            var pg = parseInt(localStorage.getItem('dw_party_gold') || '0');
+            localStorage.setItem('dw_party_gold', String(Math.max(0, pg - amt)));
+            if (typeof syncUpload === 'function') syncUpload('dw_party_gold');
             renderApp();
             return;
         }
