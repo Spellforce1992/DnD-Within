@@ -106,7 +106,12 @@ function getRoute() {
 }
 
 function initRouter() {
-    window.addEventListener('hashchange', function() { renderApp(); });
+    window.addEventListener('hashchange', function() {
+        // Close mobile nav on navigation
+        var navLinks = document.querySelector('.nav-links.open');
+        if (navLinks) navLinks.classList.remove('open');
+        renderApp();
+    });
     renderApp();
 }
 
@@ -3073,6 +3078,7 @@ function showLevelUpModal(charId, config, state) {
     html += '</div></div>';
 
     document.body.insertAdjacentHTML('beforeend', html);
+    if (typeof lockBodyScroll === 'function') lockBodyScroll();
 
     // ---- Event bindings ----
     var modal = document.getElementById('levelup-modal');
@@ -3087,12 +3093,14 @@ function showLevelUpModal(charId, config, state) {
         // Close on overlay click
         if (tgt === modal) {
             modal.remove();
+            if (typeof unlockBodyScroll === 'function') unlockBodyScroll();
             return;
         }
 
         // Cancel
         if (tgt.dataset.action === 'cancel-levelup') {
             modal.remove();
+            if (typeof unlockBodyScroll === 'function') unlockBodyScroll();
             return;
         }
 
@@ -3184,6 +3192,7 @@ function showLevelUpModal(charId, config, state) {
 
             saveCharState(charId, state);
             modal.remove();
+            if (typeof unlockBodyScroll === 'function') unlockBodyScroll();
             renderApp();
             return;
         }
@@ -3303,22 +3312,23 @@ function showResetModal(charId, config, state) {
         '<button class="modal-btn modal-btn-cancel" data-modal-action="cancel-reset">Annuleren</button>' +
         '</div></div>';
     document.body.appendChild(modal);
+    if (typeof lockBodyScroll === 'function') lockBodyScroll();
 
     modal.addEventListener('click', function(e) {
         var action = e.target.dataset.modalAction;
         if (!action) {
-            if (e.target === modal) modal.remove();
+            if (e.target === modal) { modal.remove(); if (typeof unlockBodyScroll === 'function') unlockBodyScroll(); }
             return;
         }
         if (action === 'save-then-reset') {
             exportCharacter(charId, state);
             performReset(charId);
-            modal.remove();
+            modal.remove(); if (typeof unlockBodyScroll === 'function') unlockBodyScroll();
         } else if (action === 'confirm-reset') {
             performReset(charId);
-            modal.remove();
+            modal.remove(); if (typeof unlockBodyScroll === 'function') unlockBodyScroll();
         } else if (action === 'cancel-reset') {
-            modal.remove();
+            modal.remove(); if (typeof unlockBodyScroll === 'function') unlockBodyScroll();
         }
     });
 }
@@ -5123,9 +5133,111 @@ function bindPageEvents(route) {
 }
 
 // ============================================================
-// Section 31: Initialization
+// Section 31: Mobile Touch Support
+// ============================================================
+
+var isTouchDevice = false;
+
+function detectTouch() {
+    isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.matchMedia('(pointer: coarse)').matches);
+}
+
+function lockBodyScroll() {
+    var scrollY = window.scrollY;
+    document.body.classList.add('modal-open');
+    document.body.dataset.scrollY = scrollY;
+    document.body.style.top = '-' + scrollY + 'px';
+}
+
+function unlockBodyScroll() {
+    document.body.classList.remove('modal-open');
+    var scrollY = parseInt(document.body.dataset.scrollY || '0', 10);
+    document.body.style.top = '';
+    window.scrollTo(0, scrollY);
+}
+
+function initMobileSupport() {
+    detectTouch();
+
+    if (!isTouchDevice) return;
+
+    // -- Tap-to-dismiss tooltips: tap anywhere outside closes tooltip --
+    document.addEventListener('touchstart', function(e) {
+        var tooltip = document.querySelector('.tooltip-popup');
+        if (tooltip && !tooltip.contains(e.target)) {
+            removeTooltipPopup();
+        }
+    }, { passive: true });
+
+    // -- Close mobile nav on outside tap --
+    document.addEventListener('touchstart', function(e) {
+        var navLinks = document.querySelector('.nav-links.open');
+        if (!navLinks) return;
+        var navToggle = e.target.closest('[data-action="toggle-nav"]');
+        if (!navToggle && !navLinks.contains(e.target)) {
+            navLinks.classList.remove('open');
+        }
+    }, { passive: true });
+}
+
+// Patch tooltip events: on touch devices use tap instead of hover
+var origInitEvents = (typeof initEvents === 'function') ? initEvents : null;
+
+function patchTooltipEvents() {
+    if (!isTouchDevice) return;
+
+    // Override mouseover/mouseout — they still fire on touch but unreliably
+    // Add touchstart-based tooltip triggers on #app
+    var appEl = document.getElementById('app');
+    if (!appEl) return;
+
+    appEl.addEventListener('touchstart', function(e) {
+        var target = e.target;
+
+        // Ability score tooltip (tap)
+        if (typeof abilityEditMode !== 'undefined' && !abilityEditMode && typeof charId !== 'undefined' && charId && typeof config !== 'undefined' && config && typeof state !== 'undefined' && state) {
+            var abilityEl = target.closest('.ability[data-ability]');
+            if (abilityEl) {
+                var ab = abilityEl.dataset.ability;
+                if (ab) {
+                    e.preventDefault();
+                    showAbilityTooltip(ab, config, state, abilityEl);
+                    return;
+                }
+            }
+        }
+
+        // Spell tooltip (tap)
+        var spellBtn = target.closest('.spell-toggle');
+        if (spellBtn && !target.matches('[data-spell-star]') && !target.closest('[data-spell-star]')) {
+            var spName = spellBtn.dataset.spell;
+            if (spName) {
+                e.preventDefault();
+                showSpellTooltip(spName, spellBtn);
+                return;
+            }
+        }
+
+        // Info item tooltip (tap)
+        var infoItem = target.closest('.info-item');
+        if (infoItem) {
+            var valueEl = infoItem.querySelector('.value');
+            if (valueEl) {
+                var tipValue = valueEl.textContent.trim();
+                e.preventDefault();
+                showInfoTooltip(tipValue, infoItem);
+                return;
+            }
+        }
+    }, { passive: false });
+}
+
+// ============================================================
+// Section 32: Initialization
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', function() {
+    initMobileSupport();
     initRouter();
+    patchTooltipEvents();
 });

@@ -4663,3 +4663,295 @@ select.edit-input option {
 .chapter-edit { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 0.7rem; opacity: 0; transition: opacity 0.2s; margin-left: auto; }
 .chapter-tab:hover .chapter-edit { opacity: 0.7; }
 .chapter-edit:hover { color: var(--accent); opacity: 1 !important; }
+
+/* =============================================================
+   MOBILE TOUCH DEVICE SUPPORT
+   Targets phones & tablets with touch (no hover capability)
+   ============================================================= */
+
+/* ===== BODY SCROLL LOCK (for modals) ===== */
+body.modal-open {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+}
+
+/* ===== SAFE AREA (notch phones) ===== */
+@supports (padding: env(safe-area-inset-top)) {
+    .navbar {
+        padding-top: env(safe-area-inset-top);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+    }
+    .dashboard, .character-page, .notes-page, .lore-page, .maps-page, .timeline-page {
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+    }
+    .tab-bar {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+}
+
+/* ===== TOUCH DEVICE OVERRIDES ===== */
+@media (hover: none) and (pointer: coarse) {
+
+    /* -- Prevent iOS zoom on input focus (must be >= 16px) -- */
+    input, select, textarea {
+        font-size: 16px !important;
+    }
+
+    /* -- Touch targets: minimum 44x44px -- */
+    .death-save-dot {
+        width: 36px;
+        height: 36px;
+    }
+
+    .slot-dot {
+        width: 32px;
+        height: 32px;
+    }
+
+    .slot-dots {
+        gap: 0.5rem;
+    }
+
+    .death-save-dots {
+        gap: 0.5rem;
+    }
+
+    .edit-trigger {
+        width: 36px;
+        height: 36px;
+        font-size: 0.9rem;
+        opacity: 0.6 !important;
+    }
+
+    .color-dot {
+        width: 32px;
+        height: 32px;
+    }
+
+    .color-option {
+        width: 36px;
+        height: 36px;
+    }
+
+    .color-picker-popup {
+        grid-template-columns: repeat(6, 36px);
+        gap: 0.5rem;
+    }
+
+    .quote-remove-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 0.9rem;
+        opacity: 0.7 !important;
+    }
+
+    .map-card-delete {
+        width: 36px;
+        height: 36px;
+        font-size: 1.1rem;
+        opacity: 0.8 !important;
+    }
+
+    .pin-delete {
+        width: 28px;
+        height: 28px;
+        font-size: 0.8rem;
+        display: flex !important;
+    }
+
+    .item-remove {
+        opacity: 0.7 !important;
+        min-width: 36px;
+        min-height: 36px;
+    }
+
+    .chapter-edit {
+        opacity: 0.7 !important;
+        min-width: 44px;
+        min-height: 44px;
+        font-size: 0.85rem;
+    }
+
+    .condition-tag {
+        padding: 0.5rem 0.9rem;
+        font-size: 0.8rem;
+    }
+
+    .tab-btn {
+        padding: 0.65rem 1rem;
+        font-size: 0.85rem;
+        min-height: 44px;
+    }
+
+    .rest-btn {
+        padding: 0.65rem 1.2rem;
+        min-height: 44px;
+    }
+
+    .btn, .btn-sm {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    .nav-link, .nav-links a {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+    }
+
+    .level-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1.1rem;
+    }
+
+    .inspiration-toggle {
+        min-height: 44px;
+    }
+
+    /* -- Hover-dependent elements: always visible on touch -- */
+    .editable-field .edit-trigger,
+    .char-name-wrap .edit-trigger {
+        opacity: 0.6 !important;
+    }
+
+    .quote-item .quote-remove-btn {
+        opacity: 0.7 !important;
+    }
+
+    .map-card .map-card-delete {
+        opacity: 0.8 !important;
+    }
+
+    .map-pin .pin-delete {
+        display: flex !important;
+    }
+
+    .chapter-tab .chapter-edit {
+        opacity: 0.7 !important;
+    }
+
+    /* -- Image upload overlays: always visible on touch -- */
+    .image-upload-overlay {
+        opacity: 0.85 !important;
+    }
+
+    .char-banner .image-upload-overlay,
+    .char-portrait-wrap .image-upload-overlay {
+        opacity: 0.85 !important;
+    }
+
+    /* -- Active states for touch feedback -- */
+    .btn:active, .btn-sm:active, .tab-btn:active, .rest-btn:active,
+    .nav-link:active, .quick-link:active, .spell-toggle:active,
+    .condition-tag:active, .death-save-dot:active, .slot-dot:active,
+    .level-btn:active, .feat-card-full:active, .char-card:active {
+        transform: scale(0.96);
+        transition: transform 0.1s;
+    }
+
+    /* -- Disable hover transforms on touch (prevents sticky hover) -- */
+    .char-card:hover {
+        transform: none;
+    }
+
+    .quick-link:hover {
+        transform: none;
+    }
+
+    .color-dot:hover {
+        transform: none;
+    }
+
+    .color-option:hover {
+        transform: none;
+    }
+
+    .feat-card-full:hover {
+        background: var(--bg-block);
+        border-color: var(--border);
+    }
+
+    .feat-card-full.selected:hover {
+        border-color: var(--accent);
+        background: rgba(34, 211, 238, 0.08);
+    }
+
+    /* -- Tooltip popup: better sizing on mobile -- */
+    .tooltip-popup, .tc-card {
+        max-width: min(320px, 90vw);
+        font-size: 0.85rem;
+    }
+
+    /* -- Mobile nav: full-width links -- */
+    .nav-links.open {
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    .nav-links.open .nav-link,
+    .nav-links.open a {
+        padding: 0.9rem 1.2rem;
+        font-size: 1rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    /* -- Scrollable areas: show scroll hints -- */
+    .tab-bar {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    .tab-bar::-webkit-scrollbar {
+        display: none;
+    }
+    .tab-bar::after {
+        content: '';
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 30px;
+        background: linear-gradient(to right, transparent, var(--bg-card));
+        pointer-events: none;
+        z-index: 2;
+    }
+
+    /* -- Modal improvements for touch -- */
+    .levelup-modal, .modal-box {
+        max-height: 85vh;
+        max-height: 85dvh;
+    }
+
+    .wizard-card, .levelup-card {
+        max-height: 80vh;
+        max-height: 80dvh;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* -- HP controls: stack on touch -- */
+    .hp-controls {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .hp-btn {
+        min-height: 44px;
+        font-size: 0.9rem;
+    }
+
+    /* -- Map: touch-friendly zoom & pins -- */
+    .map-zoom-controls button {
+        width: 44px;
+        height: 44px;
+        font-size: 1.2rem;
+    }
+
+    .map-pin {
+        min-width: 28px;
+        min-height: 28px;
+    }
+}
