@@ -1672,10 +1672,22 @@ function renderTabCombat(charId, config, state) {
             html += '</div>';
         }
         html += '</div>';
+
+        // === Prepared Spells Quick Reference ===
+        var preparedSpells = state.prepared || [];
+        if (preparedSpells.length > 0) {
+            html += '<div class="sheet-block">';
+            html += '<h2>' + t('combat.preparedspells') || 'Prepared Spells' + '</h2>';
+            html += '<div class="prepared-spells-compact">';
+            for (var psi = 0; psi < preparedSpells.length; psi++) {
+                html += '<span class="prepared-spell-tag">' + escapeHtml(preparedSpells[psi]) + '</span>';
+            }
+            html += '</div></div>';
+        }
     } else if (editable) {
         html += '<div class="rest-buttons">';
-        html += '<button class="rest-btn" data-action="short-rest">' + t('combat.shortrest') + '</button>';
-        html += '<button class="rest-btn" data-action="long-rest">' + t('combat.longrest') + '</button>';
+        html += '<button class="btn btn-ghost btn-sm" data-action="short-rest">' + t('combat.shortrest') + '</button>';
+        html += '<button class="btn btn-ghost btn-sm" data-action="long-rest">' + t('combat.longrest') + '</button>';
         html += '</div>';
     }
 
@@ -1985,7 +1997,75 @@ function renderTabStory(charId, config, state) {
         html += '</div>';
     }
 
-    if (!editable && !config.backstory && !hasPersonality && quotes.length === 0) {
+    // === Character Timeline ===
+    var charTimeline = config.charTimeline || [];
+    if (charTimeline.length > 0 || editable) {
+        html += '<div class="sheet-block">';
+        html += '<h2>Timeline</h2>';
+        if (charTimeline.length > 0) {
+            html += '<div class="char-timeline">';
+            for (var cti = 0; cti < charTimeline.length; cti++) {
+                var ctEntry = charTimeline[cti];
+                html += '<div class="char-timeline-entry">';
+                html += '<div class="char-timeline-marker"></div>';
+                html += '<div class="char-timeline-content">';
+                html += '<span class="char-timeline-age">' + escapeHtml(ctEntry.age || '') + '</span>';
+                html += '<span class="char-timeline-text">' + escapeHtml(ctEntry.event || '') + '</span>';
+                if (editable) {
+                    html += '<button class="char-timeline-remove" data-action="remove-timeline-entry" data-idx="' + cti + '">&times;</button>';
+                }
+                html += '</div></div>';
+            }
+            html += '</div>';
+        }
+        if (editable) {
+            html += '<div class="char-timeline-add">';
+            html += '<input type="text" class="edit-input" id="ct-age" placeholder="Age / Year" style="width:80px;">';
+            html += '<input type="text" class="edit-input" id="ct-event" placeholder="Event..." style="flex:1;">';
+            html += '<button class="edit-save" data-action="add-timeline-entry">+</button>';
+            html += '</div>';
+        }
+        html += '</div>';
+    }
+
+    // === Family / Connections ===
+    var family = config.family || [];
+    if (family.length > 0 || editable) {
+        html += '<div class="sheet-block">';
+        html += '<h2>Family & Connections</h2>';
+        if (family.length > 0) {
+            html += '<div class="family-tree">';
+            for (var fi = 0; fi < family.length; fi++) {
+                var fm = family[fi];
+                var statusClass = fm.status === 'Deceased' || fm.status === 'Overleden' ? ' deceased' : '';
+                html += '<div class="family-member' + statusClass + '">';
+                html += '<div class="family-connector"></div>';
+                html += '<div class="family-info">';
+                html += '<strong>' + escapeHtml(fm.name || '') + '</strong>';
+                html += '<span class="family-relation">' + escapeHtml(fm.relation || '') + '</span>';
+                if (fm.status) html += '<span class="family-status">' + escapeHtml(fm.status) + '</span>';
+                if (fm.notes) html += '<span class="family-notes">' + escapeHtml(fm.notes) + '</span>';
+                html += '</div>';
+                if (editable) {
+                    html += '<button class="family-remove" data-action="remove-family" data-idx="' + fi + '">&times;</button>';
+                }
+                html += '</div>';
+            }
+            html += '</div>';
+        }
+        if (editable) {
+            html += '<div class="family-add">';
+            html += '<input type="text" class="edit-input" id="fam-name" placeholder="Name" style="flex:1;">';
+            html += '<input type="text" class="edit-input" id="fam-relation" placeholder="Relation" style="width:100px;">';
+            html += '<input type="text" class="edit-input" id="fam-status" placeholder="Status" style="width:80px;">';
+            html += '<input type="text" class="edit-input" id="fam-notes" placeholder="Notes" style="flex:1;">';
+            html += '<button class="edit-save" data-action="add-family">+</button>';
+            html += '</div>';
+        }
+        html += '</div>';
+    }
+
+    if (!editable && !config.backstory && !hasPersonality && quotes.length === 0 && charTimeline.length === 0 && family.length === 0) {
         html += '<p class="block-note">' + t('story.nostory') + '</p>';
     }
 
@@ -4815,6 +4895,71 @@ function bindPageEvents(route) {
                     var curQ = (config.quotes || []).slice();
                     curQ.splice(qIdx, 1);
                     saveCharConfigField(charId, 'quotes', curQ);
+                    config = loadCharConfig(charId);
+                    renderApp();
+                }
+                return;
+            }
+
+            // Add timeline entry
+            if (target.matches('[data-action="add-timeline-entry"]')) {
+                if (!canEdit(charId)) return;
+                var ctAge = document.getElementById('ct-age');
+                var ctEvent = document.getElementById('ct-event');
+                if (ctAge && ctEvent && ctEvent.value.trim()) {
+                    var tl = (config.charTimeline || []).slice();
+                    tl.push({ age: ctAge.value.trim(), event: ctEvent.value.trim() });
+                    saveCharConfigField(charId, 'charTimeline', tl);
+                    config = loadCharConfig(charId);
+                    renderApp();
+                }
+                return;
+            }
+
+            // Remove timeline entry
+            if (target.matches('[data-action="remove-timeline-entry"]')) {
+                if (!canEdit(charId)) return;
+                var ctIdx = parseInt(target.dataset.idx);
+                if (!isNaN(ctIdx)) {
+                    var tl = (config.charTimeline || []).slice();
+                    tl.splice(ctIdx, 1);
+                    saveCharConfigField(charId, 'charTimeline', tl);
+                    config = loadCharConfig(charId);
+                    renderApp();
+                }
+                return;
+            }
+
+            // Add family member
+            if (target.matches('[data-action="add-family"]')) {
+                if (!canEdit(charId)) return;
+                var famName = document.getElementById('fam-name');
+                var famRelation = document.getElementById('fam-relation');
+                var famStatus = document.getElementById('fam-status');
+                var famNotes = document.getElementById('fam-notes');
+                if (famName && famName.value.trim()) {
+                    var fam = (config.family || []).slice();
+                    fam.push({
+                        name: famName.value.trim(),
+                        relation: famRelation ? famRelation.value.trim() : '',
+                        status: famStatus ? famStatus.value.trim() : '',
+                        notes: famNotes ? famNotes.value.trim() : ''
+                    });
+                    saveCharConfigField(charId, 'family', fam);
+                    config = loadCharConfig(charId);
+                    renderApp();
+                }
+                return;
+            }
+
+            // Remove family member
+            if (target.matches('[data-action="remove-family"]')) {
+                if (!canEdit(charId)) return;
+                var famIdx = parseInt(target.dataset.idx);
+                if (!isNaN(famIdx)) {
+                    var fam = (config.family || []).slice();
+                    fam.splice(famIdx, 1);
+                    saveCharConfigField(charId, 'family', fam);
                     config = loadCharConfig(charId);
                     renderApp();
                 }

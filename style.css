@@ -5311,3 +5311,184 @@ body.modal-open {
 .timeline-content .event-layout-picker {
     margin-top: 0.5rem;
 }
+
+/* ============================================================
+   Prepared Spells (Combat Tab)
+   ============================================================ */
+.prepared-spells-compact {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+.prepared-spell-tag {
+    padding: 0.2rem 0.6rem;
+    background: rgba(var(--accent-rgb, 34,211,238), 0.1);
+    border: 1px solid rgba(var(--accent-rgb, 34,211,238), 0.25);
+    border-radius: 100px;
+    font-size: 0.75rem;
+    color: var(--accent);
+}
+
+/* ============================================================
+   Character Timeline (Story Tab)
+   ============================================================ */
+.char-timeline {
+    position: relative;
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+.char-timeline::before {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 4px;
+    bottom: 4px;
+    width: 2px;
+    background: linear-gradient(180deg, var(--accent), var(--gold));
+    border-radius: 1px;
+}
+.char-timeline-entry {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+.char-timeline-marker {
+    position: absolute;
+    left: -1.5rem;
+    top: 5px;
+    width: 10px;
+    height: 10px;
+    background: var(--accent);
+    border-radius: 50%;
+    transform: translateX(-4px);
+    box-shadow: 0 0 6px var(--accent-glow);
+    flex-shrink: 0;
+}
+.char-timeline-content {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    flex: 1;
+}
+.char-timeline-age {
+    font-weight: 700;
+    color: var(--accent);
+    font-size: 0.85rem;
+    white-space: nowrap;
+    min-width: 60px;
+}
+.char-timeline-text {
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+.char-timeline-remove {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+    font-size: 1rem;
+}
+.char-timeline-entry:hover .char-timeline-remove { opacity: 1; }
+.char-timeline-remove:hover { color: var(--danger); }
+.char-timeline-add {
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
+}
+
+/* ============================================================
+   Family & Connections (Story Tab)
+   ============================================================ */
+.family-tree {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+    padding-left: 1.5rem;
+}
+.family-tree::before {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 12px;
+    bottom: 12px;
+    width: 2px;
+    background: var(--border-light);
+}
+.family-member {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 0;
+}
+.family-member.deceased { opacity: 0.6; }
+.family-connector {
+    position: absolute;
+    left: -1.5rem;
+    width: 14px;
+    height: 2px;
+    background: var(--border-light);
+    top: 50%;
+}
+.family-connector::before {
+    content: '';
+    position: absolute;
+    right: -3px;
+    top: -3px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--bg-elevated);
+    border: 2px solid var(--text-dim);
+}
+.family-member.deceased .family-connector::before {
+    border-color: var(--danger);
+    opacity: 0.6;
+}
+.family-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.75rem;
+    align-items: baseline;
+}
+.family-info strong { color: var(--text-bright); font-size: 0.95rem; }
+.family-relation { color: var(--accent); font-size: 0.8rem; }
+.family-status { color: var(--text-dim); font-size: 0.75rem; font-style: italic; }
+.family-notes { color: var(--text-dim); font-size: 0.8rem; }
+.family-remove {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+    margin-left: auto;
+}
+.family-member:hover .family-remove { opacity: 1; }
+.family-remove:hover { color: var(--danger); }
+.family-add {
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 0.75rem;
+    flex-wrap: wrap;
+}
+
+/* ============================================================
+   Character Page Layout Cleanup
+   ============================================================ */
+.sheet-block p {
+    max-width: 680px;
+}
+.personality-item p {
+    max-width: 600px;
+    line-height: 1.6;
+}
+.editable-field .field-display {
+    max-width: 680px;
+}
