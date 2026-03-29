@@ -611,7 +611,7 @@ function renderApp() {
                 html += renderNotes();
             }
         } else {
-            html += '<div class="page-placeholder"><h2>Pagina niet gevonden</h2><p>De pagina die je zoekt bestaat niet.</p></div>';
+            html += '<div class="page-placeholder"><h2>' + t('page.notfound') + '</h2><p>' + t('page.notfound.desc') + '</p></div>';
         }
 
         html += '</main>';
@@ -633,14 +633,14 @@ function renderLogin() {
     html += '<p class="login-subtitle">Valoria Campaign Platform</p>';
     html += '<div class="login-form">';
     html += '<div class="login-field">';
-    html += '<label class="login-label">Gebruikersnaam</label>';
-    html += '<input type="text" class="login-input" id="login-username" placeholder="Gebruikersnaam" autocomplete="username">';
+    html += '<label class="login-label">' + t('login.username') + '</label>';
+    html += '<input type="text" class="login-input" id="login-username" placeholder="' + t('login.username') + '" autocomplete="username">';
     html += '</div>';
     html += '<div class="login-field">';
-    html += '<label class="login-label">Wachtwoord</label>';
-    html += '<input type="password" class="login-input" id="login-password" placeholder="Wachtwoord" autocomplete="current-password">';
+    html += '<label class="login-label">' + t('login.password') + '</label>';
+    html += '<input type="password" class="login-input" id="login-password" placeholder="' + t('login.password') + '" autocomplete="current-password">';
     html += '</div>';
-    html += '<button class="login-submit" data-action="login-submit">Inloggen</button>';
+    html += '<button class="login-submit" data-action="login-submit">' + t('login.submit') + '</button>';
     html += '<p class="login-error" id="login-error" style="display:none;"></p>';
     html += '</div>';
     html += '</div>';
@@ -655,12 +655,12 @@ function renderLogin() {
 function renderNavbar(route) {
     var user = currentUser();
     var links = [
-        { path: '/dashboard', label: 'Dashboard', icon: '&#9733;' },
-        { path: '/characters', label: 'Characters', icon: '&#9876;' },
-        { path: '/maps', label: 'Maps', icon: '&#9873;' },
-        { path: '/timeline', label: 'Timeline', icon: '&#128337;' },
-        { path: '/lore', label: 'Lore', icon: '&#128214;' },
-        { path: '/notes', label: 'Notes', icon: '&#128221;' }
+        { path: '/dashboard', label: t('nav.dashboard'), icon: '&#9733;' },
+        { path: '/characters', label: t('nav.characters'), icon: '&#9876;' },
+        { path: '/maps', label: t('nav.maps'), icon: '&#9873;' },
+        { path: '/timeline', label: t('nav.timeline'), icon: '&#128337;' },
+        { path: '/lore', label: t('nav.lore'), icon: '&#128214;' },
+        { path: '/notes', label: t('nav.notes'), icon: '&#128221;' }
     ];
 
     var html = '<nav class="navbar">';
@@ -680,7 +680,7 @@ function renderNavbar(route) {
     html += '</div>';
     html += '<div class="nav-right">';
     html += '<div class="theme-picker-wrap">';
-    html += '<button class="theme-picker-btn" data-action="toggle-theme-picker" title="Kleurenthema">&#127912;</button>';
+    html += '<button class="theme-picker-btn" data-action="toggle-theme-picker" title="' + t('nav.theme') + '">&#127912;</button>';
     html += '<div class="theme-picker-popup" id="theme-picker" style="display:none;">';
     html += '<div class="theme-picker-grid">';
     for (var ti = 0; ti < COLOR_THEMES.length; ti++) {
@@ -694,12 +694,13 @@ function renderNavbar(route) {
     // Sync status indicator
     var syncStatus = typeof getSyncStatus === 'function' ? getSyncStatus() : 'not-configured';
     if (syncStatus === 'online') {
-        html += '<span class="sync-indicator sync-online" title="Cloud sync actief">&#9729;</span>';
+        html += '<span class="sync-indicator sync-online" title="' + t('nav.sync.online') + '">&#9729;</span>';
     } else if (syncStatus === 'offline') {
-        html += '<span class="sync-indicator sync-offline" title="Cloud offline">&#9729;</span>';
+        html += '<span class="sync-indicator sync-offline" title="' + t('nav.sync.offline') + '">&#9729;</span>';
     }
+    html += '<button class="nav-lang-btn" data-action="toggle-lang" title="' + t('nav.language') + '">' + (getLang() === 'nl' ? 'NL' : 'EN') + '</button>';
     html += '<span class="nav-avatar">' + escapeHtml(user ? user.name.charAt(0) : '') + '</span>';
-    html += '<button class="nav-logout" data-action="logout">Uitloggen</button>';
+    html += '<button class="nav-logout" data-action="logout">' + t('nav.logout') + '</button>';
     html += '</div>';
     html += '<button class="nav-toggle" data-action="toggle-nav">&#9776;</button>';
     html += '</nav>';
@@ -719,10 +720,10 @@ function renderDashboard() {
 
     // Welcome banner
     html += '<div class="welcome-banner">';
-    html += '<h1>Welkom in Valoria</h1>';
-    html += '<p class="campaign-name">De Slangenmars</p>';
-    html += '<p class="welcome-user">Ingelogd als ' + escapeHtml(user ? user.name : '') + '</p>';
-    html += '<p class="text-dim" style="font-size:0.85rem;">Sessie ' + escapeHtml(sessionNum) + '</p>';
+    html += '<h1>' + t('dash.welcome') + '</h1>';
+    html += '<p class="campaign-name">' + t('dash.campaign') + '</p>';
+    html += '<p class="welcome-user">' + t('dash.loggedinas') + ' ' + escapeHtml(user ? user.name : '') + '</p>';
+    html += '<p class="text-dim" style="font-size:0.85rem;">' + t('dash.session') + ' ' + escapeHtml(sessionNum) + '</p>';
     html += '</div>';
 
     // Quick stats
@@ -740,7 +741,7 @@ function renderDashboard() {
     html += '<div class="dash-stats">';
     html += '<div class="dash-stat-card session-card">';
     html += '<span class="dash-stat-value">' + escapeHtml(sessionNum) + '</span>';
-    html += '<span class="dash-stat-label">Sessie</span>';
+    html += '<span class="dash-stat-label">' + t('dash.session') + '</span>';
     if (isDM()) {
         html += '<div class="session-controls">';
         html += '<button class="session-btn" data-action="session-minus">&minus;</button>';
@@ -748,17 +749,17 @@ function renderDashboard() {
         html += '</div>';
     }
     html += '</div>';
-    html += '<div class="dash-stat-card"><span class="dash-stat-value">' + partySize + '</span><span class="dash-stat-label">Party</span></div>';
-    html += '<div class="dash-stat-card"><span class="dash-stat-value">' + groupLevel + '</span><span class="dash-stat-label">Level</span></div>';
+    html += '<div class="dash-stat-card"><span class="dash-stat-value">' + partySize + '</span><span class="dash-stat-label">' + t('dash.party') + '</span></div>';
+    html += '<div class="dash-stat-card"><span class="dash-stat-value">' + groupLevel + '</span><span class="dash-stat-label">' + t('dash.level') + '</span></div>';
     html += '</div>';
 
     // Quick navigation cards
     html += '<div class="dash-nav-cards">';
-    html += '<a class="dash-nav-card" href="#/characters"><span class="dash-nav-icon">&#9876;</span><span class="dash-nav-title">Characters</span><span class="dash-nav-desc">Bekijk alle avonturiers</span></a>';
-    html += '<a class="dash-nav-card" href="#/timeline"><span class="dash-nav-icon">&#128337;</span><span class="dash-nav-title">Timeline</span><span class="dash-nav-desc">Campagne gebeurtenissen</span></a>';
-    html += '<a class="dash-nav-card" href="#/maps"><span class="dash-nav-icon">&#128506;</span><span class="dash-nav-title">Maps</span><span class="dash-nav-desc">Kaarten van de wereld</span></a>';
-    html += '<a class="dash-nav-card" href="#/lore"><span class="dash-nav-icon">&#128214;</span><span class="dash-nav-title">Lore</span><span class="dash-nav-desc">Achtergrondverhalen en kennis</span></a>';
-    html += '<a class="dash-nav-card" href="#/notes"><span class="dash-nav-icon">&#128221;</span><span class="dash-nav-title">Notes</span><span class="dash-nav-desc">Je sessie-aantekeningen</span></a>';
+    html += '<a class="dash-nav-card" href="#/characters"><span class="dash-nav-icon">&#9876;</span><span class="dash-nav-title">' + t('nav.characters') + '</span><span class="dash-nav-desc">' + t('dash.characters.desc') + '</span></a>';
+    html += '<a class="dash-nav-card" href="#/timeline"><span class="dash-nav-icon">&#128337;</span><span class="dash-nav-title">' + t('nav.timeline') + '</span><span class="dash-nav-desc">' + t('dash.timeline.desc') + '</span></a>';
+    html += '<a class="dash-nav-card" href="#/maps"><span class="dash-nav-icon">&#128506;</span><span class="dash-nav-title">' + t('nav.maps') + '</span><span class="dash-nav-desc">' + t('dash.maps.desc') + '</span></a>';
+    html += '<a class="dash-nav-card" href="#/lore"><span class="dash-nav-icon">&#128214;</span><span class="dash-nav-title">' + t('nav.lore') + '</span><span class="dash-nav-desc">' + t('dash.lore.desc') + '</span></a>';
+    html += '<a class="dash-nav-card" href="#/notes"><span class="dash-nav-icon">&#128221;</span><span class="dash-nav-title">' + t('nav.notes') + '</span><span class="dash-nav-desc">' + t('dash.notes.desc') + '</span></a>';
     html += '</div>';
 
     // Recent timeline events (pull from ALL chapters)
@@ -773,12 +774,12 @@ function renderDashboard() {
     var recentEvents = allEvents.slice(-3).reverse();
     if (recentEvents.length > 0) {
         html += '<div class="dash-recent-section">';
-        html += '<h2 class="section-title">Recente Gebeurtenissen</h2>';
+        html += '<h2 class="section-title">' + t('dash.recent') + '</h2>';
         html += '<div class="dash-recent-events">';
         for (var ri = 0; ri < recentEvents.length; ri++) {
             var rev = recentEvents[ri];
             html += '<div class="dash-recent-event timeline-' + (rev.type || 'quest') + '">';
-            if (rev.session) html += '<span class="timeline-date">Sessie ' + escapeHtml(rev.session) + '</span>';
+            if (rev.session) html += '<span class="timeline-date">' + t('dash.session') + ' ' + escapeHtml(rev.session) + '</span>';
             html += '<strong>' + escapeHtml(rev.title) + '</strong>';
             html += '<p class="text-dim" style="margin:0;font-size:0.8rem;">' + escapeHtml(rev.desc) + '</p>';
             html += '</div>';
@@ -789,7 +790,7 @@ function renderDashboard() {
 
     // Party overview
     html += '<div class="party-section">';
-    html += '<h2 class="section-title">Party Overzicht</h2>';
+    html += '<h2 class="section-title">' + t('dash.partyoverview') + '</h2>';
     html += '<div class="character-cards">';
 
     for (var i = 0; i < charIds.length; i++) {
@@ -808,11 +809,11 @@ function renderDashboard() {
     // DM Tools section (only for DM)
     if (isDM()) {
         html += '<div class="dm-tools">';
-        html += '<h2 class="section-title">DM Tools</h2>';
+        html += '<h2 class="section-title">' + t('dm.tools') + '</h2>';
 
         // Initiative Tracker
         html += '<div class="dm-tool-card">';
-        html += '<h3>Initiative Tracker</h3>';
+        html += '<h3>' + t('dm.initiative') + '</h3>';
 
         var initData = JSON.parse(localStorage.getItem('dw_initiative') || '{"entries":[],"currentTurn":0,"round":1}');
         var entries = initData.entries || [];
@@ -820,9 +821,9 @@ function renderDashboard() {
         var initRound = initData.round || 1;
 
         html += '<div class="init-header">';
-        html += '<span class="init-round">Ronde ' + initRound + '</span>';
+        html += '<span class="init-round">' + t('dm.round') + ' ' + initRound + '</span>';
         if (entries.length > 0) {
-            html += '<button class="btn btn-sm btn-primary" data-action="next-turn">Volgende Beurt &rarr;</button>';
+            html += '<button class="btn btn-sm btn-primary" data-action="next-turn">' + t('dm.nextturn') + ' &rarr;</button>';
         }
         html += '</div>';
 
@@ -846,29 +847,29 @@ function renderDashboard() {
         // Add to initiative
         html += '<div class="init-add">';
         html += '<select class="edit-input" id="init-char" style="flex:1;">';
-        html += '<option value="">Kies karakter/NPC...</option>';
+        html += '<option value="">' + t('dm.choosechar') + '</option>';
         var iCharIds = getCharacterIds();
         for (var ici = 0; ici < iCharIds.length; ici++) {
             var iccfg = loadCharConfig(iCharIds[ici]);
             if (iccfg) html += '<option value="' + iCharIds[ici] + '">' + escapeHtml(iccfg.name) + '</option>';
         }
-        html += '<option value="custom">NPC / Monster</option>';
+        html += '<option value="custom">' + t('dm.npcmonster') + '</option>';
         html += '</select>';
-        html += '<input type="text" class="edit-input" id="init-custom-name" placeholder="NPC naam" style="display:none;flex:1;">';
-        html += '<input type="number" class="edit-input" id="init-roll" placeholder="Init" style="width:60px;">';
+        html += '<input type="text" class="edit-input" id="init-custom-name" placeholder="' + t('dm.npcname') + '" style="display:none;flex:1;">';
+        html += '<input type="number" class="edit-input" id="init-roll" placeholder="' + t('dm.init') + '" style="width:60px;">';
         html += '<button class="btn btn-sm btn-primary" data-action="add-init">+</button>';
         html += '</div>';
 
         // Clear initiative
         if (entries.length > 0) {
-            html += '<button class="btn btn-ghost btn-sm" data-action="clear-init" style="margin-top:0.5rem;">Initiative resetten</button>';
+            html += '<button class="btn btn-ghost btn-sm" data-action="clear-init" style="margin-top:0.5rem;">' + t('dm.resetinit') + '</button>';
         }
 
         html += '</div>'; // dm-tool-card
 
         // Quick Dice Roller
         html += '<div class="dm-tool-card">';
-        html += '<h3>Dice Roller</h3>';
+        html += '<h3>' + t('dm.diceroller') + '</h3>';
         html += '<div class="dice-buttons">';
         var dice = [4, 6, 8, 10, 12, 20, 100];
         for (var di = 0; di < dice.length; di++) {
@@ -880,15 +881,15 @@ function renderDashboard() {
 
         // Cloud sync card
         html += '<div class="dm-tool-card">';
-        html += '<h3>&#9729; Cloud Sync</h3>';
+        html += '<h3>&#9729; ' + t('dm.cloudsync') + '</h3>';
         var syncSt = typeof getSyncStatus === 'function' ? getSyncStatus() : 'not-configured';
         if (syncSt === 'online') {
-            html += '<p style="color:var(--success);font-size:0.85rem;margin-bottom:0.75rem;">Verbonden — alle wijzigingen worden automatisch gesynchroniseerd.</p>';
-            html += '<button class="btn btn-ghost btn-sm" data-action="sync-upload-all">Alles uploaden naar cloud</button>';
+            html += '<p style="color:var(--success);font-size:0.85rem;margin-bottom:0.75rem;">' + t('dm.sync.connected') + '</p>';
+            html += '<button class="btn btn-ghost btn-sm" data-action="sync-upload-all">' + t('dm.sync.uploadall') + '</button>';
         } else if (syncSt === 'not-configured') {
-            html += '<p style="color:var(--text-dim);font-size:0.85rem;">Firebase niet geconfigureerd. Vul FIREBASE_CONFIG in sync.js in.</p>';
+            html += '<p style="color:var(--text-dim);font-size:0.85rem;">' + t('dm.sync.notconfig') + '</p>';
         } else {
-            html += '<p style="color:var(--warning);font-size:0.85rem;">Firebase offline. Controleer je verbinding.</p>';
+            html += '<p style="color:var(--warning);font-size:0.85rem;">' + t('dm.sync.offline') + '</p>';
         }
         html += '</div>';
 
@@ -920,7 +921,7 @@ function renderCharCard(cid, cfg, state, isOwn) {
     html += '<span class="char-card-name">' + escapeHtml(cfg.name) + '</span>';
     html += '<span class="char-card-detail">' + raceDisplayName(cfg.race) + ' ' + classDisplayName(cfg.className) + '</span>';
     html += '<span class="char-card-detail">Level ' + state.level + '</span>';
-    if (isOwn) html += '<span class="char-card-badge">Jouw karakter</span>';
+    if (isOwn) html += '<span class="char-card-badge">' + t('char.yours') + '</span>';
     html += '</div>';
     html += '</a>';
     return html;
@@ -956,7 +957,7 @@ function renderCharacterList() {
 function renderCharacterSheet(charId) {
     var config = loadCharConfig(charId);
     if (!config) {
-        return '<div class="page-placeholder"><h2>Karakter niet gevonden</h2></div>';
+        return '<div class="page-placeholder"><h2>' + t('char.notfound') + '</h2></div>';
     }
 
     var state = loadCharState(charId);
@@ -980,7 +981,7 @@ function renderCharacterSheet(charId) {
         html += '<div class="banner-placeholder">Banner</div>';
     }
     if (editable) {
-        html += '<label class="image-upload-overlay" title="Banner uploaden"><span class="upload-icon">&#128247;</span><input type="file" accept="image/*" data-action="upload-banner" style="display:none"></label>';
+        html += '<label class="image-upload-overlay" title="' + t('banner.upload') + '"><span class="upload-icon">&#128247;</span><input type="file" accept="image/*" data-action="upload-banner" style="display:none"></label>';
     }
     html += '</div>';
 
@@ -994,7 +995,7 @@ function renderCharacterSheet(charId) {
     }
     html += '</div>';
     if (editable) {
-        html += '<label class="image-upload-overlay" title="Portret uploaden"><span class="upload-icon">&#128247;</span><input type="file" accept="image/*" data-action="upload-portrait" style="display:none"></label>';
+        html += '<label class="image-upload-overlay" title="' + t('portrait.upload') + '"><span class="upload-icon">&#128247;</span><input type="file" accept="image/*" data-action="upload-portrait" style="display:none"></label>';
     }
     html += '</div>';
 
@@ -1004,10 +1005,10 @@ function renderCharacterSheet(charId) {
     html += '<h1 class="char-name-wrap">';
     html += '<span class="char-name-display">' + escapeHtml(config.name) + '</span>';
     if (editable) {
-        html += '<button class="edit-trigger" data-action="edit-name" title="Naam bewerken">&#9998;</button>';
+        html += '<button class="edit-trigger" data-action="edit-name" title="' + t('char.editname') + '">&#9998;</button>';
         var colorOptions = ['#22d3ee','#f472b6','#4ade80','#818cf8','#fbbf24','#34d399','#f87171','#a78bfa','#fb923c','#e879f9','#38bdf8','#facc15'];
         html += '<span class="color-picker-wrap">';
-        html += '<span class="color-dot" data-action="pick-color" style="background:' + config.accentColor + ';" title="Kleur kiezen"></span>';
+        html += '<span class="color-dot" data-action="pick-color" style="background:' + config.accentColor + ';" title="' + t('char.pickcolor') + '"></span>';
         html += '<div class="color-picker-popup" style="display:none;">';
         for (var ci = 0; ci < colorOptions.length; ci++) {
             var selClass = colorOptions[ci] === config.accentColor ? ' selected' : '';
@@ -1020,8 +1021,10 @@ function renderCharacterSheet(charId) {
     html += '<span class="info-item" data-tip="' + escapeAttr(raceLabel) + '"><span class="value">' + raceLabel + '</span></span>';
     html += ' &mdash; ';
     html += '<span class="info-item" data-tip="' + escapeAttr(classLabel) + '"><span class="value">' + classLabel + '</span></span>';
-    html += ' &mdash; ';
-    html += '<span class="info-item" data-tip="' + escapeAttr(subLabel) + '"><span class="value">' + subLabel + '</span></span>';
+    if (isSubclassVisible(config, state)) {
+        html += ' &mdash; ';
+        html += '<span class="info-item" data-tip="' + escapeAttr(subLabel) + '"><span class="value">' + subLabel + '</span></span>';
+    }
     html += '</p>';
 
     // Level control
@@ -1042,9 +1045,9 @@ function renderCharacterSheet(charId) {
         html += '<div class="header-actions" id="options-dropdown">';
         html += '<button class="options-toggle" data-action="toggle-options">&#9881;</button>';
         html += '<div class="options-menu">';
-        html += '<button class="header-btn" data-action="export-char">&#128190; Opslaan</button>';
-        html += '<label class="header-btn">&#128194; Laden<input type="file" accept=".json" data-action="import-char" style="display:none"></label>';
-        html += '<button class="header-btn header-btn-danger" data-action="reset-char">&#128260; Reset</button>';
+        html += '<button class="header-btn" data-action="export-char">&#128190; ' + t('char.save') + '</button>';
+        html += '<label class="header-btn">&#128194; ' + t('char.load') + '<input type="file" accept=".json" data-action="import-char" style="display:none"></label>';
+        html += '<button class="header-btn header-btn-danger" data-action="reset-char">&#128260; ' + t('char.reset') + '</button>';
         html += '</div>';
         html += '</div>';
     }
@@ -1057,21 +1060,21 @@ function renderCharacterSheet(charId) {
         var quoteText = quotes[Math.floor(Math.random() * quotes.length)];
         html += '<div class="header-quote-row">';
         html += '<p class="char-quote-dynamic">&ldquo;' + escapeHtml(quoteText) + '&rdquo;</p>';
-        html += '<button class="quote-refresh-btn" data-action="refresh-quote" title="Ander citaat">&#8635;</button>';
+        html += '<button class="quote-refresh-btn" data-action="refresh-quote" title="' + t('char.refreshquote') + '">&#8635;</button>';
         html += '</div>';
     }
 
     // Tab bar
     var tabs = [
-        { id: 'overview', label: 'Overzicht' },
-        { id: 'stats', label: 'Stats' },
-        { id: 'combat', label: 'Combat' }
+        { id: 'overview', label: t('tab.overview') },
+        { id: 'stats', label: t('tab.stats') },
+        { id: 'combat', label: t('tab.combat') }
     ];
     if (hasSpellcasting(config.className)) {
-        tabs.push({ id: 'spells', label: 'Spells' });
+        tabs.push({ id: 'spells', label: t('tab.spells') });
     }
-    tabs.push({ id: 'story', label: 'Verhaal' });
-    tabs.push({ id: 'inventory', label: 'Inventaris' });
+    tabs.push({ id: 'story', label: t('tab.story') });
+    tabs.push({ id: 'inventory', label: t('tab.inventory') });
 
     html += '<div class="tab-bar">';
     for (var t = 0; t < tabs.length; t++) {
@@ -1123,38 +1126,40 @@ function renderTabOverview(charId, config, state) {
 
     // Info grid
     html += '<div class="info-grid">';
-    html += '<div class="info-item" data-tip="' + escapeAttr(raceDisplayName(config.race)) + '"><span class="label">Ras</span><span class="value">' + raceDisplayName(config.race) + '</span></div>';
-    html += '<div class="info-item" data-tip="' + escapeAttr(classDisplayName(config.className)) + '"><span class="label">Klasse</span><span class="value">' + classDisplayName(config.className) + '</span></div>';
-    html += '<div class="info-item" data-tip="' + escapeAttr(subclassDisplayName(config.subclass)) + '"><span class="label">Subklasse</span><span class="value">' + subclassDisplayName(config.subclass) + '</span></div>';
-    html += '<div class="info-item" data-tip="' + escapeAttr(config.background || '') + '"><span class="label">Achtergrond</span><span class="value">' + escapeHtml(config.background || '-') + '</span></div>';
-    html += '<div class="info-item" data-tip="' + escapeAttr(config.alignment || '') + '"><span class="label">Alignment</span><span class="value">' + escapeHtml(config.alignment || '-') + '</span></div>';
-    html += '<div class="info-item"><span class="label">Leeftijd</span><span class="value">' + (config.age || '-') + '</span></div>';
+    html += '<div class="info-item" data-tip="' + escapeAttr(raceDisplayName(config.race)) + '"><span class="label">' + t('overview.race') + '</span><span class="value">' + raceDisplayName(config.race) + '</span></div>';
+    html += '<div class="info-item" data-tip="' + escapeAttr(classDisplayName(config.className)) + '"><span class="label">' + t('overview.class') + '</span><span class="value">' + classDisplayName(config.className) + '</span></div>';
+    if (isSubclassVisible(config, state)) {
+        html += '<div class="info-item" data-tip="' + escapeAttr(subclassDisplayName(config.subclass)) + '"><span class="label">' + t('overview.subclass') + '</span><span class="value">' + subclassDisplayName(config.subclass) + '</span></div>';
+    }
+    html += '<div class="info-item" data-tip="' + escapeAttr(config.background || '') + '"><span class="label">' + t('overview.background') + '</span><span class="value">' + escapeHtml(config.background || '-') + '</span></div>';
+    html += '<div class="info-item" data-tip="' + escapeAttr(config.alignment || '') + '"><span class="label">' + t('overview.alignment') + '</span><span class="value">' + escapeHtml(config.alignment || '-') + '</span></div>';
+    html += '<div class="info-item"><span class="label">' + t('overview.age') + '</span><span class="value">' + (config.age || '-') + '</span></div>';
     html += '</div>';
 
     // Appearance
     var hasAppearance = config.appearance && (config.appearance[0] || config.appearance[1]);
     if (hasAppearance || canEdit(charId)) {
         html += '<div class="sheet-block appearance-mini">';
-        html += '<h2>Uiterlijk</h2>';
+        html += '<h2>' + t('overview.appearance') + '</h2>';
         var appearImg = loadImage(charId, 'appearance');
         if (appearImg) {
             html += '<img class="appearance-img" src="' + appearImg + '" alt="">';
         }
         if (canEdit(charId)) {
             html += '<div class="editable-field" data-edit-field="appearance0" data-char-id="' + charId + '">';
-            html += '<p class="field-display">' + escapeHtml(config.appearance ? config.appearance[0] || '' : '') + (!(config.appearance && config.appearance[0]) ? '<em class="placeholder-text">Klik om uiterlijk toe te voegen...</em>' : '') + '</p>';
-            html += '<button class="edit-trigger" data-action="edit-field" data-field="appearance0" title="Bewerken">&#9998;</button>';
+            html += '<p class="field-display">' + escapeHtml(config.appearance ? config.appearance[0] || '' : '') + (!(config.appearance && config.appearance[0]) ? '<em class="placeholder-text">' + t('overview.appearance.add') + '</em>' : '') + '</p>';
+            html += '<button class="edit-trigger" data-action="edit-field" data-field="appearance0" title="' + t('generic.edit') + '">&#9998;</button>';
             html += '</div>';
             html += '<div class="editable-field" data-edit-field="appearance1" data-char-id="' + charId + '">';
-            html += '<p class="field-display">' + escapeHtml(config.appearance ? config.appearance[1] || '' : '') + (!(config.appearance && config.appearance[1]) ? '<em class="placeholder-text">Klik om uiterlijk toe te voegen...</em>' : '') + '</p>';
-            html += '<button class="edit-trigger" data-action="edit-field" data-field="appearance1" title="Bewerken">&#9998;</button>';
+            html += '<p class="field-display">' + escapeHtml(config.appearance ? config.appearance[1] || '' : '') + (!(config.appearance && config.appearance[1]) ? '<em class="placeholder-text">' + t('overview.appearance.add') + '</em>' : '') + '</p>';
+            html += '<button class="edit-trigger" data-action="edit-field" data-field="appearance1" title="' + t('generic.edit') + '">&#9998;</button>';
             html += '</div>';
         } else {
             if (config.appearance && config.appearance[0]) html += '<p>' + escapeHtml(config.appearance[0]) + '</p>';
             if (config.appearance && config.appearance[1]) html += '<p>' + escapeHtml(config.appearance[1]) + '</p>';
         }
         if (canEdit(charId)) {
-            html += '<label class="btn btn-ghost btn-sm appearance-upload-btn">&#128247; Afbeelding<input type="file" accept="image/*" data-action="upload-appearance" style="display:none"></label>';
+            html += '<label class="btn btn-ghost btn-sm appearance-upload-btn">&#128247; ' + t('overview.appearance.image') + '<input type="file" accept="image/*" data-action="upload-appearance" style="display:none"></label>';
         }
         html += '</div>';
     }
@@ -1171,7 +1176,7 @@ function renderFeaturesSummary(config, state) {
     if (!classData) return '';
 
     var html = '<div class="sheet-block">';
-    html += '<h2>Class Features</h2>';
+    html += '<h2>' + t('overview.classfeatures') + '</h2>';
 
     for (var lvl = 1; lvl <= state.level; lvl++) {
         var features = classData.features ? (classData.features[lvl] || []) : [];
@@ -1186,9 +1191,10 @@ function renderFeaturesSummary(config, state) {
     }
 
     // Subclass features
+    if (isSubclassVisible(config, state)) {
     var subData = classData.subclasses && classData.subclasses[config.subclass];
     if (subData) {
-        html += '<h3 style="margin-top:1rem;">Subclass Features</h3>';
+        html += '<h3 style="margin-top:1rem;">' + t('overview.subclassfeatures') + '</h3>';
         for (var lvl2 = 1; lvl2 <= state.level; lvl2++) {
             var subFeatures = subData.features ? (subData.features[lvl2] || []) : [];
             for (var sf = 0; sf < subFeatures.length; sf++) {
@@ -1201,12 +1207,13 @@ function renderFeaturesSummary(config, state) {
             }
         }
     }
+    }
 
     // Racial features
     var raceKey = config.race;
     var raceData = DATA[raceKey];
     if (raceData && raceData.features) {
-        html += '<h3 style="margin-top:1rem;">Racial Traits (' + raceDisplayName(config.race) + ')</h3>';
+        html += '<h3 style="margin-top:1rem;">' + t('overview.racialtraits') + ' (' + raceDisplayName(config.race) + ')</h3>';
         for (var rf = 0; rf < raceData.features.length; rf++) {
             var rfeat = raceData.features[rf];
             html += '<div class="feature-card">';
@@ -1229,25 +1236,25 @@ function renderTabStats(charId, config, state) {
 
     // Ability Scores
     html += '<div class="sheet-block">';
-    html += '<h2>Ability Scores</h2>';
+    html += '<h2>' + t('stats.abilityscores') + '</h2>';
     html += renderAbilityScoresHTML(charId, config, state);
     html += '</div>';
 
     // Saving Throws
     html += '<div class="sheet-block">';
-    html += '<h2>Saving Throws</h2>';
+    html += '<h2>' + t('stats.savingthrows') + '</h2>';
     html += renderSavingThrowsHTML(config, state);
     html += '</div>';
 
     // Skills
     html += '<div class="sheet-block">';
-    html += '<h2>Skills</h2>';
+    html += '<h2>' + t('stats.skills') + '</h2>';
     html += renderSkillsHTML(config, state);
     html += '</div>';
 
     // ASI
     html += '<div class="sheet-block" id="asi-content">';
-    html += '<h2>Ability Score Improvements</h2>';
+    html += '<h2>' + t('stats.asi') + '</h2>';
     html += renderASIHTML(charId, config, state);
     html += '</div>';
 
@@ -1296,12 +1303,12 @@ function renderAbilityScoresHTML(charId, config, state) {
         }
         html += '</div>';
         html += '<div class="ability-edit-actions">';
-        html += '<button class="ability-edit-btn" data-action="ability-save">Opslaan</button>';
-        html += '<button class="ability-edit-btn ability-edit-cancel" data-action="ability-cancel">Annuleren</button>';
+        html += '<button class="ability-edit-btn" data-action="ability-save">' + t('generic.save') + '</button>';
+        html += '<button class="ability-edit-btn ability-edit-cancel" data-action="ability-cancel">' + t('generic.cancel') + '</button>';
         html += '</div>';
     } else {
         if (editable) {
-            html += '<div class="ability-edit-header"><button class="edit-toggle-btn" data-action="ability-edit" title="Bewerken">&#9998;</button></div>';
+            html += '<div class="ability-edit-header"><button class="edit-toggle-btn" data-action="ability-edit" title="' + t('stats.edit') + '">&#9998;</button></div>';
         }
         html += '<div class="ability-scores">';
         var keys2 = Object.keys(abNames);
@@ -1371,7 +1378,7 @@ function renderSkillsHTML(config, state) {
     html += '</div>';
 
     if (state.expertise && state.expertise.length > 0) {
-        html += '<p class="block-note" style="margin-top:0.75rem;">&#9733; = Expertise (dubbele proficiency)</p>';
+        html += '<p class="block-note" style="margin-top:0.75rem;">&#9733; = ' + t('stats.expertise') + '</p>';
     }
 
     return html;
@@ -1388,7 +1395,7 @@ function renderASIHTML(charId, config, state) {
     }
 
     if (relevantLevels.length === 0) {
-        return '<p class="block-note">Ability Score Improvement beschikbaar op level ' + asiLevels[0] + '.</p>';
+        return '<p class="block-note">' + t('stats.asi.available') + ' ' + asiLevels[0] + '.</p>';
     }
 
     var html = '';
@@ -1396,13 +1403,13 @@ function renderASIHTML(charId, config, state) {
         var lvl = relevantLevels[r];
         var choice = state.asiChoices[lvl];
         html += '<div class="asi-panel" data-asi-level="' + lvl + '">';
-        html += '<h4>Level ' + lvl + ' \u2014 Ability Score Improvement</h4>';
+        html += '<h4>Level ' + lvl + ' \u2014 ' + t('stats.asi') + '</h4>';
 
         if (!choice) {
             html += '<div class="asi-options">';
-            html += '<button class="asi-option" data-asi-level="' + lvl + '" data-asi-type="asi-two">+2 op 1 ability</button>';
-            html += '<button class="asi-option" data-asi-level="' + lvl + '" data-asi-type="asi-split">+1 op 2 abilities</button>';
-            html += '<button class="asi-option" data-asi-level="' + lvl + '" data-asi-type="feat">Feat kiezen</button>';
+            html += '<button class="asi-option" data-asi-level="' + lvl + '" data-asi-type="asi-two">' + t('stats.asi.plus2') + '</button>';
+            html += '<button class="asi-option" data-asi-level="' + lvl + '" data-asi-type="asi-split">' + t('stats.asi.split') + '</button>';
+            html += '<button class="asi-option" data-asi-level="' + lvl + '" data-asi-type="feat">' + t('stats.asi.feat') + '</button>';
             html += '</div>';
         } else if (choice.type === 'asi') {
             var parts = [];
@@ -1412,14 +1419,14 @@ function renderASIHTML(charId, config, state) {
                     parts.push(abKeys[a].toUpperCase() + ' +' + choice.abilities[abKeys[a]]);
                 }
             }
-            html += '<p class="asi-chosen">Gekozen: ' + parts.join(', ') + '</p>';
+            html += '<p class="asi-chosen">' + t('stats.asi.chosen') + ': ' + parts.join(', ') + '</p>';
             if (canEdit(charId)) {
-                html += '<button class="asi-option asi-reset" data-asi-level="' + lvl + '" data-asi-type="reset">Opnieuw kiezen</button>';
+                html += '<button class="asi-option asi-reset" data-asi-level="' + lvl + '" data-asi-type="reset">' + t('stats.asi.rechoose') + '</button>';
             }
         } else if (choice.type === 'feat') {
             html += '<p class="asi-chosen">Feat: <strong>' + escapeHtml(choice.feat) + '</strong></p>';
             if (canEdit(charId)) {
-                html += '<button class="asi-option asi-reset" data-asi-level="' + lvl + '" data-asi-type="reset">Opnieuw kiezen</button>';
+                html += '<button class="asi-option asi-reset" data-asi-level="' + lvl + '" data-asi-type="reset">' + t('stats.asi.rechoose') + '</button>';
             }
         }
         html += '</div>';
@@ -1463,11 +1470,11 @@ function renderTabCombat(charId, config, state) {
     if (editable) {
         html += '<div class="hp-controls">';
         html += '<input type="number" class="hp-input" id="damage-input" min="0" placeholder="0">';
-        html += '<button class="hp-btn hp-btn-damage" data-action="take-damage">Damage</button>';
+        html += '<button class="hp-btn hp-btn-damage" data-action="take-damage">' + t('combat.damage') + '</button>';
         html += '<input type="number" class="hp-input" id="heal-input" min="0" placeholder="0">';
-        html += '<button class="hp-btn hp-btn-heal" data-action="heal">Heal</button>';
+        html += '<button class="hp-btn hp-btn-heal" data-action="heal">' + t('combat.heal') + '</button>';
         html += '<input type="number" class="hp-input" id="temp-hp-input" min="0" placeholder="0" value="' + tempHP + '">';
-        html += '<button class="hp-btn hp-btn-temp" data-action="set-temp-hp">Temp HP</button>';
+        html += '<button class="hp-btn hp-btn-temp" data-action="set-temp-hp">' + t('combat.temphp') + '</button>';
         html += '</div>';
     }
     html += '</div>';
@@ -1476,20 +1483,20 @@ function renderTabCombat(charId, config, state) {
     if (currentHP <= 0) {
         var ds = state.deathSaves || { successes: 0, failures: 0 };
         html += '<div class="death-saves">';
-        html += '<div class="death-save-group"><label>Successes</label><div class="death-save-dots">';
+        html += '<div class="death-save-group"><label>' + t('combat.successes') + '</label><div class="death-save-dots">';
         for (var si = 0; si < 3; si++) {
             var sFilled = si < ds.successes ? ' filled' : '';
             html += '<div class="death-save-dot success' + sFilled + '" data-action="toggle-death-save" data-save-type="successes" data-save-idx="' + si + '"></div>';
         }
         html += '</div></div>';
-        html += '<div class="death-save-group"><label>Failures</label><div class="death-save-dots">';
+        html += '<div class="death-save-group"><label>' + t('combat.failures') + '</label><div class="death-save-dots">';
         for (var fi = 0; fi < 3; fi++) {
             var fFilled = fi < ds.failures ? ' filled' : '';
             html += '<div class="death-save-dot failure' + fFilled + '" data-action="toggle-death-save" data-save-type="failures" data-save-idx="' + fi + '"></div>';
         }
         html += '</div></div>';
         if (editable) {
-            html += '<button class="hp-btn" data-action="reset-death-saves" style="margin-left:auto;">Reset</button>';
+            html += '<button class="hp-btn" data-action="reset-death-saves" style="margin-left:auto;">' + t('combat.deathsaves.reset') + '</button>';
         }
         html += '</div>';
     }
@@ -1497,13 +1504,13 @@ function renderTabCombat(charId, config, state) {
     // === Inspiration ===
     html += '<div class="inspiration-toggle" ' + (editable ? 'data-action="toggle-inspiration"' : '') + '>';
     html += '<span class="inspiration-star' + (state.inspiration ? ' active' : '') + '">&#9733;</span>';
-    html += '<span style="font-size:0.9rem;color:var(--text-dim)">Inspiration</span>';
+    html += '<span style="font-size:0.9rem;color:var(--text-dim)">' + t('combat.inspiration') + '</span>';
     html += '</div>';
 
     // === Core Stats Grid ===
     html += '<div class="combat-stats">';
     html += '<div class="combat-stat"><span class="stat-value">' + ac + '</span><span class="stat-label">AC</span></div>';
-    html += '<div class="combat-stat"><span class="stat-value">' + speed + '</span><span class="stat-label">Speed</span></div>';
+    html += '<div class="combat-stat"><span class="stat-value">' + speed + '</span><span class="stat-label">' + t('combat.speed') + '</span></div>';
     html += '<div class="combat-stat"><span class="stat-value">' + formatMod(dexMod) + '</span><span class="stat-label">Initiative</span></div>';
     html += '<div class="combat-stat"><span class="stat-value">+' + profBonus + '</span><span class="stat-label">Prof.</span></div>';
     var hitDiceRemaining = state.level - (state.hitDiceUsed || 0);
@@ -1513,7 +1520,7 @@ function renderTabCombat(charId, config, state) {
     // === Weapons ===
     if (config.weapons && config.weapons.length > 0) {
         html += '<div class="sheet-block">';
-        html += '<h2>Wapens</h2>';
+        html += '<h2>' + t('combat.weapons') + '</h2>';
         html += renderWeaponsHTML(config, state);
         html += '</div>';
     }
@@ -1522,14 +1529,14 @@ function renderTabCombat(charId, config, state) {
     if (config.className === 'rogue') {
         var sneakAttack = (DATA.rogue && DATA.rogue.sneakAttack) ? DATA.rogue.sneakAttack[state.level] || '1d6' : '1d6';
         html += '<div class="sheet-block">';
-        html += '<p class="block-note">Sneak Attack: ' + sneakAttack + ' extra damage bij advantage of adjacent ally</p>';
+        html += '<p class="block-note">' + t('combat.sneakattack') + ': ' + sneakAttack + ' ' + t('combat.sneakattack.desc') + '</p>';
         html += '</div>';
     }
 
     // === Metamagic for sorcerer ===
     if (config.className === 'sorcerer') {
         html += '<div class="sheet-block">';
-        html += '<h2>Metamagic</h2>';
+        html += '<h2>' + t('combat.metamagic') + '</h2>';
         html += renderMetamagicHTML(charId, config, state);
         html += '</div>';
     }
@@ -1537,7 +1544,7 @@ function renderTabCombat(charId, config, state) {
     // === Spell Slot Tracker (for casters) ===
     if (hasSpellcasting(config.className)) {
         html += '<div class="sheet-block">';
-        html += '<h2>Spell Slots</h2>';
+        html += '<h2>' + t('combat.spellslots') + '</h2>';
         html += '<div class="slot-tracker">';
         var slotsUsed = state.spellSlotsUsed || {};
 
@@ -1581,15 +1588,15 @@ function renderTabCombat(charId, config, state) {
 
         if (editable) {
             html += '<div class="rest-buttons">';
-            html += '<button class="rest-btn" data-action="short-rest">Short Rest</button>';
-            html += '<button class="rest-btn" data-action="long-rest">Long Rest</button>';
+            html += '<button class="rest-btn" data-action="short-rest">' + t('combat.shortrest') + '</button>';
+            html += '<button class="rest-btn" data-action="long-rest">' + t('combat.longrest') + '</button>';
             html += '</div>';
         }
         html += '</div>';
     } else if (editable) {
         html += '<div class="rest-buttons">';
-        html += '<button class="rest-btn" data-action="short-rest">Short Rest</button>';
-        html += '<button class="rest-btn" data-action="long-rest">Long Rest</button>';
+        html += '<button class="rest-btn" data-action="short-rest">' + t('combat.shortrest') + '</button>';
+        html += '<button class="rest-btn" data-action="long-rest">' + t('combat.longrest') + '</button>';
         html += '</div>';
     }
 
@@ -1597,7 +1604,7 @@ function renderTabCombat(charId, config, state) {
     var allConditions = ['Blinded','Charmed','Deafened','Frightened','Grappled','Incapacitated','Invisible','Paralyzed','Petrified','Poisoned','Prone','Restrained','Stunned','Unconscious'];
     var activeConditions = state.conditions || [];
     html += '<div class="sheet-block">';
-    html += '<h2>Conditions</h2>';
+    html += '<h2>' + t('combat.conditions') + '</h2>';
     html += '<div class="conditions-grid">';
     for (var ci = 0; ci < allConditions.length; ci++) {
         var cond = allConditions[ci];
@@ -1636,7 +1643,7 @@ function renderWeaponsHTML(config, state) {
 }
 
 function renderMetamagicHTML(charId, config, state) {
-    if (state.level < 2) return '<p class="block-note">Metamagic wordt beschikbaar op level 2.</p>';
+    if (state.level < 2) return '<p class="block-note">' + t('combat.metamagic.available') + '</p>';
 
     var maxChoices = 0;
     if (state.level >= 2) maxChoices = 2;
@@ -1647,7 +1654,7 @@ function renderMetamagicHTML(charId, config, state) {
     var chosen = state.metamagic || [];
     var canChooseMore = chosen.length < maxChoices;
 
-    var html = '<p class="block-note" style="margin-bottom:0.75rem;">Gekozen: ' + chosen.length + '/' + maxChoices + '</p>';
+    var html = '<p class="block-note" style="margin-bottom:0.75rem;">' + t('combat.metamagic.chosen') + ': ' + chosen.length + '/' + maxChoices + '</p>';
     html += '<div class="metamagic-grid">';
     for (var m = 0; m < allMetamagic.length; m++) {
         var mm = allMetamagic[m];
@@ -1671,7 +1678,7 @@ function renderMetamagicHTML(charId, config, state) {
 function renderTabSpells(charId, config, state) {
     var className = config.className;
     if (!hasSpellcasting(className)) {
-        return '<div class="tab-spells"><p class="block-note">Dit karakter heeft geen spellcasting.</p></div>';
+        return '<div class="tab-spells"><p class="block-note">' + t('spells.nospellcasting') + '</p></div>';
     }
 
     var spellAbility = getSpellcastingAbility(className);
@@ -1713,49 +1720,49 @@ function renderTabSpells(charId, config, state) {
 
     // Check if character is below spellcasting start level
     if (state.level < spellcastingStart) {
-        return '<div class="tab-spells"><p class="block-note">' + classDisplayName(className) + ' krijgt spellcasting op level ' + spellcastingStart + '.</p></div>';
+        return '<div class="tab-spells"><p class="block-note">' + classDisplayName(className) + ' ' + t('spells.spellcastingat') + ' ' + spellcastingStart + '.</p></div>';
     }
 
     // Determine prepared/known label
     var isPreparedCaster = (className === 'wizard' || className === 'druid' || className === 'paladin' || className === 'sorcerer');
-    var preparedLabel = isPreparedCaster ? 'Voorbereid' : 'Bekend';
+    var preparedLabel = isPreparedCaster ? t('spells.prepared') : t('spells.known');
 
     var html = '<div class="tab-spells">';
 
     // Spell stats header
     html += '<div class="spell-header">';
-    html += '<div class="spell-stat"><span class="label">Save DC</span><span class="value">' + spellDC + '</span></div>';
-    html += '<div class="spell-stat"><span class="label">Attack</span><span class="value">' + formatMod(spellAttack) + '</span></div>';
+    html += '<div class="spell-stat"><span class="label">' + t('spells.savedc') + '</span><span class="value">' + spellDC + '</span></div>';
+    html += '<div class="spell-stat"><span class="label">' + t('spells.attack') + '</span><span class="value">' + formatMod(spellAttack) + '</span></div>';
     // Sorcerer-specific: sorcery points
     if (className === 'sorcerer') {
         var sorcPts = DATA.sorcerer.sorceryPoints[state.level] || 0;
-        html += '<div class="spell-stat"><span class="label">Sorc Pts</span><span class="value">' + sorcPts + '</span></div>';
+        html += '<div class="spell-stat"><span class="label">' + t('spells.sorcpts') + '</span><span class="value">' + sorcPts + '</span></div>';
     }
     // Warlock-specific: pact slots
     if (isWarlock) {
         var wPactSlots = DATA.warlock.pactSlots[state.level] || 0;
         var wPactLevel = DATA.warlock.pactSlotLevel[state.level] || 1;
-        html += '<div class="spell-stat"><span class="label">Pact Slots</span><span class="value">' + wPactSlots + ' (lvl ' + wPactLevel + ')</span></div>';
+        html += '<div class="spell-stat"><span class="label">' + t('spells.pactslots') + '</span><span class="value">' + wPactSlots + ' (lvl ' + wPactLevel + ')</span></div>';
     }
     html += '<div class="spell-stat prepared-counter"><span class="label">' + preparedLabel + '</span><span class="value">' + preparedCount + '/' + maxPrepared + '</span></div>';
     html += '</div>';
 
     // Warlock note about short rest recovery
     if (isWarlock) {
-        html += '<p class="block-note" style="margin-bottom:0.5rem;opacity:0.7;">Pact Magic slots herstellen na een short rest.</p>';
+        html += '<p class="block-note" style="margin-bottom:0.5rem;opacity:0.7;">' + t('combat.pactslots.note') + '</p>';
     }
 
     // Filter bar
     html += '<div class="spell-filter-bar">';
-    html += '<button class="filter-btn' + (spellFilter === 'all' ? ' active' : '') + '" data-filter="all">Alle</button>';
+    html += '<button class="filter-btn' + (spellFilter === 'all' ? ' active' : '') + '" data-filter="all">' + t('spells.filter.all') + '</button>';
     html += '<button class="filter-btn' + (spellFilter === 'prepared' ? ' active' : '') + '" data-filter="prepared">' + preparedLabel + '</button>';
-    html += '<button class="filter-btn' + (spellFilter === 'favorites' ? ' active' : '') + '" data-filter="favorites">&#9733; Favorieten</button>';
+    html += '<button class="filter-btn' + (spellFilter === 'favorites' ? ' active' : '') + '" data-filter="favorites">&#9733; ' + t('spells.filter.favorites') + '</button>';
     html += '</div>';
 
     // Cantrips (level 0)
     if (hasCantrips && maxCantrips > 0) {
         var cantripList = spellList[0] || [];
-        html += '<h3 class="spell-level-header">Cantrips <span class="slots">altijd bekend &mdash; ' + state.cantrips.length + '/' + maxCantrips + '</span></h3>';
+        html += '<h3 class="spell-level-header">Cantrips <span class="slots">' + t('spells.cantrips.always') + ' &mdash; ' + state.cantrips.length + '/' + maxCantrips + '</span></h3>';
         html += '<div class="spell-grid">';
         for (var c = 0; c < cantripList.length; c++) {
             var spell = cantripList[c];
@@ -1788,13 +1795,13 @@ function renderTabSpells(charId, config, state) {
         if (isWarlock) {
             // Warlock: pact slots only apply at or below pact slot level
             if (lvl <= pactSlotLevel) {
-                slotLabel = '(pact slots op level ' + pactSlotLevel + ')';
+                slotLabel = '(' + t('spells.pact.at') + ' ' + pactSlotLevel + ')';
             } else {
-                slotLabel = '0 slots';
+                slotLabel = '0 ' + t('spells.slots');
             }
         } else {
             slotCount = spellSlots[lvl - 1] || 0;
-            slotLabel = slotCount + ' slots';
+            slotLabel = slotCount + ' ' + t('spells.slots');
         }
 
         var spells = spellList[lvl] || [];
@@ -1817,7 +1824,7 @@ function renderTabSpells(charId, config, state) {
     }
 
     if (displayMaxLevel < 9 && displayMaxLevel < maxSpellLevel) {
-        html += '<p class="block-note" style="margin-top:1rem;opacity:0.5;">Hogere spell levels worden beschikbaar bij hogere levels.</p>';
+        html += '<p class="block-note" style="margin-top:1rem;opacity:0.5;">' + t('spells.higherlater') + '</p>';
     }
 
     html += '</div>';
@@ -1837,13 +1844,13 @@ function renderTabStory(charId, config, state) {
     var hasPersonality = personality.traits || personality.ideal || personality.bond || personality.flaw || personality.fear;
     if (hasPersonality || editable) {
         html += '<div class="sheet-block personality-block">';
-        html += '<h2>Persoonlijkheid</h2>';
+        html += '<h2>' + t('story.personality') + '</h2>';
         var pFields = [
-            { key: 'traits', label: 'Traits' },
-            { key: 'ideal', label: 'Ideaal' },
-            { key: 'bond', label: 'Band' },
-            { key: 'flaw', label: 'Fout' },
-            { key: 'fear', label: 'Angst' }
+            { key: 'traits', label: t('story.traits') },
+            { key: 'ideal', label: t('story.ideal') },
+            { key: 'bond', label: t('story.bond') },
+            { key: 'flaw', label: t('story.flaw') },
+            { key: 'fear', label: t('story.fear') }
         ];
         for (var pf = 0; pf < pFields.length; pf++) {
             var pfKey = pFields[pf].key;
@@ -1852,8 +1859,8 @@ function renderTabStory(charId, config, state) {
             if (editable) {
                 html += '<div class="personality-item editable-field" data-edit-field="personality.' + pfKey + '" data-char-id="' + charId + '">';
                 html += '<h3>' + pfLabel + '</h3>';
-                html += '<p class="field-display">' + escapeHtml(pfVal) + (!pfVal ? '<em class="placeholder-text">Klik om toe te voegen...</em>' : '') + '</p>';
-                html += '<button class="edit-trigger" data-action="edit-field" data-field="personality.' + pfKey + '" title="Bewerken">&#9998;</button>';
+                html += '<p class="field-display">' + escapeHtml(pfVal) + (!pfVal ? '<em class="placeholder-text">' + t('story.clicktoadd') + '</em>' : '') + '</p>';
+                html += '<button class="edit-trigger" data-action="edit-field" data-field="personality.' + pfKey + '" title="' + t('generic.edit') + '">&#9998;</button>';
                 html += '</div>';
             } else if (pfVal) {
                 html += '<div class="personality-item"><h3>' + pfLabel + '</h3><p>' + escapeHtml(pfVal) + '</p></div>';
@@ -1865,11 +1872,11 @@ function renderTabStory(charId, config, state) {
     // Backstory
     if (config.backstory || editable) {
         html += '<div class="sheet-block">';
-        html += '<h2>Backstory</h2>';
+        html += '<h2>' + t('story.backstory') + '</h2>';
         if (editable) {
             html += '<div class="editable-field" data-edit-field="backstory" data-char-id="' + charId + '">';
-            html += '<p class="field-display">' + escapeHtml(config.backstory || '') + (!config.backstory ? '<em class="placeholder-text">Klik om backstory toe te voegen...</em>' : '') + '</p>';
-            html += '<button class="edit-trigger" data-action="edit-field" data-field="backstory" title="Bewerken">&#9998;</button>';
+            html += '<p class="field-display">' + escapeHtml(config.backstory || '') + (!config.backstory ? '<em class="placeholder-text">' + t('story.addbackstory') + '</em>' : '') + '</p>';
+            html += '<button class="edit-trigger" data-action="edit-field" data-field="backstory" title="' + t('generic.edit') + '">&#9998;</button>';
             html += '</div>';
         } else {
             html += '<p>' + escapeHtml(config.backstory) + '</p>';
@@ -1881,26 +1888,26 @@ function renderTabStory(charId, config, state) {
     var quotes = config.quotes || [];
     if (quotes.length > 0 || editable) {
         html += '<div class="sheet-block">';
-        html += '<h2>Citaten</h2>';
+        html += '<h2>' + t('story.quotes') + '</h2>';
         for (var q = 0; q < quotes.length; q++) {
             html += '<div class="quote-item">';
             html += '<blockquote>&ldquo;' + escapeHtml(quotes[q]) + '&rdquo;</blockquote>';
             if (editable) {
-                html += '<button class="quote-remove-btn" data-action="remove-quote" data-quote-idx="' + q + '" title="Verwijderen">&#10005;</button>';
+                html += '<button class="quote-remove-btn" data-action="remove-quote" data-quote-idx="' + q + '" title="' + t('generic.delete') + '">&#10005;</button>';
             }
             html += '</div>';
         }
         if (editable) {
             html += '<div class="quote-add-form">';
-            html += '<input type="text" class="edit-input quote-add-input" placeholder="Nieuw citaat...">';
-            html += '<button class="edit-save" data-action="add-quote">+ Toevoegen</button>';
+            html += '<input type="text" class="edit-input quote-add-input" placeholder="' + t('story.addquote') + '">';
+            html += '<button class="edit-save" data-action="add-quote">+ ' + t('story.add') + '</button>';
             html += '</div>';
         }
         html += '</div>';
     }
 
     if (!editable && !config.backstory && !hasPersonality && quotes.length === 0) {
-        html += '<p class="block-note">Nog geen verhaal geschreven voor dit karakter.</p>';
+        html += '<p class="block-note">' + t('story.nostory') + '</p>';
     }
 
     html += '</div>';
@@ -1923,13 +1930,13 @@ function renderTabInventory(charId, config, state) {
     var encStatus = '';
     var encClass = '';
     if (totalWeight > strScore * 10) {
-        encStatus = '&#128308; Overbelast (-20ft speed, disadvantage)';
+        encStatus = '&#128308; ' + t('inv.encumbered.heavy') + '';
         encClass = 'enc-heavy';
     } else if (totalWeight > strScore * 5) {
-        encStatus = '&#9888;&#65039; Belast (-10ft speed)';
+        encStatus = '&#9888;&#65039; ' + t('inv.encumbered.medium') + '';
         encClass = 'enc-medium';
     } else {
-        encStatus = '&#10003; OK';
+        encStatus = '&#10003; ' + t('inv.encumbered.ok') + '';
         encClass = 'enc-ok';
     }
 
@@ -1954,16 +1961,16 @@ function renderTabInventory(charId, config, state) {
     var html = '<div class="tab-inventory">';
 
     html += '<div class="items-header">';
-    html += '<span class="weight-total">Gewicht: ' + totalWeight.toFixed(2) + ' / ' + capacity + ' lbs</span>';
+    html += '<span class="weight-total">' + t('inv.weight') + ': ' + totalWeight.toFixed(2) + ' / ' + capacity + ' lbs</span>';
     html += '<span class="encumbrance-status ' + encClass + '">' + encStatus + '</span>';
     if (editable) {
-        html += '<button class="item-add-btn" data-action="add-item">+ Item toevoegen</button>';
+        html += '<button class="item-add-btn" data-action="add-item">' + t('inv.additem') + '</button>';
     }
     html += '</div>';
 
     // Gold
     html += '<div class="gold-row">';
-    html += '<span class="gold-label">Goud: </span>';
+    html += '<span class="gold-label">' + t('inv.gold') + ': </span>';
     if (editable) {
         html += '<input type="number" class="gold-input" value="' + (state.gold || 0) + '" min="0" step="1" data-action="update-gold">';
         html += '<span class="gold-suffix"> gp</span>';
@@ -1974,10 +1981,10 @@ function renderTabInventory(charId, config, state) {
 
     if (editable) {
         html += '<div class="item-add-form" style="display:none;">';
-        html += '<input type="text" class="item-name-input" placeholder="Item naam..." list="item-suggestions">';
+        html += '<input type="text" class="item-name-input" placeholder="' + t('inv.itemname') + '" list="item-suggestions">';
         html += '<datalist id="item-suggestions">' + datalistOptions + '</datalist>';
-        html += '<input type="number" class="item-weight-input" placeholder="Gewicht (lbs)" step="0.25" min="0">';
-        html += '<input type="text" class="item-notes-input" placeholder="Notities...">';
+        html += '<input type="number" class="item-weight-input" placeholder="' + t('inv.itemweight') + '" step="0.25" min="0">';
+        html += '<input type="text" class="item-notes-input" placeholder="' + t('inv.itemnotes') + '">';
         html += '<button class="item-confirm-btn" data-action="confirm-item">&#10003;</button>';
         html += '<button class="item-cancel-btn" data-action="cancel-item">&#10005;</button>';
         html += '</div>';
@@ -2045,7 +2052,7 @@ function renderMaps() {
 
     // Dimension tabs at top
     html += '<div class="maps-header">';
-    html += '<h1>Kaarten</h1>';
+    html += '<h1>' + t('maps.title') + '</h1>';
     html += '<div class="dimension-tabs">';
     for (var d = 0; d < dims.length; d++) {
         var activeClass = d === activeDimension ? ' active' : '';
@@ -2080,15 +2087,15 @@ function renderMaps() {
                     if (prevDim.maps[bmi].id === prevMap.mapId) { prevName = prevDim.maps[bmi].name; break; }
                 }
             }
-            html += '<button class="btn btn-ghost btn-sm" data-action="map-go-back">&larr; ' + escapeHtml(prevName || 'Vorige kaart') + '</button>';
+            html += '<button class="btn btn-ghost btn-sm" data-action="map-go-back">&larr; ' + escapeHtml(prevName || t('maps.prevmap')) + '</button>';
             html += '<span class="map-breadcrumb-sep">&#8250;</span>';
         } else {
-            html += '<button class="btn btn-ghost btn-sm" data-action="map-back">&larr; Alle kaarten</button>';
+            html += '<button class="btn btn-ghost btn-sm" data-action="map-back">&larr; ' + t('maps.allmaps') + '</button>';
         }
         html += '<span class="map-title">' + escapeHtml(map.name) + '</span>';
         if (isDM()) {
-            html += '<button class="btn btn-ghost btn-sm" data-action="add-pin">+ Pin toevoegen</button>';
-            html += '<label class="btn btn-ghost btn-sm">Afbeelding wijzigen<input type="file" accept="image/*" data-action="update-map-image" data-map-id="' + map.id + '" style="display:none"></label>';
+            html += '<button class="btn btn-ghost btn-sm" data-action="add-pin">' + t('maps.addpin') + '</button>';
+            html += '<label class="btn btn-ghost btn-sm">' + t('maps.changeimage') + '<input type="file" accept="image/*" data-action="update-map-image" data-map-id="' + map.id + '" style="display:none"></label>';
         }
         html += '</div>';
 
@@ -2101,9 +2108,9 @@ function renderMaps() {
         } else {
             html += '<div class="map-placeholder">';
             if (isDM()) {
-                html += '<label class="map-upload-prompt">Klik om een kaartafbeelding te uploaden<input type="file" accept="image/*" data-action="update-map-image" data-map-id="' + map.id + '" style="display:none"></label>';
+                html += '<label class="map-upload-prompt">' + t('maps.uploadprompt') + '<input type="file" accept="image/*" data-action="update-map-image" data-map-id="' + map.id + '" style="display:none"></label>';
             } else {
-                html += '<p>De DM heeft nog geen afbeelding toegevoegd.</p>';
+                html += '<p>' + t('maps.noimageyet') + '</p>';
             }
             html += '</div>';
         }
@@ -2158,8 +2165,8 @@ function renderMaps() {
         // Pin adding mode indicator
         if (addingPin) {
             html += '<div class="pin-add-overlay">';
-            html += '<p>Klik op de kaart om een pin te plaatsen</p>';
-            html += '<button class="btn btn-ghost btn-sm" data-action="cancel-add-pin">Annuleren</button>';
+            html += '<p>' + t('maps.clicktoplace') + '</p>';
+            html += '<button class="btn btn-ghost btn-sm" data-action="cancel-add-pin">' + t('generic.cancel') + '</button>';
             html += '</div>';
         }
 
@@ -2178,7 +2185,7 @@ function renderMaps() {
             }
             html += '<div class="map-card-info">';
             html += '<span class="map-card-name">' + escapeHtml(gm.name) + '</span>';
-            if (gm.isRoot) html += '<span class="map-card-badge">Hoofdkaart</span>';
+            if (gm.isRoot) html += '<span class="map-card-badge">' + t('maps.mainmap') + '</span>';
             html += '<span class="map-card-pins">' + (gm.pins ? gm.pins.length : 0) + ' pins</span>';
             html += '</div>';
             if (isDM()) {
@@ -2190,7 +2197,7 @@ function renderMaps() {
         if (isDM()) {
             html += '<div class="map-card map-card-add" data-action="add-map">';
             html += '<span class="map-card-add-icon">+</span>';
-            html += '<span class="map-card-name">Nieuwe Kaart</span>';
+            html += '<span class="map-card-name">' + t('maps.newmap') + '</span>';
             html += '</div>';
         }
 
@@ -2235,7 +2242,7 @@ function renderTimeline() {
     if (activeChapter >= chapters.length) activeChapter = Math.max(0, chapters.length - 1);
 
     var html = '<div class="timeline-page">';
-    html += '<h1>Tijdlijn</h1>';
+    html += '<h1>' + t('timeline.title') + '</h1>';
 
     html += '<div class="timeline-layout">';
 
@@ -2246,17 +2253,17 @@ function renderTimeline() {
         var ch = chapters[i];
         var activeClass = i === activeChapter ? ' active' : '';
         html += '<button class="chapter-tab' + activeClass + '" data-action="select-chapter" data-chapter="' + i + '">';
-        html += '<span class="chapter-num">Chapter ' + (i + 1) + '</span>';
+        html += '<span class="chapter-num">' + t('timeline.chapter') + ' ' + (i + 1) + '</span>';
         html += '<span class="chapter-name">' + escapeHtml(ch.name) + '</span>';
         if (isDM()) {
-            html += '<span class="chapter-edit" data-action="edit-chapter" data-chapter="' + i + '" title="Bewerken">&#9998;</span>';
+            html += '<span class="chapter-edit" data-action="edit-chapter" data-chapter="' + i + '" title="' + t('generic.edit') + '">&#9998;</span>';
         }
         html += '</button>';
     }
     html += '</div>';
 
     if (isDM()) {
-        html += '<button class="btn btn-ghost btn-sm" data-action="add-chapter" style="margin-top:0.75rem;width:100%;">+ Chapter</button>';
+        html += '<button class="btn btn-ghost btn-sm" data-action="add-chapter" style="margin-top:0.75rem;width:100%;">' + t('timeline.addchapter') + '</button>';
     }
     html += '</div>';
 
@@ -2265,29 +2272,29 @@ function renderTimeline() {
 
     if (chapters.length === 0) {
         html += '<div class="timeline-empty">';
-        html += '<p class="text-dim">Nog geen chapters. De DM kan chapters toevoegen.</p>';
+        html += '<p class="text-dim">' + t('timeline.nochapters') + '</p>';
         html += '</div>';
     } else {
         var ch = chapters[activeChapter];
         html += '<div class="timeline-chapter-header">';
-        html += '<h2>Chapter ' + (activeChapter + 1) + ': ' + escapeHtml(ch.name) + '</h2>';
+        html += '<h2>' + t('timeline.chapter') + ' ' + (activeChapter + 1) + ': ' + escapeHtml(ch.name) + '</h2>';
         if (isDM()) {
-            html += '<button class="btn btn-primary btn-sm" data-action="add-event">+ Event</button>';
+            html += '<button class="btn btn-primary btn-sm" data-action="add-event">' + t('timeline.addevent') + '</button>';
         }
         html += '</div>';
 
         // Add event form (hidden by default)
         if (isDM()) {
             html += '<div class="timeline-add-form" id="event-add-form" style="display:none;">';
-            html += '<input type="text" class="edit-input" id="ev-title" placeholder="Event titel">';
-            html += '<textarea class="edit-textarea" id="ev-desc" placeholder="Beschrijving" style="min-height:60px;"></textarea>';
+            html += '<input type="text" class="edit-input" id="ev-title" placeholder="' + t('timeline.eventtitle') + '">';
+            html += '<textarea class="edit-textarea" id="ev-desc" placeholder="' + t('timeline.eventdesc') + '" style="min-height:60px;"></textarea>';
             html += '<div style="display:flex;gap:0.5rem;">';
-            html += '<input type="text" class="edit-input" id="ev-session" placeholder="Sessie #" style="width:80px;">';
-            html += '<select class="edit-input" id="ev-type" style="flex:1;"><option value="quest">Quest</option><option value="danger">Gevaar</option><option value="magic">Magie</option><option value="discovery">Ontdekking</option><option value="social">Sociaal</option><option value="combat">Gevecht</option></select>';
+            html += '<input type="text" class="edit-input" id="ev-session" placeholder="' + t('timeline.eventsession') + '" style="width:80px;">';
+            html += '<select class="edit-input" id="ev-type" style="flex:1;"><option value="quest">' + t('timeline.eventtype.quest') + '</option><option value="danger">' + t('timeline.eventtype.danger') + '</option><option value="magic">' + t('timeline.eventtype.magic') + '</option><option value="discovery">' + t('timeline.eventtype.discovery') + '</option><option value="social">' + t('timeline.eventtype.social') + '</option><option value="combat">' + t('timeline.eventtype.combat') + '</option></select>';
             html += '</div>';
             html += '<div class="edit-actions">';
-            html += '<button class="edit-save" data-action="save-event">Opslaan</button>';
-            html += '<button class="edit-cancel" data-action="cancel-event">Annuleren</button>';
+            html += '<button class="edit-save" data-action="save-event">' + t('generic.save') + '</button>';
+            html += '<button class="edit-cancel" data-action="cancel-event">' + t('generic.cancel') + '</button>';
             html += '</div>';
             html += '</div>';
         }
@@ -2295,7 +2302,7 @@ function renderTimeline() {
         // Events
         var events = ch.events || [];
         if (events.length === 0) {
-            html += '<p class="text-dim" style="padding:2rem 0;">Nog geen events in dit chapter.</p>';
+            html += '<p class="text-dim" style="padding:2rem 0;">' + t('timeline.noevents') + '</p>';
         } else {
             html += '<div class="timeline">';
             for (var j = 0; j < events.length; j++) {
@@ -2303,13 +2310,13 @@ function renderTimeline() {
                 html += '<div class="timeline-event timeline-' + (ev.type || 'quest') + '">';
                 html += '<div class="timeline-marker"></div>';
                 html += '<div class="timeline-content">';
-                if (ev.session) html += '<span class="timeline-session">Sessie ' + escapeHtml(ev.session) + '</span>';
+                if (ev.session) html += '<span class="timeline-session">' + t('dash.session') + ' ' + escapeHtml(ev.session) + '</span>';
                 html += '<h3>' + escapeHtml(ev.title) + '</h3>';
                 html += '<p>' + escapeHtml(ev.desc) + '</p>';
                 if (isDM()) {
                     html += '<div class="event-actions">';
-                    html += '<button class="btn btn-ghost btn-sm" data-action="edit-event" data-event="' + j + '">Bewerken</button>';
-                    html += '<button class="btn btn-ghost btn-sm" data-action="delete-event" data-event="' + j + '" style="color:var(--danger);">Verwijderen</button>';
+                    html += '<button class="btn btn-ghost btn-sm" data-action="edit-event" data-event="' + j + '">' + t('generic.edit') + '</button>';
+                    html += '<button class="btn btn-ghost btn-sm" data-action="delete-event" data-event="' + j + '" style="color:var(--danger);">' + t('generic.delete') + '</button>';
                     html += '</div>';
                 }
                 html += '</div>';
@@ -2359,17 +2366,17 @@ function renderLore(subpage) {
     var data = getLoreData();
     var html = '<div class="lore-page">';
     html += '<div class="lore-header">';
-    html += '<h1>Lore</h1>';
+    html += '<h1>' + t('lore.title') + '</h1>';
     if (isDM()) {
-        html += '<a class="btn btn-primary" href="#/lore/new">+ Artikel Toevoegen</a>';
+        html += '<a class="btn btn-primary" href="#/lore/new">' + t('lore.addarticle') + '</a>';
     }
     html += '</div>';
 
     // Always show party link
     html += '<div class="lore-grid">';
     html += '<a class="lore-card" href="#/lore/party">';
-    html += '<h3>De Party</h3>';
-    html += '<p>Alle avonturiers in de campagne.</p>';
+    html += '<h3>' + t('lore.theparty') + '</h3>';
+    html += '<p>' + t('lore.theparty.desc') + '</p>';
     html += '</a>';
 
     // DM-created articles
@@ -2393,10 +2400,10 @@ function renderLoreArticle(articleId) {
         if (data.articles[i].id === articleId) { article = data.articles[i]; break; }
     }
 
-    if (!article) return '<div class="page-placeholder"><h2>Artikel niet gevonden</h2><a class="btn btn-ghost" href="#/lore">Terug naar Lore</a></div>';
+    if (!article) return '<div class="page-placeholder"><h2>' + t('lore.notfound') + '</h2><a class="btn btn-ghost" href="#/lore">' + t('lore.backtolore') + '</a></div>';
 
     var html = '<div class="lore-page lore-article">';
-    html += '<a class="btn btn-ghost btn-sm" href="#/lore">&larr; Terug naar Lore</a>';
+    html += '<a class="btn btn-ghost btn-sm" href="#/lore">&larr; ' + t('lore.backtolore') + '</a>';
     html += '<h1>' + escapeHtml(article.title) + '</h1>';
 
     // Render content — split by double newlines for paragraphs
@@ -2415,8 +2422,8 @@ function renderLoreArticle(articleId) {
 
     if (isDM()) {
         html += '<div style="margin-top:2rem;display:flex;gap:0.5rem;">';
-        html += '<a class="btn btn-ghost btn-sm" href="#/lore/edit-' + article.id + '">Bewerken</a>';
-        html += '<button class="btn btn-ghost btn-sm" data-action="delete-lore" data-article-id="' + article.id + '" style="color:var(--danger);">Verwijderen</button>';
+        html += '<a class="btn btn-ghost btn-sm" href="#/lore/edit-' + article.id + '">' + t('generic.edit') + '</a>';
+        html += '<button class="btn btn-ghost btn-sm" data-action="delete-lore" data-article-id="' + article.id + '" style="color:var(--danger);">' + t('generic.delete') + '</button>';
         html += '</div>';
     }
 
@@ -2442,14 +2449,14 @@ function renderLoreEditor(editId) {
     }
 
     var html = '<div class="lore-page">';
-    html += '<a class="btn btn-ghost btn-sm" href="#/lore">&larr; Terug naar Lore</a>';
-    html += '<h1>' + (isEdit ? 'Artikel Bewerken' : 'Nieuw Artikel') + '</h1>';
+    html += '<a class="btn btn-ghost btn-sm" href="#/lore">&larr; ' + t('lore.backtolore') + '</a>';
+    html += '<h1>' + (isEdit ? t('lore.editarticle') : t('lore.newarticle')) + '</h1>';
     html += '<div class="lore-editor">';
-    html += '<input type="text" class="edit-input" id="lore-title" placeholder="Titel" value="' + escapeAttr(title) + '">';
-    html += '<textarea class="edit-textarea lore-content-editor" id="lore-content" placeholder="Inhoud... (gebruik ## voor koppen, lege regels voor alinea\'s)">' + escapeHtml(content) + '</textarea>';
+    html += '<input type="text" class="edit-input" id="lore-title" placeholder="' + t('lore.articletitle') + '" value="' + escapeAttr(title) + '">';
+    html += '<textarea class="edit-textarea lore-content-editor" id="lore-content" placeholder="' + t('lore.articlecontent') + '">' + escapeHtml(content) + '</textarea>';
     html += '<div class="edit-actions">';
-    html += '<button class="edit-save" data-action="save-lore"' + (isEdit ? ' data-edit-id="' + editId + '"' : '') + '>Opslaan</button>';
-    html += '<a class="edit-cancel" href="#/lore">Annuleren</a>';
+    html += '<button class="edit-save" data-action="save-lore"' + (isEdit ? ' data-edit-id="' + editId + '"' : '') + '>' + t('generic.save') + '</button>';
+    html += '<a class="edit-cancel" href="#/lore">' + t('generic.cancel') + '</a>';
     html += '</div>';
     html += '</div>';
     html += '</div>';
@@ -2458,9 +2465,9 @@ function renderLoreEditor(editId) {
 
 function renderLoreParty() {
     var html = '<div class="lore-page lore-article">';
-    html += '<a class="btn btn-ghost btn-sm" href="#/lore">&larr; Terug naar Lore</a>';
-    html += '<h1>De Party</h1>';
-    html += '<p class="section-intro">Acht avonturiers. Verschillende achtergronden. E\u00e9n bestemming.</p>';
+    html += '<a class="btn btn-ghost btn-sm" href="#/lore">&larr; ' + t('lore.backtolore') + '</a>';
+    html += '<h1>' + t('lore.theparty') + '</h1>';
+    html += '<p class="section-intro">' + t('lore.theparty.intro') + '</p>';
 
     var ids = getCharacterIds();
     for (var i = 0; i < ids.length; i++) {
@@ -2517,11 +2524,11 @@ function formatNoteDate(ts) {
     var mins = Math.floor(diff / 60000);
     var hours = Math.floor(diff / 3600000);
     var days = Math.floor(diff / 86400000);
-    if (mins < 1) return 'Zojuist';
-    if (mins < 60) return mins + ' min geleden';
-    if (hours < 24) return hours + ' uur geleden';
-    if (days === 1) return 'Gisteren';
-    if (days < 7) return days + ' dagen geleden';
+    if (mins < 1) return t('date.justnow');
+    if (mins < 60) return mins + ' ' + t('date.minago');
+    if (hours < 24) return hours + ' ' + t('date.hoursago');
+    if (days === 1) return t('date.yesterday');
+    if (days < 7) return days + ' ' + t('date.daysago');
     var d = new Date(ts);
     return d.getDate() + '-' + (d.getMonth() + 1) + '-' + d.getFullYear();
 }
@@ -2553,23 +2560,23 @@ function renderNotes() {
 
     var html = '<div class="notes-page">';
     html += '<div class="notes-header">';
-    html += '<h1>Notities</h1>';
-    html += '<button class="btn btn-primary" data-action="new-note">+ Nieuwe Notitie</button>';
+    html += '<h1>' + t('notes.title') + '</h1>';
+    html += '<button class="btn btn-primary" data-action="new-note">' + t('notes.new') + '</button>';
     html += '</div>';
 
     // Search bar
     html += '<div class="notes-search">';
-    html += '<input type="text" class="notes-search-input" data-action="search-notes" placeholder="Zoeken in notities..." value="' + escapeAttr(notesSearch) + '">';
+    html += '<input type="text" class="notes-search-input" data-action="search-notes" placeholder="' + t('notes.search') + '" value="' + escapeAttr(notesSearch) + '">';
     html += '</div>';
 
     // Category filter tabs
     html += '<div class="notes-categories">';
-    html += '<button class="notes-cat-btn' + (notesFilter === 'all' ? ' active' : '') + '" data-action="filter-notes" data-cat="all">Alle</button>';
+    html += '<button class="notes-cat-btn' + (notesFilter === 'all' ? ' active' : '') + '" data-action="filter-notes" data-cat="all">' + t('notes.all') + '</button>';
     for (var ci = 0; ci < TAG_CATEGORIES.length; ci++) {
         var cat = TAG_CATEGORIES[ci];
         var count = notes.filter(function(n) { return n.tagCategory === cat.id; }).length;
         html += '<button class="notes-cat-btn' + (notesFilter === cat.id ? ' active' : '') + '" data-action="filter-notes" data-cat="' + cat.id + '" style="--cat-color:' + cat.color + '">';
-        html += cat.icon + ' ' + cat.name;
+        html += cat.icon + ' ' + t('notecat.' + cat.id);
         if (count > 0) html += ' <span class="notes-cat-count">' + count + '</span>';
         html += '</button>';
     }
@@ -2579,10 +2586,10 @@ function renderNotes() {
     if (filtered.length === 0) {
         html += '<div class="notes-empty">';
         if (notes.length === 0) {
-            html += '<p>Je hebt nog geen notities.</p>';
-            html += '<p class="text-dim">Maak notities over NPCs, plaatsen, events en meer.</p>';
+            html += '<p>' + t('notes.empty') + '</p>';
+            html += '<p class="text-dim">' + t('notes.empty.hint') + '</p>';
         } else {
-            html += '<p>Geen notities gevonden voor deze filter.</p>';
+            html += '<p>' + t('notes.nofilter') + '</p>';
         }
         html += '</div>';
     } else {
@@ -2599,7 +2606,7 @@ function renderNotes() {
 
             // Pin badge
             if (note.pinned) {
-                html += '<div class="note-pin-badge" title="Vastgepind">&#128204;</div>';
+                html += '<div class="note-pin-badge" title="' + t('notes.pinned') + '">&#128204;</div>';
             }
 
             // Gallery preview: show image grid
@@ -2618,8 +2625,8 @@ function renderNotes() {
             }
 
             html += '<div class="note-card-body">';
-            html += '<div class="note-card-meta"><span class="note-card-cat">' + cat.icon + ' ' + cat.name + '</span><span class="note-card-date">' + formatNoteDate(note.updated) + '</span></div>';
-            html += '<h3 class="note-card-title">' + escapeHtml(note.title || 'Naamloos') + '</h3>';
+            html += '<div class="note-card-meta"><span class="note-card-cat">' + cat.icon + ' ' + t('notecat.' + cat.id) + '</span><span class="note-card-date">' + formatNoteDate(note.updated) + '</span></div>';
+            html += '<h3 class="note-card-title">' + escapeHtml(note.title || t('generic.unnamed')) + '</h3>';
 
             // Checklist preview
             if (note.layout === 'checklist' && note.checklist && note.checklist.length > 0) {
@@ -2631,7 +2638,7 @@ function renderNotes() {
                 for (var pi = 0; pi < previewItems.length; pi++) {
                     html += '<div class="note-card-check-item' + (previewItems[pi].done ? ' done' : '') + '">' + (previewItems[pi].done ? '&#9745; ' : '&#9744; ') + escapeHtml(previewItems[pi].text) + '</div>';
                 }
-                if (note.checklist.length > 3) html += '<div class="note-card-check-more">+' + (note.checklist.length - 3) + ' meer</div>';
+                if (note.checklist.length > 3) html += '<div class="note-card-check-more">+' + (note.checklist.length - 3) + ' ' + t('notes.more') + '</div>';
                 html += '</div>';
             } else {
                 html += '<p class="note-card-preview">' + escapeHtml((note.content || '').substring(0, 120)) + (note.content && note.content.length > 120 ? '...' : '') + '</p>';
@@ -2677,40 +2684,40 @@ function renderNoteEditor(noteId) {
 
     var html = '<div class="notes-page">';
     html += '<div class="notes-header">';
-    html += '<button class="btn btn-ghost" data-action="back-to-notes">&larr; Terug</button>';
-    html += '<h1>' + (note ? 'Notitie Bewerken' : 'Nieuwe Notitie') + '</h1>';
+    html += '<button class="btn btn-ghost" data-action="back-to-notes">&larr; ' + t('generic.back') + '</button>';
+    html += '<h1>' + (note ? t('notes.editnote') : t('notes.newnote')) + '</h1>';
     if (note) {
-        html += '<button class="btn btn-ghost btn-sm note-pin-toggle' + (pinned ? ' active' : '') + '" data-action="toggle-note-pin" data-note-id="' + note.id + '" title="' + (pinned ? 'Losmaken' : 'Vastpinnen') + '">&#128204; ' + (pinned ? 'Vastgepind' : 'Vastpinnen') + '</button>';
+        html += '<button class="btn btn-ghost btn-sm note-pin-toggle' + (pinned ? ' active' : '') + '" data-action="toggle-note-pin" data-note-id="' + note.id + '" title="' + (pinned ? t('notes.unpin') : t('notes.pin')) + '">&#128204; ' + (pinned ? t('notes.pinned') : t('notes.pin')) + '</button>';
     }
     html += '</div>';
 
     html += '<div class="note-editor">';
 
     // Title
-    html += '<input type="text" class="edit-input note-title-input" id="note-title" placeholder="Titel" value="' + escapeAttr(title) + '">';
+    html += '<input type="text" class="edit-input note-title-input" id="note-title" placeholder="' + t('lore.articletitle') + '" value="' + escapeAttr(title) + '">';
 
     // Category selector
     html += '<div class="note-category-picker">';
-    html += '<label class="text-dim" style="font-size:0.8rem;">Categorie:</label>';
+    html += '<label class="text-dim" style="font-size:0.8rem;">' + t('notes.category') + '</label>';
     html += '<div class="note-cat-options">';
     for (var ci = 0; ci < TAG_CATEGORIES.length; ci++) {
         var ecat = TAG_CATEGORIES[ci];
-        html += '<button class="note-cat-option' + (category === ecat.id ? ' active' : '') + '" data-action="pick-note-cat" data-cat="' + ecat.id + '" style="--cat-color:' + ecat.color + '">' + ecat.icon + ' ' + ecat.name + '</button>';
+        html += '<button class="note-cat-option' + (category === ecat.id ? ' active' : '') + '" data-action="pick-note-cat" data-cat="' + ecat.id + '" style="--cat-color:' + ecat.color + '">' + ecat.icon + ' ' + t('notecat.' + ecat.id) + '</button>';
     }
     html += '</div>';
     html += '</div>';
 
     // Layout selector
     html += '<div class="note-layout-picker">';
-    html += '<label class="text-dim" style="font-size:0.8rem;">Indeling:</label>';
+    html += '<label class="text-dim" style="font-size:0.8rem;">' + t('notes.layout') + '</label>';
     html += '<div class="note-layout-options">';
     var layouts = [
-        { id: 'text-only', icon: '\ud83d\udcdd', label: 'Tekst' },
-        { id: 'image-top', icon: '\ud83d\uddbc\ufe0f', label: 'Afbeelding' },
-        { id: 'image-right', icon: '\ud83d\udcdd\ud83d\uddbc\ufe0f', label: 'Rechts' },
-        { id: 'image-left', icon: '\ud83d\uddbc\ufe0f\ud83d\udcdd', label: 'Links' },
-        { id: 'gallery', icon: '\ud83d\uddbc\ufe0f\ud83d\uddbc\ufe0f', label: 'Galerij' },
-        { id: 'checklist', icon: '\u2611\ufe0f', label: 'Checklist' }
+        { id: 'text-only', icon: '\ud83d\udcdd', label: t('notelayout.text') },
+        { id: 'image-top', icon: '\ud83d\uddbc\ufe0f', label: t('notelayout.image') },
+        { id: 'image-right', icon: '\ud83d\udcdd\ud83d\uddbc\ufe0f', label: t('notelayout.right') },
+        { id: 'image-left', icon: '\ud83d\uddbc\ufe0f\ud83d\udcdd', label: t('notelayout.left') },
+        { id: 'gallery', icon: '\ud83d\uddbc\ufe0f\ud83d\uddbc\ufe0f', label: t('notelayout.gallery') },
+        { id: 'checklist', icon: '\u2611\ufe0f', label: t('notelayout.checklist') }
     ];
     for (var li = 0; li < layouts.length; li++) {
         var lo = layouts[li];
@@ -2723,9 +2730,9 @@ function renderNoteEditor(noteId) {
     var singleImageLayouts = ['image-top', 'image-right', 'image-left'];
     html += '<div class="note-image-section" style="display:' + (singleImageLayouts.indexOf(layout) >= 0 ? 'block' : 'none') + '">';
     if (image) {
-        html += '<div class="note-image-preview"><img src="' + image + '" alt=""><button class="btn btn-ghost btn-sm" data-action="remove-note-image">Verwijderen</button></div>';
+        html += '<div class="note-image-preview"><img src="' + image + '" alt=""><button class="btn btn-ghost btn-sm" data-action="remove-note-image">' + t('generic.delete') + '</button></div>';
     } else {
-        html += '<label class="note-image-upload"><span>+ Afbeelding toevoegen</span><input type="file" accept="image/*" data-action="upload-note-image" style="display:none"></label>';
+        html += '<label class="note-image-upload"><span>' + t('notes.addimage') + '</span><input type="file" accept="image/*" data-action="upload-note-image" style="display:none"></label>';
     }
     html += '</div>';
 
@@ -2745,28 +2752,28 @@ function renderNoteEditor(noteId) {
     for (var cli = 0; cli < checklist.length; cli++) {
         html += '<div class="note-checklist-item" data-check-idx="' + cli + '">';
         html += '<input type="checkbox" class="note-check-box" data-action="toggle-check" data-idx="' + cli + '"' + (checklist[cli].done ? ' checked' : '') + '>';
-        html += '<input type="text" class="note-check-text" data-action="edit-check-text" data-idx="' + cli + '" value="' + escapeAttr(checklist[cli].text) + '" placeholder="Item...">';
+        html += '<input type="text" class="note-check-text" data-action="edit-check-text" data-idx="' + cli + '" value="' + escapeAttr(checklist[cli].text) + '" placeholder="' + t('notes.checkitem') + '">';
         html += '<button class="note-check-remove" data-action="remove-check-item" data-idx="' + cli + '">&times;</button>';
         html += '</div>';
     }
     html += '</div>';
-    html += '<button class="btn btn-ghost btn-sm" data-action="add-check-item">+ Item toevoegen</button>';
+    html += '<button class="btn btn-ghost btn-sm" data-action="add-check-item">' + t('notes.addcheckitem') + '</button>';
     html += '</div>';
 
     // Content (hidden for checklist layout)
-    html += '<textarea class="edit-textarea note-content-input" id="note-content" placeholder="Schrijf je notitie..." style="display:' + (layout === 'checklist' ? 'none' : 'block') + '">' + escapeHtml(content) + '</textarea>';
+    html += '<textarea class="edit-textarea note-content-input" id="note-content" placeholder="' + t('notes.notecontent') + '" style="display:' + (layout === 'checklist' ? 'none' : 'block') + '">' + escapeHtml(content) + '</textarea>';
 
     // Tags
     html += '<div class="note-tags-section">';
-    html += '<label class="text-dim" style="font-size:0.8rem;">Tags (gescheiden door komma\'s):</label>';
-    html += '<input type="text" class="edit-input" id="note-tags" placeholder="bijv. Velthaven, marktplein, quest" value="' + escapeAttr(tags) + '">';
+    html += '<label class="text-dim" style="font-size:0.8rem;">' + t('notes.tags') + '</label>';
+    html += '<input type="text" class="edit-input" id="note-tags" placeholder="' + t('notes.tags.placeholder') + '" value="' + escapeAttr(tags) + '">';
     html += '</div>';
 
     // Save/Delete
     html += '<div class="note-editor-actions">';
-    html += '<button class="btn btn-primary" data-action="save-note"' + (note ? ' data-note-id="' + note.id + '"' : '') + '>Opslaan</button>';
+    html += '<button class="btn btn-primary" data-action="save-note"' + (note ? ' data-note-id="' + note.id + '"' : '') + '>' + t('generic.save') + '</button>';
     if (note) {
-        html += '<button class="btn btn-ghost" data-action="delete-note" data-note-id="' + note.id + '" style="color:var(--danger);">Verwijderen</button>';
+        html += '<button class="btn btn-ghost" data-action="delete-note" data-note-id="' + note.id + '" style="color:var(--danger);">' + t('generic.delete') + '</button>';
     }
     html += '</div>';
 
@@ -2781,7 +2788,7 @@ function renderNoteView(noteId) {
     for (var i = 0; i < data.notes.length; i++) {
         if (data.notes[i].id === noteId) { note = data.notes[i]; break; }
     }
-    if (!note) return '<div class="page-placeholder"><h2>Notitie niet gevonden</h2></div>';
+    if (!note) return '<div class="page-placeholder"><h2>' + t('notes.notfound') + '</h2></div>';
 
     var cat = null;
     for (var ci = 0; ci < TAG_CATEGORIES.length; ci++) {
@@ -2791,11 +2798,11 @@ function renderNoteView(noteId) {
 
     var html = '<div class="notes-page">';
     html += '<div class="notes-header">';
-    html += '<button class="btn btn-ghost" data-action="back-to-notes">&larr; Terug</button>';
+    html += '<button class="btn btn-ghost" data-action="back-to-notes">&larr; ' + t('generic.back') + '</button>';
     html += '<div class="notes-header-right">';
-    if (note.pinned) html += '<span class="note-view-pin">&#128204; Vastgepind</span>';
-    html += '<button class="btn btn-ghost btn-sm" data-action="toggle-note-pin" data-note-id="' + note.id + '">' + (note.pinned ? 'Losmaken' : '&#128204; Vastpinnen') + '</button>';
-    html += '<button class="btn btn-ghost btn-sm" data-action="edit-note" data-note-id="' + note.id + '">Bewerken</button>';
+    if (note.pinned) html += '<span class="note-view-pin">&#128204; ' + t('notes.pinned') + '</span>';
+    html += '<button class="btn btn-ghost btn-sm" data-action="toggle-note-pin" data-note-id="' + note.id + '">' + (note.pinned ? t('notes.unpin') : '&#128204; ' + t('notes.pin')) + '</button>';
+    html += '<button class="btn btn-ghost btn-sm" data-action="edit-note" data-note-id="' + note.id + '">' + t('generic.edit') + '</button>';
     html += '</div>';
     html += '</div>';
 
@@ -2820,15 +2827,15 @@ function renderNoteView(noteId) {
     }
 
     html += '<div class="note-view-text">';
-    html += '<div class="note-view-meta"><span class="note-view-cat" style="color:' + cat.color + '">' + cat.icon + ' ' + cat.name + '</span><span class="note-view-date">' + formatNoteDate(note.updated) + '</span></div>';
-    html += '<h1>' + escapeHtml(note.title || 'Naamloos') + '</h1>';
+    html += '<div class="note-view-meta"><span class="note-view-cat" style="color:' + cat.color + '">' + cat.icon + ' ' + t('notecat.' + cat.id) + '</span><span class="note-view-date">' + formatNoteDate(note.updated) + '</span></div>';
+    html += '<h1>' + escapeHtml(note.title || t('generic.unnamed')) + '</h1>';
 
     // Checklist view
     if (note.layout === 'checklist' && note.checklist && note.checklist.length > 0) {
         var done = note.checklist.filter(function(c) { return c.done; }).length;
         html += '<div class="note-view-checklist">';
         html += '<div class="note-view-progress"><div class="note-view-progress-fill" style="width:' + Math.round(done / note.checklist.length * 100) + '%"></div></div>';
-        html += '<p class="note-view-progress-label">' + done + ' van ' + note.checklist.length + ' voltooid</p>';
+        html += '<p class="note-view-progress-label">' + done + ' ' + t('notes.completed') + ' ' + note.checklist.length + '</p>';
         for (var vci = 0; vci < note.checklist.length; vci++) {
             html += '<div class="note-view-check-item' + (note.checklist[vci].done ? ' done' : '') + '" data-action="toggle-view-check" data-note-id="' + note.id + '" data-idx="' + vci + '">';
             html += (note.checklist[vci].done ? '&#9745; ' : '&#9744; ') + escapeHtml(note.checklist[vci].text);
@@ -2934,9 +2941,9 @@ function showSpellTooltip(spellName, anchorEl) {
 
     var tooltipHtml = '<div>';
     tooltipHtml += '<h4>' + escapeHtml(spellData.name) + '</h4>';
-    if (spellData.time) tooltipHtml += '<p class="spell-meta"><strong>Tijd:</strong> ' + escapeHtml(spellData.time) + '</p>';
-    if (spellData.range) tooltipHtml += '<p class="spell-meta"><strong>Range:</strong> ' + escapeHtml(spellData.range) + '</p>';
-    if (spellData.dur) tooltipHtml += '<p class="spell-meta"><strong>Duur:</strong> ' + escapeHtml(spellData.dur) + '</p>';
+    if (spellData.time) tooltipHtml += '<p class="spell-meta"><strong>' + t('tooltip.time') + ':</strong> ' + escapeHtml(spellData.time) + '</p>';
+    if (spellData.range) tooltipHtml += '<p class="spell-meta"><strong>' + t('tooltip.range') + ':</strong> ' + escapeHtml(spellData.range) + '</p>';
+    if (spellData.dur) tooltipHtml += '<p class="spell-meta"><strong>' + t('tooltip.duration') + ':</strong> ' + escapeHtml(spellData.dur) + '</p>';
     tooltipHtml += '<p class="spell-desc">' + escapeHtml(spellData.desc) + '</p>';
     tooltipHtml += '</div>';
 
@@ -2971,20 +2978,20 @@ function showAbilityTooltip(ability, config, state, anchorEl) {
     var breakdown = getAbilityBreakdown(config, state, ability);
     var abLabel = ability.toUpperCase();
 
-    var lines = '<strong>' + abLabel + ' Breakdown</strong><br>';
-    lines += 'Base (Standard Array): ' + breakdown.baseArray + '<br>';
+    var lines = '<strong>' + abLabel + ' ' + t('tooltip.breakdown') + '</strong><br>';
+    lines += t('tooltip.base') + ': ' + breakdown.baseArray + '<br>';
     if (breakdown.racialBonus > 0) {
-        lines += 'Racial: +' + breakdown.racialBonus + '<br>';
+        lines += t('tooltip.racial') + ': +' + breakdown.racialBonus + '<br>';
     }
     if (breakdown.asiDetails.length > 0) {
         for (var i = 0; i < breakdown.asiDetails.length; i++) {
             lines += breakdown.asiDetails[i] + '<br>';
         }
     }
-    lines += '<strong>Totaal: ' + breakdown.total + '</strong>';
+    lines += '<strong>' + t('tooltip.total') + ': ' + breakdown.total + '</strong>';
 
     if (state.customAbilities && state.customAbilities[ability] !== undefined && state.customAbilities[ability] !== null) {
-        lines += '<br><em>(Handmatig overschreven naar ' + state.customAbilities[ability] + ')</em>';
+        lines += '<br><em>(' + t('tooltip.overridden') + ' ' + state.customAbilities[ability] + ')</em>';
     }
 
     showTooltipPopup(lines, anchorEl);
@@ -3018,7 +3025,7 @@ function importCharacter(charId, file, callback) {
             var imported = JSON.parse(e.target.result);
             callback(imported);
         } catch (err) {
-            showWarning('Ongeldig JSON bestand.');
+            showWarning(t('warn.invalidjson'));
         }
     };
     reader.readAsText(file);
@@ -3122,17 +3129,17 @@ function showLevelUpModal(charId, config, state) {
 
     // Header
     html += '<div class="levelup-header">';
-    html += '<h2 style="color:' + accentColor + '">Level Up!</h2>';
+    html += '<h2 style="color:' + accentColor + '">' + t('levelup.title') + '</h2>';
     html += '<p class="levelup-subtitle">Level ' + state.level + ' \u2192 Level ' + newLevel + '</p>';
     html += '</div>';
 
     // --- HP gain ---
     html += '<div class="levelup-section">';
-    html += '<h3>\u2764\uFE0F Hit Points</h3>';
+    html += '<h3>\u2764\uFE0F ' + t('levelup.hp') + '</h3>';
     html += '<p style="font-size:1.1rem;color:var(--text-bright)">+' + hpGain + ' HP</p>';
-    html += '<p>d' + hitDie + ' gemiddeld (' + avgHP + ') + CON mod (' + formatMod(conMod) + ')</p>';
+    html += '<p>d' + hitDie + ' ' + t('levelup.hp.avg') + ' (' + avgHP + ') + ' + t('levelup.hp.conmod') + ' (' + formatMod(conMod) + ')</p>';
     html += '<div style="display:flex;align-items:center;gap:0.75rem;margin-top:0.5rem;">';
-    html += '<button class="levelup-choice" data-action="levelup-roll-hp">Handmatig rollen</button>';
+    html += '<button class="levelup-choice" data-action="levelup-roll-hp">' + t('levelup.hp.manual') + '</button>';
     html += '<span id="levelup-hp-result" style="color:var(--text-bright);font-weight:600;"></span>';
     html += '<input type="hidden" id="levelup-hp-value" value="' + hpGain + '">';
     html += '</div>';
@@ -3141,7 +3148,7 @@ function showLevelUpModal(charId, config, state) {
     // --- Prof bonus change ---
     if (profBonus > oldProfBonus) {
         html += '<div class="levelup-section">';
-        html += '<h3>Proficiency Bonus</h3>';
+        html += '<h3>' + t('levelup.profbonus') + '</h3>';
         html += '<p style="font-size:1.1rem;color:var(--text-bright)">+' + oldProfBonus + ' \u2192 +' + profBonus + '</p>';
         html += '</div>';
     }
@@ -3149,7 +3156,7 @@ function showLevelUpModal(charId, config, state) {
     // --- New features ---
     if (classFeatures.length > 0 || subFeatures.length > 0) {
         html += '<div class="levelup-section">';
-        html += '<h3>Nieuwe Features</h3>';
+        html += '<h3>' + t('levelup.newfeatures') + '</h3>';
         for (var fi = 0; fi < classFeatures.length; fi++) {
             html += '<div class="levelup-feature">';
             html += '<h4>' + escapeHtml(classFeatures[fi].name) + '</h4>';
@@ -3168,8 +3175,8 @@ function showLevelUpModal(charId, config, state) {
     // --- Subclass selection ---
     if (needsSubclass) {
         html += '<div class="levelup-section">';
-        html += '<h3>Subclass Kiezen</h3>';
-        html += '<p>Kies je subclass:</p>';
+        html += '<h3>' + t('levelup.subclass') + '</h3>';
+        html += '<p>' + t('levelup.subclass.choose') + '</p>';
         html += '<div class="levelup-choices" id="levelup-subclass-choices">';
         var subKeys = Object.keys(classData.subclasses);
         for (var sck = 0; sck < subKeys.length; sck++) {
@@ -3184,12 +3191,12 @@ function showLevelUpModal(charId, config, state) {
     // --- ASI / Feat ---
     if (isASI) {
         html += '<div class="levelup-section">';
-        html += '<h3>Ability Score Improvement</h3>';
-        html += '<p>Kies een verbetering:</p>';
+        html += '<h3>' + t('levelup.asi') + '</h3>';
+        html += '<p>' + t('levelup.asi.choose') + '</p>';
         html += '<div class="levelup-choices">';
-        html += '<button class="levelup-choice" data-action="levelup-asi" data-asi-mode="asi-two">+2 op 1 ability</button>';
-        html += '<button class="levelup-choice" data-action="levelup-asi" data-asi-mode="asi-split">+1 op 2 abilities</button>';
-        html += '<button class="levelup-choice" data-action="levelup-asi" data-asi-mode="feat">Feat kiezen</button>';
+        html += '<button class="levelup-choice" data-action="levelup-asi" data-asi-mode="asi-two">' + t('stats.asi.plus2') + '</button>';
+        html += '<button class="levelup-choice" data-action="levelup-asi" data-asi-mode="asi-split">' + t('stats.asi.split') + '</button>';
+        html += '<button class="levelup-choice" data-action="levelup-asi" data-asi-mode="feat">' + t('stats.asi.feat') + '</button>';
         html += '</div>';
         html += '<div id="levelup-asi-detail"></div>';
         html += '<input type="hidden" id="levelup-asi-value" value="">';
@@ -3202,7 +3209,7 @@ function showLevelUpModal(charId, config, state) {
         var newSA = DATA.rogue.sneakAttack[newLevel] || oldSA;
         if (newSA !== oldSA) {
             html += '<div class="levelup-section">';
-            html += '<h3>Sneak Attack</h3>';
+            html += '<h3>' + t('levelup.sneakattack') + '</h3>';
             html += '<p style="font-size:1.1rem;color:var(--text-bright)">' + oldSA + ' \u2192 ' + newSA + '</p>';
             html += '</div>';
         }
@@ -3214,7 +3221,7 @@ function showLevelUpModal(charId, config, state) {
         var newSP = DATA.sorcerer.sorceryPoints[newLevel] || 0;
         if (newSP > oldSP) {
             html += '<div class="levelup-section">';
-            html += '<h3>Sorcery Points</h3>';
+            html += '<h3>' + t('levelup.sorcpts') + '</h3>';
             html += '<p style="font-size:1.1rem;color:var(--text-bright)">' + oldSP + ' \u2192 ' + newSP + '</p>';
             html += '</div>';
         }
@@ -3223,7 +3230,7 @@ function showLevelUpModal(charId, config, state) {
     // --- Spell slot changes ---
     if (spellSlotChanges.length > 0) {
         html += '<div class="levelup-section">';
-        html += '<h3>Spell Slots</h3>';
+        html += '<h3>' + t('levelup.spellslots') + '</h3>';
         for (var ssc = 0; ssc < spellSlotChanges.length; ssc++) {
             html += '<p style="color:var(--text-bright)">' + escapeHtml(spellSlotChanges[ssc]) + '</p>';
         }
@@ -3233,23 +3240,23 @@ function showLevelUpModal(charId, config, state) {
     // --- New cantrip ---
     if (newCantrip) {
         html += '<div class="levelup-section">';
-        html += '<h3>Nieuwe Cantrip</h3>';
-        html += '<p>Je kunt een extra cantrip kiezen bij je spell lijst.</p>';
+        html += '<h3>' + t('levelup.newcantrip') + '</h3>';
+        html += '<p>' + t('levelup.newcantrip.desc') + '</p>';
         html += '</div>';
     }
 
     // --- New metamagic ---
     if (newMetamagic) {
         html += '<div class="levelup-section">';
-        html += '<h3>Nieuwe Metamagic</h3>';
-        html += '<p>Je kunt een extra Metamagic optie kiezen bij je class features.</p>';
+        html += '<h3>' + t('levelup.newmetamagic') + '</h3>';
+        html += '<p>' + t('levelup.newmetamagic.desc') + '</p>';
         html += '</div>';
     }
 
     // --- Actions ---
     html += '<div class="levelup-actions">';
-    html += '<button class="wizard-btn wizard-btn-primary" data-action="confirm-levelup">Bevestig Level Up</button>';
-    html += '<button class="wizard-btn wizard-btn-secondary" data-action="cancel-levelup">Annuleren</button>';
+    html += '<button class="wizard-btn wizard-btn-primary" data-action="confirm-levelup">' + t('levelup.confirm') + '</button>';
+    html += '<button class="wizard-btn wizard-btn-secondary" data-action="cancel-levelup">' + t('levelup.cancel') + '</button>';
     html += '</div>';
 
     html += '</div></div>';
@@ -3287,9 +3294,9 @@ function showLevelUpModal(charId, config, state) {
             var rolledHP = rolled + conMod;
             var resultEl = document.getElementById('levelup-hp-result');
             var valueEl = document.getElementById('levelup-hp-value');
-            if (resultEl) resultEl.textContent = 'Gerolled: ' + rolled + ' + CON ' + formatMod(conMod) + ' = ' + rolledHP + ' HP';
+            if (resultEl) resultEl.textContent = t('levelup.hp.rolled') + ': ' + rolled + ' + CON ' + formatMod(conMod) + ' = ' + rolledHP + ' HP';
             if (valueEl) valueEl.value = rolledHP;
-            tgt.textContent = 'Opnieuw rollen';
+            tgt.textContent = t('levelup.hp.reroll');
             return;
         }
 
@@ -3332,12 +3339,12 @@ function showLevelUpModal(charId, config, state) {
             if (needsSubclass) {
                 var subVal = document.getElementById('levelup-subclass-value');
                 if (!subVal || !subVal.value) {
-                    showWarning('Kies eerst een subclass.');
+                    showWarning(t('levelup.warn.subclass'));
                     return;
                 }
             }
             if (isASI && !asiChoice) {
-                showWarning('Kies eerst een ASI of feat.');
+                showWarning(t('levelup.warn.asi'));
                 return;
             }
 
@@ -3401,7 +3408,7 @@ function renderLevelUpASIPicker(modal, config, state, level, mode, onChoice) {
         for (var sk = 0; sk < selKeys.length; sk++) totalSpent += selected[selKeys[sk]];
 
         var html = '<div class="asi-panel" style="margin-top:0.75rem;">';
-        html += '<p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:0.5rem;">Punten over: ' + (maxPoints - totalSpent) + '</p>';
+        html += '<p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:0.5rem;">' + t('stats.asi.pointsleft') + ': ' + (maxPoints - totalSpent) + '</p>';
         html += '<div class="asi-ability-picker">';
         for (var i = 0; i < abNames.length; i++) {
             var ab = abNames[i];
@@ -3416,7 +3423,7 @@ function renderLevelUpASIPicker(modal, config, state, level, mode, onChoice) {
         html += '</div>';
         if (totalSpent === maxPoints) {
             onChoice({ type: 'asi', abilities: Object.assign({}, selected) });
-            html += '<p style="color:var(--accent);font-size:0.85rem;margin-top:0.5rem;">ASI geselecteerd!</p>';
+            html += '<p style="color:var(--accent);font-size:0.85rem;margin-top:0.5rem;">' + t('stats.asi.selected') + '</p>';
         }
         html += '</div>';
         detailEl.innerHTML = html;
@@ -3481,12 +3488,12 @@ function showResetModal(charId, config, state) {
     modal.id = 'reset-modal';
     modal.className = 'modal-overlay';
     modal.innerHTML = '<div class="modal-box">' +
-        '<h3>Karakter Resetten</h3>' +
-        '<p>Weet je het zeker? Dit zet het karakter terug naar level 1.</p>' +
+        '<h3>' + t('reset.title') + '</h3>' +
+        '<p>' + t('reset.confirm') + '</p>' +
         '<div class="modal-actions">' +
-        '<button class="modal-btn modal-btn-primary" data-modal-action="save-then-reset">Opslaan voor reset</button>' +
-        '<button class="modal-btn modal-btn-danger" data-modal-action="confirm-reset">Reset</button>' +
-        '<button class="modal-btn modal-btn-cancel" data-modal-action="cancel-reset">Annuleren</button>' +
+        '<button class="modal-btn modal-btn-primary" data-modal-action="save-then-reset">' + t('reset.savethen') + '</button>' +
+        '<button class="modal-btn modal-btn-danger" data-modal-action="confirm-reset">' + t('reset.doreset') + '</button>' +
+        '<button class="modal-btn modal-btn-cancel" data-modal-action="cancel-reset">' + t('reset.cancel') + '</button>' +
         '</div></div>';
     document.body.appendChild(modal);
     if (typeof lockBodyScroll === 'function') lockBodyScroll();
@@ -3543,8 +3550,8 @@ function showASIAbilityPicker(charId, config, state, level, mode) {
         for (var sk = 0; sk < selKeys.length; sk++) totalSpent += selected[selKeys[sk]];
 
         var html = '<div class="asi-panel" data-asi-level="' + level + '">';
-        html += '<h4>Level ' + level + ' \u2014 ' + (mode === 'asi-two' ? '+2 op 1 ability' : '+1 op 2 abilities') + '</h4>';
-        html += '<p class="block-note">Punten over: ' + (maxPoints - totalSpent) + '</p>';
+        html += '<h4>Level ' + level + ' \u2014 ' + (mode === 'asi-two' ? t('stats.asi.plus2') : t('stats.asi.split')) + '</h4>';
+        html += '<p class="block-note">' + t('stats.asi.pointsleft') + ': ' + (maxPoints - totalSpent) + '</p>';
         html += '<div class="asi-ability-picker">';
         for (var i = 0; i < abNames.length; i++) {
             var ab = abNames[i];
@@ -3558,8 +3565,8 @@ function showASIAbilityPicker(charId, config, state, level, mode) {
         }
         html += '</div>';
         html += '<div style="display:flex;gap:0.5rem;margin-top:0.75rem;">';
-        html += '<button class="asi-option" data-action="asi-confirm"' + (totalSpent === maxPoints ? '' : ' disabled') + '>Bevestigen</button>';
-        html += '<button class="asi-option asi-reset" data-action="asi-cancel">Annuleren</button>';
+        html += '<button class="asi-option" data-action="asi-confirm"' + (totalSpent === maxPoints ? '' : ' disabled') + '>' + t('stats.asi.confirm') + '</button>';
+        html += '<button class="asi-option asi-reset" data-action="asi-cancel">' + t('stats.asi.cancel') + '</button>';
         html += '</div></div>';
 
         var panel = el.querySelector('[data-asi-level="' + level + '"]');
@@ -3609,7 +3616,7 @@ function showFeatPicker(charId, config, state, level) {
     var feats = DATA.feats || [];
 
     var html = '<div class="asi-panel" data-asi-level="' + level + '">';
-    html += '<h4>Level ' + level + ' \u2014 Feat kiezen</h4>';
+    html += '<h4>Level ' + level + ' \u2014 ' + t('stats.asi.feat') + '</h4>';
     html += '<div class="feat-grid-full">';
 
     for (var i = 0; i < feats.length; i++) {
@@ -3627,7 +3634,7 @@ function showFeatPicker(charId, config, state, level) {
     }
 
     html += '</div>';
-    html += '<button class="asi-option asi-reset" data-action="feat-cancel" style="margin-top:0.75rem;">Annuleren</button>';
+    html += '<button class="asi-option asi-reset" data-action="feat-cancel" style="margin-top:0.75rem;">' + t('stats.asi.cancel') + '</button>';
     html += '</div>';
 
     var panel = el.querySelector('[data-asi-level="' + level + '"]');
@@ -3703,7 +3710,7 @@ function toggleCantrip(charId, config, state, spellName) {
     } else {
         var maxCantrips = getMaxCantrips(state.level, config.className);
         if (state.cantrips.length >= maxCantrips) {
-            showWarning('Maximum aantal cantrips bereikt (' + maxCantrips + '). Verwijder er eerst een.');
+            showWarning(t('warn.maxcantrips') + ' (' + maxCantrips + '). ' + t('warn.maxcantrips.remove'));
             return;
         }
         state.cantrips.push(spellName);
@@ -3722,7 +3729,7 @@ function togglePrepared(charId, config, state, spellName) {
         var maxPrepared = getMaxPrepared(state, abilityMod, config.className);
         if (state.prepared.length >= maxPrepared) {
             var label = (config.className === 'ranger' || config.className === 'warlock') ? 'bekende' : 'voorbereide';
-            showWarning('Maximum aantal ' + label + ' spells bereikt (' + maxPrepared + '). Verwijder er eerst een.');
+            showWarning(t('warn.maxcantrips') + ' (' + maxPrepared + '). ' + t('warn.maxcantrips.remove'));
             return;
         }
         state.prepared.push(spellName);
@@ -3741,7 +3748,7 @@ function toggleMetamagic(charId, config, state, mmName) {
         if (state.level >= 10) maxChoices = 3;
         if (state.level >= 17) maxChoices = 4;
         if (state.metamagic.length >= maxChoices) {
-            showWarning('Maximum aantal metamagic opties bereikt (' + maxChoices + ').');
+            showWarning(t('warn.maxmetamagic') + ' (' + maxChoices + ').');
             return;
         }
         state.metamagic.push(mmName);
@@ -3854,7 +3861,7 @@ function handleImageUpload(file, charId, type, maxSize) {
                 saveImage(charId, type, compressed);
                 renderApp();
             } catch (err) {
-                showWarning('Afbeelding te groot om op te slaan.');
+                showWarning(t('warn.imagetoolarge'));
             }
         };
         img.src = result;
@@ -3913,12 +3920,12 @@ function bindPageEvents(route) {
                 }
 
                 if (!matchedId) {
-                    if (errorEl) { errorEl.textContent = 'Gebruiker niet gevonden.'; errorEl.style.display = 'block'; }
+                    if (errorEl) { errorEl.textContent = t('login.error.notfound'); errorEl.style.display = 'block'; }
                     return;
                 }
 
                 if (USERS[matchedId].password !== password) {
-                    if (errorEl) { errorEl.textContent = 'Onjuist wachtwoord.'; errorEl.style.display = 'block'; }
+                    if (errorEl) { errorEl.textContent = t('login.error.password'); errorEl.style.display = 'block'; }
                     return;
                 }
 
@@ -3935,6 +3942,13 @@ function bindPageEvents(route) {
         if (target.matches('[data-action="logout"]') || target.closest('[data-action="logout"]')) {
             clearSession();
             navigate('/login');
+            return;
+        }
+
+        // Language toggle
+        if (target.matches('[data-action="toggle-lang"]') || target.closest('[data-action="toggle-lang"]')) {
+            setLang(getLang() === 'nl' ? 'en' : 'nl');
+            renderApp();
             return;
         }
 
@@ -4020,7 +4034,7 @@ function bindPageEvents(route) {
             var noteActiveLayout = document.querySelector('.note-layout-option.active');
             var noteImg = document.querySelector('.note-image-preview img');
 
-            if (!noteTitleEl || !noteTitleEl.value.trim()) { alert('Vul een titel in.'); return; }
+            if (!noteTitleEl || !noteTitleEl.value.trim()) { alert(t('notes.filltitle')); return; }
 
             var noteData = getNotesData();
             var saveNoteId = target.dataset.noteId;
@@ -4088,7 +4102,7 @@ function bindPageEvents(route) {
 
         // Delete note
         if (target.matches('[data-action="delete-note"]')) {
-            if (confirm('Notitie verwijderen?')) {
+            if (confirm(t('notes.deletenote'))) {
                 var delNoteData = getNotesData();
                 delNoteData.notes = delNoteData.notes.filter(function(n) { return n.id !== target.dataset.noteId; });
                 saveNotesData(delNoteData);
@@ -4238,8 +4252,8 @@ function bindPageEvents(route) {
         // Sync upload all
         if (target.matches('[data-action="sync-upload-all"]')) {
             if (typeof syncUploadAll === 'function') syncUploadAll();
-            target.textContent = 'Geupload!';
-            setTimeout(function() { target.textContent = 'Alles uploaden naar cloud'; }, 2000);
+            target.textContent = t('dm.sync.uploaded');
+            setTimeout(function() { target.textContent = t('dm.sync.uploadall'); }, 2000);
             return;
         }
 
@@ -4326,11 +4340,11 @@ function bindPageEvents(route) {
                     var saveBtn = document.createElement('button');
                     saveBtn.className = 'edit-save';
                     saveBtn.setAttribute('data-action', 'save-name');
-                    saveBtn.textContent = 'Opslaan';
+                    saveBtn.textContent = t('generic.save');
                     var cancelBtn = document.createElement('button');
                     cancelBtn.className = 'edit-cancel';
                     cancelBtn.setAttribute('data-action', 'cancel-edit');
-                    cancelBtn.textContent = 'Annuleren';
+                    cancelBtn.textContent = t('generic.cancel');
                     var actionsDiv = document.createElement('div');
                     actionsDiv.className = 'edit-actions';
                     actionsDiv.appendChild(saveBtn);
@@ -4414,11 +4428,11 @@ function bindPageEvents(route) {
                 sSaveBtn.className = 'edit-save';
                 sSaveBtn.setAttribute('data-action', 'save-field');
                 sSaveBtn.setAttribute('data-field', fieldName);
-                sSaveBtn.textContent = 'Opslaan';
+                sSaveBtn.textContent = t('generic.save');
                 var sCancelBtn = document.createElement('button');
                 sCancelBtn.className = 'edit-cancel';
                 sCancelBtn.setAttribute('data-action', 'cancel-edit');
-                sCancelBtn.textContent = 'Annuleren';
+                sCancelBtn.textContent = t('generic.cancel');
                 actions.appendChild(sSaveBtn);
                 actions.appendChild(sCancelBtn);
 
@@ -4859,7 +4873,7 @@ function bindPageEvents(route) {
 
         // Add chapter
         if (target.matches('[data-action="add-chapter"]')) {
-            var chName = prompt('Naam van het nieuwe chapter:');
+            var chName = prompt(t('timeline.chaptername'));
             if (chName && chName.trim()) {
                 var tlData = getTimelineData();
                 tlData.chapters.push({ id: 'ch' + Date.now(), name: chName.trim(), events: [] });
@@ -4903,7 +4917,7 @@ function bindPageEvents(route) {
             var chIdx = parseInt(target.dataset.chapter);
             var tlData = getTimelineData();
             if (tlData.chapters[chIdx]) {
-                var newName = prompt('Nieuwe naam voor het chapter:', tlData.chapters[chIdx].name);
+                var newName = prompt(t('timeline.newchaptername'), tlData.chapters[chIdx].name);
                 if (newName && newName.trim()) {
                     tlData.chapters[chIdx].name = newName.trim();
                     saveTimelineData(tlData);
@@ -4981,10 +4995,10 @@ function bindPageEvents(route) {
 
         // Add dimension
         if (target.matches('[data-action="add-dimension"]')) {
-            var dimName = prompt('Naam van de dimensie:');
+            var dimName = prompt(t('maps.dimname'));
             if (dimName && dimName.trim()) {
                 var mData = getMapsData();
-                mData.dimensions.push({ id: 'dim' + Date.now(), name: dimName.trim(), maps: [{ id: 'map' + Date.now(), name: 'Hoofdkaart', image: null, isRoot: true, pins: [] }] });
+                mData.dimensions.push({ id: 'dim' + Date.now(), name: dimName.trim(), maps: [{ id: 'map' + Date.now(), name: t('maps.mainmap'), image: null, isRoot: true, pins: [] }] });
                 saveMapsData(mData);
                 activeDimension = mData.dimensions.length - 1;
                 renderApp();
@@ -5024,7 +5038,7 @@ function bindPageEvents(route) {
 
         // Add map
         if (target.matches('[data-action="add-map"]') || target.closest('[data-action="add-map"]')) {
-            var mapName = prompt('Naam van de kaart:');
+            var mapName = prompt(t('maps.mapname'));
             if (mapName && mapName.trim()) {
                 var mData = getMapsData();
                 var mDim = mData.dimensions[activeDimension];
@@ -5041,7 +5055,7 @@ function bindPageEvents(route) {
         if (target.matches('[data-action="delete-map"]')) {
             e.stopPropagation();
             var delMapId = target.dataset.mapId;
-            if (confirm('Kaart verwijderen?')) {
+            if (confirm(t('maps.deletemap'))) {
                 var mData = getMapsData();
                 var mDim = mData.dimensions[activeDimension];
                 if (mDim) {
@@ -5101,12 +5115,12 @@ function bindPageEvents(route) {
                 var allDims = mData.dimensions || [];
                 var modalHtml = '<div class="modal-overlay" id="pin-modal">';
                 modalHtml += '<div class="modal-box" style="max-width:400px;">';
-                modalHtml += '<h3>&#128205; Pin toevoegen</h3>';
+                modalHtml += '<h3>&#128205; ' + t('maps.addpin.title') + '</h3>';
                 modalHtml += '<div style="display:flex;flex-direction:column;gap:0.75rem;margin-top:1rem;">';
-                modalHtml += '<input type="text" class="edit-input" id="pin-label-input" placeholder="Label (bijv. Velthaven)" autofocus>';
-                modalHtml += '<label style="font-size:0.8rem;color:var(--text-dim);">Link naar kaart (optioneel):</label>';
+                modalHtml += '<input type="text" class="edit-input" id="pin-label-input" placeholder="' + t('maps.addpin.label') + '" autofocus>';
+                modalHtml += '<label style="font-size:0.8rem;color:var(--text-dim);">' + t('maps.addpin.link') + '</label>';
                 modalHtml += '<select class="edit-input" id="pin-link-select" style="padding:0.5rem;">';
-                modalHtml += '<option value="">Geen link</option>';
+                modalHtml += '<option value="">' + t('maps.addpin.nolink') + '</option>';
                 for (var pdi = 0; pdi < allDims.length; pdi++) {
                     var pdMaps = allDims[pdi].maps || [];
                     for (var pdmi = 0; pdmi < pdMaps.length; pdmi++) {
@@ -5118,8 +5132,8 @@ function bindPageEvents(route) {
                 modalHtml += '</select>';
                 modalHtml += '</div>';
                 modalHtml += '<div class="modal-actions" style="margin-top:1rem;">';
-                modalHtml += '<button class="btn btn-primary" data-modal-action="save-pin">Opslaan</button>';
-                modalHtml += '<button class="btn btn-ghost" data-modal-action="cancel-pin">Annuleren</button>';
+                modalHtml += '<button class="btn btn-primary" data-modal-action="save-pin">' + t('generic.save') + '</button>';
+                modalHtml += '<button class="btn btn-ghost" data-modal-action="cancel-pin">' + t('generic.cancel') + '</button>';
                 modalHtml += '</div>';
                 modalHtml += '</div></div>';
 
@@ -5217,7 +5231,7 @@ function bindPageEvents(route) {
         // Delete lore article
         if (target.matches('[data-action="delete-lore"]')) {
             var artId = target.dataset.articleId;
-            if (artId && confirm('Weet je zeker dat je dit artikel wilt verwijderen?')) {
+            if (artId && confirm(t('lore.deletearticle'))) {
                 var loreData = getLoreData();
                 loreData.articles = loreData.articles.filter(function(a) { return a.id !== artId; });
                 saveLoreData(loreData);
@@ -5326,7 +5340,7 @@ function bindPageEvents(route) {
                         try {
                             saveMapsData(mData);
                         } catch (err) {
-                            showWarning('Kaartafbeelding te groot om op te slaan.');
+                            showWarning(t('maps.imagetoolarge'));
                         }
                         renderApp();
                     };
@@ -5355,7 +5369,7 @@ function bindPageEvents(route) {
                         var noteBase64 = canvas.toDataURL('image/jpeg', 0.7);
                         var noteSection = document.querySelector('.note-image-section');
                         if (noteSection) {
-                            noteSection.innerHTML = '<div class="note-image-preview"><img src="' + noteBase64 + '" alt=""><button class="btn btn-ghost btn-sm" data-action="remove-note-image">Verwijderen</button></div>';
+                            noteSection.innerHTML = '<div class="note-image-preview"><img src="' + noteBase64 + '" alt=""><button class="btn btn-ghost btn-sm" data-action="remove-note-image">' + t('generic.delete') + '</button></div>';
                         }
                     };
                     nimg.src = ev.target.result;

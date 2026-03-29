@@ -1,5 +1,64 @@
 # Session Log — D&D Within
 
+### Recap — 2026-03-29 (sessie 2)
+
+**What was done:**
+- i18n (internationalization) systeem: NL/EN taalwisseling via knop in navbar
+- Nieuw bestand i18n.js met ~400 vertaalsleutels voor NL en EN
+- Taalknop in navbar (NL/EN toggle), taal opgeslagen in localStorage
+- Subclass wordt nu verborgen in header, overview en features wanneer level te laag is
+- isSubclassVisible() functie checkt of character level >= subclass start level
+- Alle UI strings (tabs, knoppen, labels, placeholders, foutmeldingen) vertaald
+- Character-specifieke content (backstory, quotes, personality) blijft onvertaald
+
+**Files modified:**
+- `i18n.js` — NIEUW: Vertaalsysteem met NL/EN woordenboek, t() functie, isSubclassVisible()
+- `index.html` — i18n.js script tag toegevoegd
+- `app.js` — ~300+ string vervangingen naar t() calls, subclass visibility checks, taalwissel handler
+- `style.css` — nav-lang-btn styling voor taalknop
+
+**Current state:**
+- Taalwisseling werkt via NL/EN knop in navbar
+- Subclass verborgen wanneer level te laag (bijv. Scout pas zichtbaar vanaf level 3)
+- Level-up modal functioneel met ASI, feat selectie, subclass features
+- Alle syntax gevalideerd (node -c passes)
+
+**Next steps:**
+- Browser testen van taalwisseling
+- Eventueel meer talen toevoegen
+- Verifiëren dat alle edge cases werken bij level-up
+
+---
+
+### Recap — 2026-03-29
+
+**What was done:**
+- Complete mobile touch device support (viewport-fit, 44px touch targets, tap tooltips, modal scroll-lock, safe-area insets)
+- Notes page overhaul: 6 layouts (text, image-top/left/right, gallery, checklist), pin/favorite, relative dates, blog-style view
+- Fixed navbar overlap on notes page
+- Firebase Realtime Database sync integration (sync.js) for shared cloud storage
+- Enhanced map linking: portal-style pins, breadcrumb navigation history, cross-dimension linking, proper pin creation modal
+
+**Files modified:**
+- `index.html` — viewport-fit=cover, mobile-web-app-capable metas, Firebase SDK + sync.js
+- `style.css` — Touch device media queries, blog note layouts, gallery/checklist CSS, portal pin styles, sync indicator
+- `app.js` — Touch tooltip system, modal scroll-lock, notes gallery/checklist/pin features, Firebase sync hooks on all save functions, map linking with history + cross-dimension
+- `sync.js` — NEW: Firebase Realtime Database sync layer
+
+**Current state:**
+- Site is fully mobile-compatible with touch targets and tap interactions
+- Notes have 6 layout types including gallery and checklist
+- Firebase sync is coded but needs FIREBASE_CONFIG filled in to activate
+- Map pins can link to any map in any dimension, with portal visual and breadcrumb back-navigation
+- All changes pushed and live on GitHub Pages
+
+**Next steps:**
+- TODO: Firebase project aanmaken + FIREBASE_CONFIG invullen in sync.js
+- Consider: image lightbox for gallery view, map panning via touch/drag
+- Consider: Markdown support in notes, session recap auto-generation
+
+---
+
 ### Recap — 2026-03-27
 
 **What was done:**
