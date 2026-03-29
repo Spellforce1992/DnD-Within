@@ -2071,7 +2071,20 @@ function renderMaps() {
 
         // Breadcrumb / back button
         html += '<div class="map-breadcrumb">';
-        html += '<button class="btn btn-ghost btn-sm" data-action="map-back">&larr; Alle kaarten</button>';
+        if (window._mapHistory && window._mapHistory.length > 0) {
+            var prevMap = window._mapHistory[window._mapHistory.length - 1];
+            var prevName = '';
+            var prevDim = data.dimensions[prevMap.dim];
+            if (prevDim) {
+                for (var bmi = 0; bmi < prevDim.maps.length; bmi++) {
+                    if (prevDim.maps[bmi].id === prevMap.mapId) { prevName = prevDim.maps[bmi].name; break; }
+                }
+            }
+            html += '<button class="btn btn-ghost btn-sm" data-action="map-go-back">&larr; ' + escapeHtml(prevName || 'Vorige kaart') + '</button>';
+            html += '<span class="map-breadcrumb-sep">&#8250;</span>';
+        } else {
+            html += '<button class="btn btn-ghost btn-sm" data-action="map-back">&larr; Alle kaarten</button>';
+        }
         html += '<span class="map-title">' + escapeHtml(map.name) + '</span>';
         if (isDM()) {
             html += '<button class="btn btn-ghost btn-sm" data-action="add-pin">+ Pin toevoegen</button>';
@@ -2097,16 +2110,34 @@ function renderMaps() {
 
         // Render pins
         var pins = map.pins || [];
+        // Build a lookup for map names (across all dimensions)
+        var allMapsLookup = {};
+        for (var dli = 0; dli < dims.length; dli++) {
+            var dlMaps = dims[dli].maps || [];
+            for (var dlmi = 0; dlmi < dlMaps.length; dlmi++) {
+                allMapsLookup[dlMaps[dlmi].id] = { name: dlMaps[dlmi].name, dimName: dims[dli].name, dimIdx: dli };
+            }
+        }
+
         for (var pi = 0; pi < pins.length; pi++) {
             var pin = pins[pi];
-            var pinClass = pin.targetMap ? 'map-pin has-link' : 'map-pin';
+            var isLink = pin.targetMap && allMapsLookup[pin.targetMap];
+            var pinClass = isLink ? 'map-pin has-link' : 'map-pin';
             html += '<div class="' + pinClass + '" style="left:' + pin.x + '%;top:' + pin.y + '%;" data-pin-idx="' + pi + '"';
-            if (pin.targetMap) {
-                html += ' data-action="goto-map" data-target="' + pin.targetMap + '"';
+            if (isLink) {
+                var targetInfo = allMapsLookup[pin.targetMap];
+                html += ' data-action="goto-map" data-target="' + pin.targetMap + '" data-target-dim="' + targetInfo.dimIdx + '"';
+                html += ' title="Ga naar: ' + escapeAttr(targetInfo.name) + '"';
             }
             html += '>';
-            html += '<div class="pin-dot"></div>';
-            html += '<span class="pin-label">' + escapeHtml(pin.label) + '</span>';
+            if (isLink) {
+                html += '<div class="pin-dot pin-portal">&#9670;</div>';
+            } else {
+                html += '<div class="pin-dot"></div>';
+            }
+            html += '<span class="pin-label">' + escapeHtml(pin.label);
+            if (isLink) html += ' <span class="pin-link-icon">&#8594;</span>';
+            html += '</span>';
             if (isDM()) {
                 html += '<button class="pin-delete" data-action="delete-pin" data-pin-idx="' + pi + '">&times;</button>';
             }
@@ -4974,7 +5005,20 @@ function bindPageEvents(route) {
         if (target.matches('[data-action="map-back"]')) {
             activeMapId = null;
             addingPin = false;
+            window._mapHistory = [];
             renderApp();
+            return;
+        }
+
+        // Map go back to previous map in history
+        if (target.matches('[data-action="map-go-back"]')) {
+            if (window._mapHistory && window._mapHistory.length > 0) {
+                var prev = window._mapHistory.pop();
+                activeDimension = prev.dim;
+                activeMapId = prev.mapId;
+                mapZoom = 1; mapPanX = 0; mapPanY = 0;
+                renderApp();
+            }
             return;
         }
 
@@ -5009,9 +5053,16 @@ function bindPageEvents(route) {
             return;
         }
 
-        // Goto linked map (pin click)
+        // Goto linked map (pin click) — supports cross-dimension
         if (target.matches('[data-action="goto-map"]') || target.closest('[data-action="goto-map"]')) {
             var gotoEl = target.closest('[data-action="goto-map"]') || target;
+            var targetDim = gotoEl.dataset.targetDim;
+            if (targetDim !== undefined && targetDim !== null) {
+                activeDimension = parseInt(targetDim, 10);
+            }
+            // Save history for back navigation
+            if (!window._mapHistory) window._mapHistory = [];
+            window._mapHistory.push({ mapId: activeMapId, dim: activeDimension });
             activeMapId = gotoEl.dataset.target;
             mapZoom = 1; mapPanX = 0; mapPanY = 0;
             renderApp();
@@ -5042,42 +5093,76 @@ function bindPageEvents(route) {
             var canvas = document.getElementById('map-canvas');
             if (viewer && canvas) {
                 var rect = canvas.getBoundingClientRect();
-                var px = ((e.clientX - rect.left) / rect.width) * 100;
-                var py = ((e.clientY - rect.top) / rect.height) * 100;
+                var pinX = Math.round(((e.clientX - rect.left) / rect.width) * 1000) / 10;
+                var pinY = Math.round(((e.clientY - rect.top) / rect.height) * 1000) / 10;
 
-                var pinLabel = prompt('Label voor deze pin:');
-                if (pinLabel && pinLabel.trim()) {
-                    var mData = getMapsData();
-                    var mDim = mData.dimensions[activeDimension];
-                    var currentMap = null;
-                    for (var cmi = 0; cmi < mDim.maps.length; cmi++) {
-                        if (mDim.maps[cmi].id === activeMapId) { currentMap = mDim.maps[cmi]; break; }
-                    }
-
-                    if (currentMap) {
-                        var otherMaps = mDim.maps.filter(function(m) { return m.id !== activeMapId; });
-                        var targetMapId = null;
-
-                        if (otherMaps.length > 0) {
-                            var linkChoice = prompt('Link naar kaart? (leeg = geen link)\n' + otherMaps.map(function(m, i) { return (i+1) + '. ' + m.name; }).join('\n'));
-                            if (linkChoice && parseInt(linkChoice) > 0) {
-                                var linkIdx = parseInt(linkChoice) - 1;
-                                if (otherMaps[linkIdx]) targetMapId = otherMaps[linkIdx].id;
-                            }
-                        }
-
-                        currentMap.pins.push({
-                            id: 'pin' + Date.now(),
-                            x: Math.round(px * 10) / 10,
-                            y: Math.round(py * 10) / 10,
-                            label: pinLabel.trim(),
-                            targetMap: targetMapId
-                        });
-                        saveMapsData(mData);
+                // Show pin creation modal
+                var mData = getMapsData();
+                var allDims = mData.dimensions || [];
+                var modalHtml = '<div class="modal-overlay" id="pin-modal">';
+                modalHtml += '<div class="modal-box" style="max-width:400px;">';
+                modalHtml += '<h3>&#128205; Pin toevoegen</h3>';
+                modalHtml += '<div style="display:flex;flex-direction:column;gap:0.75rem;margin-top:1rem;">';
+                modalHtml += '<input type="text" class="edit-input" id="pin-label-input" placeholder="Label (bijv. Velthaven)" autofocus>';
+                modalHtml += '<label style="font-size:0.8rem;color:var(--text-dim);">Link naar kaart (optioneel):</label>';
+                modalHtml += '<select class="edit-input" id="pin-link-select" style="padding:0.5rem;">';
+                modalHtml += '<option value="">Geen link</option>';
+                for (var pdi = 0; pdi < allDims.length; pdi++) {
+                    var pdMaps = allDims[pdi].maps || [];
+                    for (var pdmi = 0; pdmi < pdMaps.length; pdmi++) {
+                        if (pdMaps[pdmi].id === activeMapId) continue;
+                        var dimLabel = allDims.length > 1 ? ' (' + allDims[pdi].name + ')' : '';
+                        modalHtml += '<option value="' + pdMaps[pdmi].id + '">' + escapeHtml(pdMaps[pdmi].name) + dimLabel + '</option>';
                     }
                 }
-                addingPin = false;
-                renderApp();
+                modalHtml += '</select>';
+                modalHtml += '</div>';
+                modalHtml += '<div class="modal-actions" style="margin-top:1rem;">';
+                modalHtml += '<button class="btn btn-primary" data-modal-action="save-pin">Opslaan</button>';
+                modalHtml += '<button class="btn btn-ghost" data-modal-action="cancel-pin">Annuleren</button>';
+                modalHtml += '</div>';
+                modalHtml += '</div></div>';
+
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                if (typeof lockBodyScroll === 'function') lockBodyScroll();
+                var pinLabelInput = document.getElementById('pin-label-input');
+                if (pinLabelInput) pinLabelInput.focus();
+
+                var pinModal = document.getElementById('pin-modal');
+                pinModal.addEventListener('click', function(me) {
+                    var action = me.target.dataset.modalAction;
+                    if (me.target === pinModal) action = 'cancel-pin';
+                    if (!action) return;
+
+                    if (action === 'save-pin') {
+                        var labelEl = document.getElementById('pin-label-input');
+                        var linkEl = document.getElementById('pin-link-select');
+                        var label = labelEl ? labelEl.value.trim() : '';
+                        if (!label) { labelEl.style.borderColor = 'var(--danger)'; return; }
+
+                        var targetMapId = linkEl ? linkEl.value : null;
+                        var mData2 = getMapsData();
+                        var mDim2 = mData2.dimensions[activeDimension];
+                        for (var cmi2 = 0; cmi2 < mDim2.maps.length; cmi2++) {
+                            if (mDim2.maps[cmi2].id === activeMapId) {
+                                mDim2.maps[cmi2].pins.push({
+                                    id: 'pin' + Date.now(),
+                                    x: pinX,
+                                    y: pinY,
+                                    label: label,
+                                    targetMap: targetMapId || null
+                                });
+                                break;
+                            }
+                        }
+                        saveMapsData(mData2);
+                    }
+
+                    pinModal.remove();
+                    if (typeof unlockBodyScroll === 'function') unlockBodyScroll();
+                    addingPin = false;
+                    renderApp();
+                });
             }
             return;
         }

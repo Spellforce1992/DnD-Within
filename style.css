@@ -2312,11 +2312,16 @@ a { color: inherit; text-decoration: none; }
 /* Map Pins */
 .map-pin { position: absolute; transform: translate(-50%, -50%); z-index: 10; cursor: default; display: flex; flex-direction: column; align-items: center; }
 .map-pin.has-link { cursor: pointer; }
-.map-pin.has-link:hover .pin-dot { background: var(--accent); box-shadow: 0 0 12px var(--accent); transform: scale(1.3); }
+.map-pin.has-link:hover .pin-dot { background: var(--accent); box-shadow: 0 0 16px var(--accent); transform: scale(1.4); }
+.map-pin.has-link .pin-label { background: rgba(34, 211, 238, 0.2); border: 1px solid rgba(34, 211, 238, 0.3); }
 
 .pin-dot { width: 14px; height: 14px; border-radius: 50%; background: var(--gold); border: 2px solid rgba(255,255,255,0.8); box-shadow: 0 0 8px rgba(240,192,64,0.5); transition: all 0.2s; }
+.pin-dot.pin-portal { width: 18px; height: 18px; border-radius: 4px; background: var(--accent); border-color: rgba(255,255,255,0.9); box-shadow: 0 0 12px var(--accent), 0 0 4px var(--accent); font-size: 0.6rem; display: flex; align-items: center; justify-content: center; color: white; animation: pulse 2s infinite; }
 
 .pin-label { background: rgba(0,0,0,0.8); color: var(--text-bright); font-size: 0.7rem; padding: 0.15rem 0.5rem; border-radius: 100px; white-space: nowrap; margin-top: 0.2rem; pointer-events: none; }
+.pin-link-icon { opacity: 0.6; font-size: 0.65rem; }
+
+.map-breadcrumb-sep { color: var(--text-dim); font-size: 1.1rem; margin: 0 0.25rem; }
 
 .pin-delete { position: absolute; top: -8px; right: -16px; width: 18px; height: 18px; border-radius: 50%; background: var(--danger); border: none; color: white; font-size: 0.7rem; cursor: pointer; display: none; align-items: center; justify-content: center; }
 .map-pin:hover .pin-delete { display: flex; }
