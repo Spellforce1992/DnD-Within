@@ -56,7 +56,7 @@ var SYNC_PREFIXES = [
 ];
 var SYNC_EXACT = [
     'dw_maps', 'dw_timeline', 'dw_lore',
-    'dw_initiative', 'dw_session_number'
+    'dw_initiative', 'dw_session_number', 'dw_dashboard'
 ];
 
 function isSyncableKey(key) {
@@ -107,6 +107,7 @@ function keyToPath(key) {
 
     // Campaign
     if (key === 'dw_session_number') return 'campaign/session_number';
+    if (key === 'dw_dashboard') return 'campaign/dashboard';
 
     return 'other/' + key;
 }
@@ -143,6 +144,7 @@ function firebasePathToLocalKey(path) {
 
     // campaign/session_number → dw_session_number
     if (p[0] === 'campaign' && p[1] === 'session_number') return 'dw_session_number';
+    if (p[0] === 'campaign' && p[1] === 'dashboard') return 'dw_dashboard';
 
     return null;
 }

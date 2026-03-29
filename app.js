@@ -763,17 +763,43 @@ function renderNavbar(route) {
 // Section 11: Dashboard
 // ============================================================
 
+function getDashboardData() {
+    var saved = localStorage.getItem('dw_dashboard');
+    if (saved) {
+        try { return JSON.parse(saved); } catch(e) {}
+    }
+    return { campaignName: 'The Serpent March', bannerImage: null };
+}
+
+function saveDashboardData(data) {
+    localStorage.setItem('dw_dashboard', JSON.stringify(data));
+    if (typeof syncUpload === 'function') syncUpload('dw_dashboard');
+}
+
 function renderDashboard() {
     var user = currentUser();
     var html = '<div class="dashboard">';
 
     // Session number (DM can set)
-    var sessionNum = localStorage.getItem('dw_session_number') || '1';
+    var sessionNum = localStorage.getItem('dw_session_number') || '0';
+    var dashData = getDashboardData();
 
-    // Welcome banner
-    html += '<div class="welcome-banner">';
+    // Welcome banner with optional background image
+    html += '<div class="welcome-banner' + (dashData.bannerImage ? ' has-banner' : '') + '"';
+    if (dashData.bannerImage) {
+        html += ' style="background-image:url(' + dashData.bannerImage + ')"';
+    }
+    html += '>';
+    if (isDM()) {
+        html += '<label class="banner-upload-btn" title="Upload banner"><span>&#128247;</span><input type="file" accept="image/*" data-action="upload-dash-banner" style="display:none"></label>';
+    }
     html += '<h1>' + t('dash.welcome') + '</h1>';
-    html += '<p class="campaign-name">' + t('dash.campaign') + '</p>';
+    html += '<p class="campaign-name">';
+    html += escapeHtml(dashData.campaignName || 'The Serpent March');
+    if (isDM()) {
+        html += ' <button class="edit-trigger" data-action="edit-campaign-name" title="Edit">&#9998;</button>';
+    }
+    html += '</p>';
     html += '<p class="welcome-user">' + t('dash.loggedinas') + ' ' + escapeHtml(user ? user.name : '') + '</p>';
     html += '<p class="text-dim" style="font-size:0.85rem;">' + t('dash.session') + ' ' + escapeHtml(sessionNum) + '</p>';
     html += '</div>';
@@ -2224,27 +2250,64 @@ function renderMaps() {
         }
 
     } else {
-        // MAP GRID MODE
-        html += '<div class="maps-grid">';
-
+        // MAP GRID MODE — grouped by category
         var maps = dim.maps || [];
+        var categories = {};
+        var uncategorized = [];
         for (var gi = 0; gi < maps.length; gi++) {
             var gm = maps[gi];
-            html += '<div class="map-card" data-action="open-map" data-map-id="' + gm.id + '">';
-            if (gm.image) {
-                html += '<img class="map-card-img" src="' + gm.image + '" alt="">';
+            var cat = gm.category || '';
+            if (cat) {
+                if (!categories[cat]) categories[cat] = [];
+                categories[cat].push(gm);
             } else {
-                html += '<div class="map-card-placeholder">&#128506;</div>';
+                uncategorized.push(gm);
             }
-            html += '<div class="map-card-info">';
-            html += '<span class="map-card-name">' + escapeHtml(gm.name) + '</span>';
-            if (gm.isRoot) html += '<span class="map-card-badge">' + t('maps.mainmap') + '</span>';
-            html += '<span class="map-card-pins">' + (gm.pins ? gm.pins.length : 0) + ' pins</span>';
-            html += '</div>';
+        }
+        var catNames = Object.keys(categories).sort();
+
+        function renderMapCard(gm) {
+            var cardHtml = '<div class="map-card" data-action="open-map" data-map-id="' + gm.id + '">';
+            if (gm.image) {
+                cardHtml += '<img class="map-card-img" src="' + gm.image + '" alt="">';
+            } else {
+                cardHtml += '<div class="map-card-placeholder">&#128506;</div>';
+            }
+            cardHtml += '<div class="map-card-info">';
+            cardHtml += '<span class="map-card-name">' + escapeHtml(gm.name) + '</span>';
+            if (gm.isRoot) cardHtml += '<span class="map-card-badge">' + t('maps.mainmap') + '</span>';
+            cardHtml += '<span class="map-card-pins">' + (gm.pins ? gm.pins.length : 0) + ' pins</span>';
+            cardHtml += '</div>';
             if (isDM()) {
-                html += '<button class="map-card-delete" data-action="delete-map" data-map-id="' + gm.id + '">&times;</button>';
+                cardHtml += '<button class="map-card-delete" data-action="delete-map" data-map-id="' + gm.id + '">&times;</button>';
+                cardHtml += '<button class="map-card-cat-btn" data-action="set-map-category" data-map-id="' + gm.id + '" title="Category">&#128193;</button>';
             }
-            html += '</div>';
+            cardHtml += '</div>';
+            return cardHtml;
+        }
+
+        // Render categorized maps
+        for (var ci = 0; ci < catNames.length; ci++) {
+            html += '<div class="maps-category">';
+            html += '<h3 class="maps-category-title">' + escapeHtml(catNames[ci]) + '</h3>';
+            html += '<div class="maps-grid">';
+            var catMaps = categories[catNames[ci]];
+            for (var mi = 0; mi < catMaps.length; mi++) {
+                html += renderMapCard(catMaps[mi]);
+            }
+            html += '</div></div>';
+        }
+
+        // Uncategorized maps
+        if (uncategorized.length > 0 || catNames.length === 0) {
+            if (catNames.length > 0) {
+                html += '<div class="maps-category">';
+                html += '<h3 class="maps-category-title">Other</h3>';
+            }
+            html += '<div class="maps-grid">';
+            for (var ui = 0; ui < uncategorized.length; ui++) {
+                html += renderMapCard(uncategorized[ui]);
+            }
         }
 
         if (isDM()) {
@@ -2286,6 +2349,59 @@ function getTimelineData() {
 function saveTimelineData(data) {
     localStorage.setItem('dw_timeline', JSON.stringify(data));
     if (typeof syncUpload === 'function') syncUpload('dw_timeline');
+}
+
+var EVENT_LAYOUTS = [
+    { id: 'text', icon: '\ud83d\udcdd', label: 'Text' },
+    { id: 'image-top', icon: '\ud83d\uddbc\ufe0f\u2b07', label: 'Image Top' },
+    { id: 'image-left', icon: '\ud83d\uddbc\ufe0f\ud83d\udcdd', label: 'Image Left' },
+    { id: 'image-right', icon: '\ud83d\udcdd\ud83d\uddbc\ufe0f', label: 'Image Right' },
+    { id: 'full-image', icon: '\ud83c\udf05', label: 'Full Image' },
+    { id: 'banner', icon: '\ud83c\udff4', label: 'Banner' }
+];
+
+function renderEventForm(evIdx, ev) {
+    var isNew = evIdx < 0;
+    var prefix = isNew ? '' : 'edit-';
+    var html = '';
+    html += '<input type="text" class="edit-input" id="' + prefix + 'ev-title" placeholder="' + t('timeline.eventtitle') + '" value="' + escapeAttr(ev.title || '') + '">';
+    html += '<textarea class="edit-textarea" id="' + prefix + 'ev-desc" placeholder="' + t('timeline.eventdesc') + '" style="min-height:60px;">' + escapeHtml(ev.desc || '') + '</textarea>';
+    html += '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;">';
+    html += '<input type="text" class="edit-input" id="' + prefix + 'ev-session" placeholder="' + t('timeline.eventsession') + '" style="width:80px;" value="' + escapeAttr(ev.session || '') + '">';
+    html += '<select class="edit-input" id="' + prefix + 'ev-type" style="flex:1;">';
+    var types = ['quest', 'danger', 'magic', 'discovery', 'social', 'combat'];
+    for (var ti = 0; ti < types.length; ti++) {
+        html += '<option value="' + types[ti] + '"' + (ev.type === types[ti] ? ' selected' : '') + '>' + t('timeline.eventtype.' + types[ti]) + '</option>';
+    }
+    html += '</select>';
+    html += '</div>';
+
+    // Layout picker
+    html += '<div class="event-layout-picker">';
+    html += '<label class="text-dim" style="font-size:0.8rem;">Layout</label>';
+    html += '<div class="event-layout-options">';
+    for (var li = 0; li < EVENT_LAYOUTS.length; li++) {
+        var lo = EVENT_LAYOUTS[li];
+        html += '<button type="button" class="event-layout-option' + ((ev.layout || 'text') === lo.id ? ' active' : '') + '" data-action="pick-event-layout" data-layout="' + lo.id + '" data-event-idx="' + evIdx + '">' + lo.icon + '<br><span>' + lo.label + '</span></button>';
+    }
+    html += '</div>';
+    html += '</div>';
+
+    // Image upload (for image layouts)
+    var needsImage = (ev.layout || 'text') !== 'text';
+    html += '<div class="event-image-section" style="display:' + (needsImage ? 'block' : 'none') + '">';
+    if (ev.image) {
+        html += '<div class="event-image-preview"><img src="' + ev.image + '" alt=""><button class="btn btn-ghost btn-sm" data-action="remove-event-image" data-event-idx="' + evIdx + '">' + t('generic.delete') + '</button></div>';
+    } else {
+        html += '<label class="note-image-upload"><span>' + t('notes.addimage') + '</span><input type="file" accept="image/*" data-action="upload-event-image" data-event-idx="' + evIdx + '" style="display:none"></label>';
+    }
+    html += '</div>';
+
+    html += '<div class="edit-actions">';
+    html += '<button class="edit-save" data-action="save-event"' + (isNew ? '' : ' data-edit-idx="' + evIdx + '"') + '>' + t('generic.save') + '</button>';
+    html += '<button class="edit-cancel" data-action="cancel-event">' + t('generic.cancel') + '</button>';
+    html += '</div>';
+    return html;
 }
 
 function renderTimeline() {
@@ -2339,16 +2455,7 @@ function renderTimeline() {
         // Add event form (hidden by default)
         if (isDM()) {
             html += '<div class="timeline-add-form" id="event-add-form" style="display:none;">';
-            html += '<input type="text" class="edit-input" id="ev-title" placeholder="' + t('timeline.eventtitle') + '">';
-            html += '<textarea class="edit-textarea" id="ev-desc" placeholder="' + t('timeline.eventdesc') + '" style="min-height:60px;"></textarea>';
-            html += '<div style="display:flex;gap:0.5rem;">';
-            html += '<input type="text" class="edit-input" id="ev-session" placeholder="' + t('timeline.eventsession') + '" style="width:80px;">';
-            html += '<select class="edit-input" id="ev-type" style="flex:1;"><option value="quest">' + t('timeline.eventtype.quest') + '</option><option value="danger">' + t('timeline.eventtype.danger') + '</option><option value="magic">' + t('timeline.eventtype.magic') + '</option><option value="discovery">' + t('timeline.eventtype.discovery') + '</option><option value="social">' + t('timeline.eventtype.social') + '</option><option value="combat">' + t('timeline.eventtype.combat') + '</option></select>';
-            html += '</div>';
-            html += '<div class="edit-actions">';
-            html += '<button class="edit-save" data-action="save-event">' + t('generic.save') + '</button>';
-            html += '<button class="edit-cancel" data-action="cancel-event">' + t('generic.cancel') + '</button>';
-            html += '</div>';
+            html += renderEventForm(-1, { title: '', desc: '', session: '', type: 'quest', layout: 'text', image: null });
             html += '</div>';
         }
 
@@ -2360,12 +2467,44 @@ function renderTimeline() {
             html += '<div class="timeline">';
             for (var j = 0; j < events.length; j++) {
                 var ev = events[j];
-                html += '<div class="timeline-event timeline-' + (ev.type || 'quest') + '">';
+                var evLayout = ev.layout || 'text';
+                html += '<div class="timeline-event timeline-' + (ev.type || 'quest') + ' event-layout-' + evLayout + '" data-event-idx="' + j + '">';
                 html += '<div class="timeline-marker"></div>';
                 html += '<div class="timeline-content">';
-                if (ev.session) html += '<span class="timeline-session">' + t('dash.session') + ' ' + escapeHtml(ev.session) + '</span>';
-                html += '<h3>' + escapeHtml(ev.title) + '</h3>';
-                html += '<p>' + escapeHtml(ev.desc) + '</p>';
+
+                // Layout-based rendering
+                if (evLayout === 'full-image' && ev.image) {
+                    html += '<div class="event-full-image" style="background-image:url(' + ev.image + ')">';
+                    html += '<div class="event-full-image-overlay">';
+                    if (ev.session) html += '<span class="timeline-session">' + t('dash.session') + ' ' + escapeHtml(ev.session) + '</span>';
+                    html += '<h3>' + escapeHtml(ev.title) + '</h3>';
+                    if (ev.desc) html += '<p>' + escapeHtml(ev.desc) + '</p>';
+                    html += '</div></div>';
+                } else if (evLayout === 'image-top' && ev.image) {
+                    html += '<div class="event-image-top"><img src="' + ev.image + '" alt=""></div>';
+                    if (ev.session) html += '<span class="timeline-session">' + t('dash.session') + ' ' + escapeHtml(ev.session) + '</span>';
+                    html += '<h3>' + escapeHtml(ev.title) + '</h3>';
+                    if (ev.desc) html += '<p>' + escapeHtml(ev.desc) + '</p>';
+                } else if ((evLayout === 'image-left' || evLayout === 'image-right') && ev.image) {
+                    html += '<div class="event-split event-split-' + evLayout + '">';
+                    html += '<div class="event-split-img"><img src="' + ev.image + '" alt=""></div>';
+                    html += '<div class="event-split-text">';
+                    if (ev.session) html += '<span class="timeline-session">' + t('dash.session') + ' ' + escapeHtml(ev.session) + '</span>';
+                    html += '<h3>' + escapeHtml(ev.title) + '</h3>';
+                    if (ev.desc) html += '<p>' + escapeHtml(ev.desc) + '</p>';
+                    html += '</div></div>';
+                } else if (evLayout === 'banner' && ev.image) {
+                    html += '<div class="event-banner" style="background-image:url(' + ev.image + ')"></div>';
+                    if (ev.session) html += '<span class="timeline-session">' + t('dash.session') + ' ' + escapeHtml(ev.session) + '</span>';
+                    html += '<h3>' + escapeHtml(ev.title) + '</h3>';
+                    if (ev.desc) html += '<p>' + escapeHtml(ev.desc) + '</p>';
+                } else {
+                    // Default text layout
+                    if (ev.session) html += '<span class="timeline-session">' + t('dash.session') + ' ' + escapeHtml(ev.session) + '</span>';
+                    html += '<h3>' + escapeHtml(ev.title) + '</h3>';
+                    if (ev.desc) html += '<p>' + escapeHtml(ev.desc) + '</p>';
+                }
+
                 if (isDM()) {
                     html += '<div class="event-actions">';
                     html += '<button class="btn btn-ghost btn-sm" data-action="edit-event" data-event="' + j + '">' + t('generic.edit') + '</button>';
@@ -2725,6 +2864,9 @@ function renderNoteEditor(noteId) {
         }
     }
 
+    // Initialize tag state for this editor session
+    window._noteTags = note ? (note.tags || []).slice() : [];
+
     var title = note ? note.title : '';
     var content = note ? note.content : '';
     var tags = note ? (note.tags || []).join(', ') : '';
@@ -2816,10 +2958,30 @@ function renderNoteEditor(noteId) {
     // Content (hidden for checklist layout)
     html += '<textarea class="edit-textarea note-content-input" id="note-content" placeholder="' + t('notes.notecontent') + '" style="display:' + (layout === 'checklist' ? 'none' : 'block') + '">' + escapeHtml(content) + '</textarea>';
 
-    // Tags
+    // Tags with category
     html += '<div class="note-tags-section">';
     html += '<label class="text-dim" style="font-size:0.8rem;">' + t('notes.tags') + '</label>';
-    html += '<input type="text" class="edit-input" id="note-tags" placeholder="' + t('notes.tags.placeholder') + '" value="' + escapeAttr(tags) + '">';
+    html += '<div class="note-tags-list" id="note-tags-list">';
+    var parsedTags = note ? (note.tags || []) : [];
+    for (var nti = 0; nti < parsedTags.length; nti++) {
+        var tagObj = typeof parsedTags[nti] === 'object' ? parsedTags[nti] : { text: parsedTags[nti], category: 'other' };
+        var tagCat = null;
+        for (var tci = 0; tci < TAG_CATEGORIES.length; tci++) {
+            if (TAG_CATEGORIES[tci].id === tagObj.category) { tagCat = TAG_CATEGORIES[tci]; break; }
+        }
+        if (!tagCat) tagCat = TAG_CATEGORIES[5];
+        html += '<span class="note-tag" style="border-color:' + tagCat.color + '">' + tagCat.icon + ' ' + escapeHtml(typeof tagObj === 'string' ? tagObj : tagObj.text) + '<button class="tag-remove" data-action="remove-tag" data-tag-idx="' + nti + '">&times;</button></span>';
+    }
+    html += '</div>';
+    html += '<div class="note-tag-add">';
+    html += '<select class="edit-input" id="tag-category" style="width:auto;">';
+    for (var tci = 0; tci < TAG_CATEGORIES.length; tci++) {
+        html += '<option value="' + TAG_CATEGORIES[tci].id + '">' + TAG_CATEGORIES[tci].icon + ' ' + t('notecat.' + TAG_CATEGORIES[tci].id) + '</option>';
+    }
+    html += '</select>';
+    html += '<input type="text" class="edit-input" id="tag-text" placeholder="Tag name..." style="flex:1;">';
+    html += '<button class="btn btn-ghost btn-sm" data-action="add-tag">+</button>';
+    html += '</div>';
     html += '</div>';
 
     // Save/Delete
@@ -4083,7 +4245,6 @@ function bindPageEvents(route) {
         if (target.matches('[data-action="save-note"]')) {
             var noteTitleEl = document.getElementById('note-title');
             var noteContentEl = document.getElementById('note-content');
-            var noteTagsEl = document.getElementById('note-tags');
             var noteActiveCat = document.querySelector('.note-cat-option.active');
             var noteActiveLayout = document.querySelector('.note-layout-option.active');
             var noteImg = document.querySelector('.note-image-preview img');
@@ -4092,7 +4253,21 @@ function bindPageEvents(route) {
 
             var noteData = getNotesData();
             var saveNoteId = target.dataset.noteId;
-            var noteTags = noteTagsEl ? noteTagsEl.value.split(',').map(function(t) { return t.trim(); }).filter(Boolean) : [];
+
+            // Collect tags from the tag list (new format: {text, category})
+            var noteTags = [];
+            if (window._noteTags) {
+                noteTags = window._noteTags.slice();
+            } else {
+                // Fallback: read existing note tags
+                var existingNote = null;
+                if (saveNoteId) {
+                    for (var fni = 0; fni < noteData.notes.length; fni++) {
+                        if (noteData.notes[fni].id === saveNoteId) { existingNote = noteData.notes[fni]; break; }
+                    }
+                }
+                if (existingNote) noteTags = existingNote.tags || [];
+            }
             var noteCategory = noteActiveCat ? noteActiveCat.dataset.cat : 'other';
             var noteLayout = noteActiveLayout ? noteActiveLayout.dataset.layout : 'text-only';
             var noteImage = noteImg ? noteImg.src : null;
@@ -4187,6 +4362,71 @@ function bindPageEvents(route) {
             }
             saveNotesData(pinData);
             renderApp();
+            return;
+        }
+
+        // Add tag to note
+        if (target.matches('[data-action="add-tag"]')) {
+            var tagTextEl = document.getElementById('tag-text');
+            var tagCatEl = document.getElementById('tag-category');
+            if (tagTextEl && tagTextEl.value.trim()) {
+                if (!window._noteTags) {
+                    // Initialize from existing tags in DOM
+                    window._noteTags = [];
+                    document.querySelectorAll('#note-tags-list .note-tag').forEach(function(el) {
+                        var txt = el.textContent.replace('\u00d7', '').trim();
+                        // Remove leading emoji
+                        txt = txt.replace(/^[\ud800-\udbff][\udc00-\udfff]\s*/, '').trim();
+                        window._noteTags.push({ text: txt, category: 'other' });
+                    });
+                }
+                window._noteTags.push({
+                    text: tagTextEl.value.trim(),
+                    category: tagCatEl ? tagCatEl.value : 'other'
+                });
+                // Re-render tag list
+                var tagListEl = document.getElementById('note-tags-list');
+                if (tagListEl) {
+                    var tagHtml = '';
+                    for (var tti = 0; tti < window._noteTags.length; tti++) {
+                        var tg = window._noteTags[tti];
+                        var tgCat = null;
+                        for (var tci = 0; tci < TAG_CATEGORIES.length; tci++) {
+                            if (TAG_CATEGORIES[tci].id === tg.category) { tgCat = TAG_CATEGORIES[tci]; break; }
+                        }
+                        if (!tgCat) tgCat = TAG_CATEGORIES[5];
+                        tagHtml += '<span class="note-tag" style="border-color:' + tgCat.color + '">' + tgCat.icon + ' ' + escapeHtml(tg.text) + '<button class="tag-remove" data-action="remove-tag" data-tag-idx="' + tti + '">&times;</button></span>';
+                    }
+                    tagListEl.innerHTML = tagHtml;
+                }
+                tagTextEl.value = '';
+            }
+            return;
+        }
+
+        // Remove tag from note
+        if (target.matches('[data-action="remove-tag"]') || target.closest('[data-action="remove-tag"]')) {
+            var removeTagBtn = target.matches('[data-action="remove-tag"]') ? target : target.closest('[data-action="remove-tag"]');
+            var tagIdx = parseInt(removeTagBtn.dataset.tagIdx);
+            if (!window._noteTags) window._noteTags = [];
+            if (!isNaN(tagIdx) && tagIdx < window._noteTags.length) {
+                window._noteTags.splice(tagIdx, 1);
+                // Re-render
+                var tagListEl = document.getElementById('note-tags-list');
+                if (tagListEl) {
+                    var tagHtml = '';
+                    for (var tti = 0; tti < window._noteTags.length; tti++) {
+                        var tg = window._noteTags[tti];
+                        var tgCat = null;
+                        for (var tci = 0; tci < TAG_CATEGORIES.length; tci++) {
+                            if (TAG_CATEGORIES[tci].id === tg.category) { tgCat = TAG_CATEGORIES[tci]; break; }
+                        }
+                        if (!tgCat) tgCat = TAG_CATEGORIES[5];
+                        tagHtml += '<span class="note-tag" style="border-color:' + tgCat.color + '">' + tgCat.icon + ' ' + escapeHtml(tg.text) + '<button class="tag-remove" data-action="remove-tag" data-tag-idx="' + tti + '">&times;</button></span>';
+                    }
+                    tagListEl.innerHTML = tagHtml;
+                }
+            }
             return;
         }
 
@@ -4911,17 +5151,29 @@ function bindPageEvents(route) {
 
         // --- Session number +/- ---
         if (target.matches('[data-action="session-plus"]')) {
-            var n = parseInt(localStorage.getItem('dw_session_number') || '1');
+            var n = parseInt(localStorage.getItem('dw_session_number') || '0');
             localStorage.setItem('dw_session_number', String(n + 1));
             if (typeof syncUpload === 'function') syncUpload('dw_session_number');
             renderApp();
             return;
         }
         if (target.matches('[data-action="session-minus"]')) {
-            var n = parseInt(localStorage.getItem('dw_session_number') || '1');
-            if (n > 1) localStorage.setItem('dw_session_number', String(n - 1));
+            var n = parseInt(localStorage.getItem('dw_session_number') || '0');
+            if (n > 0) localStorage.setItem('dw_session_number', String(n - 1));
             if (typeof syncUpload === 'function') syncUpload('dw_session_number');
             renderApp();
+            return;
+        }
+
+        // --- Dashboard: campaign name & banner ---
+        if (target.matches('[data-action="edit-campaign-name"]')) {
+            var dd = getDashboardData();
+            var newName = prompt('Campaign name:', dd.campaignName || '');
+            if (newName !== null && newName.trim()) {
+                dd.campaignName = newName.trim();
+                saveDashboardData(dd);
+                renderApp();
+            }
             return;
         }
 
@@ -4954,22 +5206,61 @@ function bindPageEvents(route) {
             return;
         }
 
-        // Edit event (populate form)
+        // Edit event (inline in the event box)
         if (target.matches('[data-action="edit-event"]')) {
             var evIdx = parseInt(target.dataset.event);
             var tlData = getTimelineData();
             var ch = tlData.chapters[activeChapter];
             if (ch && ch.events[evIdx]) {
                 var ev = ch.events[evIdx];
-                var form = document.getElementById('event-add-form');
-                if (form) {
-                    form.style.display = 'block';
-                    document.getElementById('ev-title').value = ev.title;
-                    document.getElementById('ev-desc').value = ev.desc || '';
-                    document.getElementById('ev-session').value = ev.session || '';
-                    document.getElementById('ev-type').value = ev.type || 'quest';
-                    var saveBtn = form.querySelector('[data-action="save-event"]');
-                    if (saveBtn) saveBtn.dataset.editIdx = evIdx;
+                var eventEl = target.closest('.timeline-event');
+                if (eventEl) {
+                    var contentEl = eventEl.querySelector('.timeline-content');
+                    if (contentEl) {
+                        contentEl.innerHTML = renderEventForm(evIdx, ev);
+                    }
+                }
+            }
+            return;
+        }
+
+        // Pick event layout (in form)
+        if (target.matches('[data-action="pick-event-layout"]') || target.closest('[data-action="pick-event-layout"]')) {
+            var btn = target.matches('[data-action="pick-event-layout"]') ? target : target.closest('[data-action="pick-event-layout"]');
+            var layout = btn.dataset.layout;
+            var eIdx = parseInt(btn.dataset.eventIdx);
+            // Update active state
+            var allOpts = btn.parentElement.querySelectorAll('.event-layout-option');
+            for (var oi = 0; oi < allOpts.length; oi++) allOpts[oi].classList.remove('active');
+            btn.classList.add('active');
+            // Show/hide image section
+            var imgSection = btn.closest('.timeline-content, .timeline-add-form');
+            if (imgSection) {
+                var evImgSec = imgSection.querySelector('.event-image-section');
+                if (evImgSec) evImgSec.style.display = layout === 'text' ? 'none' : 'block';
+            }
+            // If editing existing event, save layout immediately
+            if (eIdx >= 0) {
+                var tlData = getTimelineData();
+                var ch = tlData.chapters[activeChapter];
+                if (ch && ch.events[eIdx]) {
+                    ch.events[eIdx].layout = layout;
+                    saveTimelineData(tlData);
+                }
+            }
+            return;
+        }
+
+        // Remove event image
+        if (target.matches('[data-action="remove-event-image"]')) {
+            var eIdx = parseInt(target.dataset.eventIdx);
+            if (eIdx >= 0) {
+                var tlData = getTimelineData();
+                var ch = tlData.chapters[activeChapter];
+                if (ch && ch.events[eIdx]) {
+                    ch.events[eIdx].image = null;
+                    saveTimelineData(tlData);
+                    renderApp();
                 }
             }
             return;
@@ -4990,34 +5281,44 @@ function bindPageEvents(route) {
             return;
         }
 
-        // Save event (supports edit mode)
+        // Save event (supports inline edit + new event form)
         if (target.matches('[data-action="save-event"]')) {
-            var titleEl = document.getElementById('ev-title');
-            var descEl = document.getElementById('ev-desc');
-            var sessionEl = document.getElementById('ev-session');
-            var typeEl = document.getElementById('ev-type');
+            var editIdx = target.dataset.editIdx;
+            var isEdit = editIdx !== undefined && editIdx !== '';
+            var prefix = isEdit ? 'edit-' : '';
+
+            // Find form fields — search in closest container first, then document
+            var container = target.closest('.timeline-content') || target.closest('.timeline-add-form') || document;
+            var titleEl = container.querySelector('#' + prefix + 'ev-title') || document.getElementById(prefix + 'ev-title');
+            var descEl = container.querySelector('#' + prefix + 'ev-desc') || document.getElementById(prefix + 'ev-desc');
+            var sessionEl = container.querySelector('#' + prefix + 'ev-session') || document.getElementById(prefix + 'ev-session');
+            var typeEl = container.querySelector('#' + prefix + 'ev-type') || document.getElementById(prefix + 'ev-type');
+            var layoutBtn = container.querySelector('.event-layout-option.active');
+
             if (titleEl && titleEl.value.trim()) {
                 var tlData = getTimelineData();
-                var editIdx = target.dataset.editIdx;
-                if (editIdx !== undefined && editIdx !== '') {
-                    // Update existing event
+                var layout = layoutBtn ? layoutBtn.dataset.layout : 'text';
+
+                if (isEdit) {
+                    var idx = parseInt(editIdx);
                     var ch = tlData.chapters[activeChapter];
-                    if (ch && ch.events[parseInt(editIdx)]) {
-                        ch.events[parseInt(editIdx)].title = titleEl.value.trim();
-                        ch.events[parseInt(editIdx)].desc = descEl ? descEl.value.trim() : '';
-                        ch.events[parseInt(editIdx)].session = sessionEl ? sessionEl.value.trim() : '';
-                        ch.events[parseInt(editIdx)].type = typeEl ? typeEl.value : 'quest';
+                    if (ch && ch.events[idx]) {
+                        ch.events[idx].title = titleEl.value.trim();
+                        ch.events[idx].desc = descEl ? descEl.value.trim() : '';
+                        ch.events[idx].session = sessionEl ? sessionEl.value.trim() : '';
+                        ch.events[idx].type = typeEl ? typeEl.value : 'quest';
+                        ch.events[idx].layout = layout;
                     }
-                    delete target.dataset.editIdx;
                 } else {
-                    // New event
                     if (tlData.chapters[activeChapter]) {
                         tlData.chapters[activeChapter].events.push({
                             id: 'ev' + Date.now(),
                             title: titleEl.value.trim(),
                             desc: descEl ? descEl.value.trim() : '',
                             session: sessionEl ? sessionEl.value.trim() : '',
-                            type: typeEl ? typeEl.value : 'quest'
+                            type: typeEl ? typeEl.value : 'quest',
+                            layout: layout,
+                            image: null
                         });
                     }
                 }
@@ -5109,6 +5410,29 @@ function bindPageEvents(route) {
                     mDim.maps.push({ id: 'map' + Date.now(), name: mapName.trim(), image: null, isRoot: false, pins: [] });
                     saveMapsData(mData);
                     renderApp();
+                }
+            }
+            return;
+        }
+
+        // Set map category
+        if (target.matches('[data-action="set-map-category"]')) {
+            e.stopPropagation();
+            var catMapId = target.dataset.mapId;
+            var mData = getMapsData();
+            var mDim = mData.dimensions[activeDimension];
+            if (mDim) {
+                for (var mi = 0; mi < mDim.maps.length; mi++) {
+                    if (mDim.maps[mi].id === catMapId) {
+                        var curCat = mDim.maps[mi].category || '';
+                        var newCat = prompt('Map category (empty to remove):', curCat);
+                        if (newCat !== null) {
+                            mDim.maps[mi].category = newCat.trim();
+                            saveMapsData(mData);
+                            renderApp();
+                        }
+                        break;
+                    }
                 }
             }
             return;
@@ -5367,6 +5691,60 @@ function bindPageEvents(route) {
         if (target.matches('[data-action="upload-appearance"]')) {
             if (charId && canEdit(charId) && target.files && target.files[0]) {
                 handleImageUpload(target.files[0], charId, 'appearance');
+            }
+            return;
+        }
+
+        // Dashboard banner upload
+        if (target.matches('[data-action="upload-dash-banner"]')) {
+            if (isDM() && target.files && target.files[0]) {
+                var dbReader = new FileReader();
+                dbReader.onload = function(ev) {
+                    var img = new Image();
+                    img.onload = function() {
+                        var cvs = document.createElement('canvas');
+                        var maxW = 1400;
+                        var scale = Math.min(1, maxW / img.width);
+                        cvs.width = img.width * scale;
+                        cvs.height = img.height * scale;
+                        cvs.getContext('2d').drawImage(img, 0, 0, cvs.width, cvs.height);
+                        var dd = getDashboardData();
+                        dd.bannerImage = cvs.toDataURL('image/jpeg', 0.8);
+                        saveDashboardData(dd);
+                        renderApp();
+                    };
+                    img.src = ev.target.result;
+                };
+                dbReader.readAsDataURL(target.files[0]);
+            }
+            return;
+        }
+
+        // Timeline event image upload
+        if (target.matches('[data-action="upload-event-image"]')) {
+            var evIdx = parseInt(target.dataset.eventIdx);
+            if (isDM() && target.files && target.files[0] && !isNaN(evIdx)) {
+                var evReader = new FileReader();
+                evReader.onload = function(ev) {
+                    var img = new Image();
+                    img.onload = function() {
+                        var cvs = document.createElement('canvas');
+                        var maxW = 1200;
+                        var scale = Math.min(1, maxW / img.width);
+                        cvs.width = img.width * scale;
+                        cvs.height = img.height * scale;
+                        cvs.getContext('2d').drawImage(img, 0, 0, cvs.width, cvs.height);
+                        var tlData = getTimelineData();
+                        var ch = tlData.chapters[activeChapter];
+                        if (ch && ch.events[evIdx]) {
+                            ch.events[evIdx].image = cvs.toDataURL('image/jpeg', 0.8);
+                            saveTimelineData(tlData);
+                            renderApp();
+                        }
+                    };
+                    img.src = ev.target.result;
+                };
+                evReader.readAsDataURL(target.files[0]);
             }
             return;
         }

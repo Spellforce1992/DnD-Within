@@ -5075,3 +5075,232 @@ body.modal-open {
         min-height: 28px;
     }
 }
+
+/* ============================================================
+   Dashboard Banner
+   ============================================================ */
+.welcome-banner {
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
+}
+.welcome-banner.has-banner {
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 2rem;
+    border-radius: 12px;
+}
+.welcome-banner.has-banner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(10,10,15,0.85) 0%, rgba(10,10,15,0.3) 60%, transparent 100%);
+    border-radius: 12px;
+}
+.welcome-banner.has-banner > * { position: relative; z-index: 1; }
+.banner-upload-btn {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    z-index: 2;
+    background: rgba(0,0,0,0.5);
+    border: none;
+    color: var(--text);
+    font-size: 1.2rem;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+.banner-upload-btn:hover { opacity: 1; }
+.campaign-name .edit-trigger {
+    font-size: 0.8em;
+    opacity: 0.5;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: inherit;
+}
+.campaign-name .edit-trigger:hover { opacity: 1; }
+
+/* ============================================================
+   Timeline Event Layouts
+   ============================================================ */
+.event-full-image {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    min-height: 200px;
+    background-size: cover;
+    background-position: center;
+}
+.event-full-image-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(10,10,15,0.9) 0%, rgba(10,10,15,0.2) 60%);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 1.5rem;
+}
+.event-full-image-overlay h3,
+.event-full-image-overlay p,
+.event-full-image-overlay .timeline-session {
+    text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+}
+.event-image-top img {
+    width: 100%;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+    max-height: 300px;
+    object-fit: cover;
+}
+.event-split {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+}
+.event-split-image-left { flex-direction: row; }
+.event-split-image-right { flex-direction: row-reverse; }
+.event-split-img {
+    flex: 0 0 40%;
+    max-width: 40%;
+}
+.event-split-img img {
+    width: 100%;
+    border-radius: 8px;
+    object-fit: cover;
+}
+.event-split-text { flex: 1; }
+.event-banner {
+    height: 120px;
+    background-size: cover;
+    background-position: center;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+}
+
+/* Event Layout Picker */
+.event-layout-picker { margin: 0.5rem 0; }
+.event-layout-options {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.25rem;
+}
+.event-layout-option {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 0.4rem 0.6rem;
+    cursor: pointer;
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    text-align: center;
+    transition: all 0.2s;
+    min-width: 60px;
+}
+.event-layout-option:hover { border-color: var(--accent); color: var(--text); }
+.event-layout-option.active {
+    border-color: var(--accent);
+    background: rgba(var(--accent-rgb, 34,211,238), 0.15);
+    color: var(--accent);
+}
+.event-layout-option span { font-size: 0.65rem; display: block; margin-top: 2px; }
+
+/* Event image section in form */
+.event-image-preview {
+    position: relative;
+    margin: 0.5rem 0;
+}
+.event-image-preview img {
+    width: 100%;
+    max-height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+.event-image-preview .btn { position: absolute; top: 0.5rem; right: 0.5rem; }
+
+/* ============================================================
+   Map Categories
+   ============================================================ */
+.maps-category { margin-bottom: 1.5rem; }
+.maps-category-title {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.map-card-cat-btn {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    background: rgba(0,0,0,0.6);
+    border: none;
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+.map-card:hover .map-card-cat-btn { opacity: 1; }
+
+/* ============================================================
+   Note Tags with Categories
+   ============================================================ */
+.note-tags-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 0.5rem;
+    min-height: 1.5rem;
+}
+.note-tags-list .note-tag {
+    border-left: 3px solid;
+    padding-left: 0.4rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+.tag-remove {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 0 2px;
+    line-height: 1;
+}
+.tag-remove:hover { color: var(--danger); }
+.note-tag-add {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+}
+.note-tag-add select {
+    min-width: 120px;
+}
+
+/* Inline event editing */
+.timeline-content .edit-input,
+.timeline-content .edit-textarea,
+.timeline-content .edit-actions {
+    margin-top: 0.4rem;
+}
+.timeline-content .event-layout-picker {
+    margin-top: 0.5rem;
+}
