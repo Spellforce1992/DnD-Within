@@ -5102,10 +5102,25 @@ function bindPageEvents(route) {
             return;
         }
 
+        // Delete NPC from initiative pool (must be before add-npc handler)
+        if (target.matches('[data-action="init-delete-npc"]') || target.closest('[data-action="init-delete-npc"]')) {
+            e.stopPropagation();
+            var delBtn = target.closest('[data-action="init-delete-npc"]') || target;
+            var nIdx = parseInt(delBtn.dataset.npcIdx);
+            var initData = JSON.parse(localStorage.getItem('dw_initiative') || '{"entries":[],"currentTurn":0,"round":1,"npcs":[]}');
+            if (!isNaN(nIdx) && initData.npcs) {
+                initData.npcs.splice(nIdx, 1);
+                initData.entries = initData.entries.filter(function(e) { return e.npcIdx !== nIdx; });
+            }
+            localStorage.setItem('dw_initiative', JSON.stringify(initData));
+            if (typeof syncUpload === 'function') syncUpload('dw_initiative');
+            renderApp();
+            return;
+        }
+
         // Add NPC to initiative
         if (target.matches('[data-action="init-add-npc"]') || target.closest('[data-action="init-add-npc"]')) {
             var btn = target.closest('[data-action="init-add-npc"]') || target;
-            if (btn.matches('[data-action="init-delete-npc"]')) return; // don't trigger on delete button inside
             var nIdx = parseInt(btn.dataset.npcIdx);
             var initData = JSON.parse(localStorage.getItem('dw_initiative') || '{"entries":[],"currentTurn":0,"round":1,"npcs":[]}');
             var npc = initData.npcs[nIdx];
@@ -5134,20 +5149,7 @@ function bindPageEvents(route) {
             return;
         }
 
-        // Delete NPC from initiative pool
-        if (target.matches('[data-action="init-delete-npc"]')) {
-            var nIdx = parseInt(target.dataset.npcIdx);
-            var initData = JSON.parse(localStorage.getItem('dw_initiative') || '{"entries":[],"currentTurn":0,"round":1,"npcs":[]}');
-            if (!isNaN(nIdx)) {
-                initData.npcs.splice(nIdx, 1);
-                // Also remove from entries if present
-                initData.entries = initData.entries.filter(function(e) { return e.npcIdx !== nIdx; });
-            }
-            localStorage.setItem('dw_initiative', JSON.stringify(initData));
-            if (typeof syncUpload === 'function') syncUpload('dw_initiative');
-            renderApp();
-            return;
-        }
+        // (delete-npc handler moved earlier in chain)
 
         // Move up in initiative
         if (target.matches('[data-action="init-move-up"]')) {
