@@ -1,5 +1,23 @@
 # Session Log — D&D Within
 
+### Recap — 2026-03-30 (sessie 8)
+
+**What was done:**
+- Fixed syntax error (stray `}`) that broke entire app
+- Fixed initiative delete-npc handler order (stopPropagation)
+
+**Current state:**
+- App should be functional again after syntax fix
+- Initiative tracker, dice roller, quest form all pushed
+- 30 test items still pending
+
+**Next steps:**
+- User needs to test initiative tracker + dice roller
+- Event block system (#92) still deferred
+- Browser test all 30 items
+
+---
+
 ### Recap — 2026-03-30 (sessie 7)
 
 **What was done:**
