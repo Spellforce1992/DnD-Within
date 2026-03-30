@@ -1,5 +1,35 @@
 # Session Log — D&D Within
 
+### Recap — 2026-03-30 (sessie 7)
+
+**What was done:**
+- Portrait glow ring: user herschreef effects.js naar tapered conic-gradient systeem
+- Dice roller: multi-dice hand systeem (pick, roll all, see individual + total, return to pool)
+- Initiative tracker: 3-kolom redesign (players links, ordered midden, NPCs rechts)
+- Quest form: inline form met title, description, quest giver, reward, tags
+- HP level-up fix: current HP stijgt mee bij level-up
+- Page fade alleen bij route change, niet bij re-render
+- Combat log mooier: cards met gekleurde linker rand
+- Auto-growing textareas voor event editing
+- Zwaardnamen: "Advies" en "Aandacht" (in code + Firebase)
+- Oude effects (LightningSystem, AmbientSystem, flame particles) verwijderd per user's edit
+
+**Files modified:**
+- app.js, style.css, effects.js (herschreven)
+
+**Current state:**
+- Alle quick fixes gedaan
+- Event block systeem (#92) deferred naar volgende sessie
+- 30 test items nog open
+- Class ambient particles verwijderd (user keuze)
+
+**Next steps:**
+- Event block-based content systeem
+- Browser testen van alle 30 items
+- Class ambient particles (als gewenst)
+
+---
+
 ### Recap — 2026-03-30 (sessie 6)
 
 **What was done:**
