@@ -6067,3 +6067,111 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     opacity: 1;
     box-shadow: 0 0 6px var(--success);
 }
+
+/* ============================================================
+   Initiative Tracker — 3-Column Layout
+   ============================================================ */
+.init-tracker-card { overflow: visible; }
+.init-columns {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr 1fr;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+.init-col {
+    background: var(--bg-block);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.5rem;
+    min-height: 120px;
+}
+.init-col-title {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    margin-bottom: 0.5rem;
+    text-align: center;
+}
+.init-col-order { border-color: var(--accent); }
+.init-available {
+    padding: 0.4rem 0.6rem;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 0.3rem;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.init-available:hover { border-color: var(--accent); }
+.init-npc { border-left: 3px solid; }
+.init-npc-del {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+.init-npc-del:hover { color: var(--danger); }
+.init-entry {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.5rem;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    margin-bottom: 0.3rem;
+    font-size: 0.8rem;
+}
+.init-entry.current { background: rgba(var(--accent-rgb), 0.1); border-color: var(--accent); }
+.init-num { font-weight: 700; color: var(--text-dim); min-width: 16px; }
+.init-roll { font-weight: 700; color: var(--accent); min-width: 20px; }
+.init-name { flex: 1; }
+.init-entry-actions { display: flex; gap: 0.15rem; }
+.init-move, .init-remove {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 0.75rem;
+    padding: 0.1rem 0.25rem;
+    border-radius: 3px;
+}
+.init-move:hover { color: var(--accent); background: rgba(var(--accent-rgb), 0.1); }
+.init-remove:hover { color: var(--danger); }
+.init-add-npc-form {
+    display: flex;
+    gap: 0.3rem;
+    margin-top: 0.5rem;
+}
+.init-add-npc-form .edit-input { font-size: 0.75rem; padding: 0.25rem 0.4rem; }
+
+@media (max-width: 700px) {
+    .init-columns { grid-template-columns: 1fr; }
+}
+
+/* ============================================================
+   Quest Add Form
+   ============================================================ */
+.quest-add-form {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.quest-meta {
+    display: inline-block;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-right: 0.75rem;
+}

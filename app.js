@@ -1016,6 +1016,24 @@ function renderDashboard() {
         html += '<button class="btn btn-ghost btn-sm" data-action="add-quest">+ Add Quest</button>';
     }
     html += '</div>';
+
+    // Quest add form (hidden by default)
+    if (isDM()) {
+        html += '<div class="quest-add-form" id="quest-add-form" style="display:none;">';
+        html += '<input type="text" class="edit-input" id="quest-title" placeholder="Quest title *">';
+        html += '<textarea class="edit-textarea auto-grow" id="quest-desc" placeholder="Description..." style="min-height:40px;" oninput="if(typeof autoGrowTextarea===\'function\')autoGrowTextarea(this)"></textarea>';
+        html += '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;">';
+        html += '<input type="text" class="edit-input" id="quest-giver" placeholder="Quest giver" style="flex:1;">';
+        html += '<input type="text" class="edit-input" id="quest-reward" placeholder="Reward" style="flex:1;">';
+        html += '<input type="text" class="edit-input" id="quest-tags" placeholder="Tags (comma sep.)" style="flex:1;">';
+        html += '</div>';
+        html += '<div class="edit-actions">';
+        html += '<button class="edit-save" data-action="save-quest">Save Quest</button>';
+        html += '<button class="edit-cancel" data-action="cancel-quest">Cancel</button>';
+        html += '</div>';
+        html += '</div>';
+    }
+
     if (questData.active.length === 0 && questData.completed.length === 0) {
         html += '<p class="text-dim">No quests yet.</p>';
     }
@@ -1026,6 +1044,8 @@ function renderDashboard() {
         html += '<div class="quest-info">';
         html += '<strong>' + escapeHtml(quest.title) + '</strong>';
         if (quest.desc) html += '<p class="text-dim" style="margin:0;font-size:0.8rem;">' + escapeHtml(quest.desc) + '</p>';
+        if (quest.giver) html += '<span class="quest-meta">From: ' + escapeHtml(quest.giver) + '</span>';
+        if (quest.reward) html += '<span class="quest-meta">Reward: ' + escapeHtml(quest.reward) + '</span>';
         html += '</div>';
         if (isDM()) {
             html += '<button class="btn btn-ghost btn-sm" data-action="complete-quest" data-quest-idx="' + qi + '" title="Complete">&#10003;</button>';
@@ -1065,60 +1085,100 @@ function renderDashboard() {
         html += '<div class="dm-tools">';
         html += '<h2 class="section-title">' + t('dm.tools') + '</h2>';
 
-        // Initiative Tracker
-        html += '<div class="dm-tool-card">';
+        // Initiative Tracker — 3-column layout
+        html += '<div class="dm-tool-card init-tracker-card">';
         html += '<h3>' + t('dm.initiative') + '</h3>';
 
-        var initData = JSON.parse(localStorage.getItem('dw_initiative') || '{"entries":[],"currentTurn":0,"round":1}');
+        var initData = JSON.parse(localStorage.getItem('dw_initiative') || '{"entries":[],"currentTurn":0,"round":1,"npcs":[]}');
         var entries = initData.entries || [];
         var currentTurn = initData.currentTurn || 0;
         var initRound = initData.round || 1;
+        var initNpcs = initData.npcs || [];
 
         html += '<div class="init-header">';
         html += '<span class="init-round">' + t('dm.round') + ' ' + initRound + '</span>';
         if (entries.length > 0) {
             html += '<button class="btn btn-sm btn-primary" data-action="next-turn">' + t('dm.nextturn') + ' &rarr;</button>';
+            html += '<button class="btn btn-ghost btn-sm" data-action="clear-init">' + t('dm.resetinit') + '</button>';
         }
         html += '</div>';
 
-        // Initiative list
-        html += '<div class="init-list">';
-        for (var ii = 0; ii < entries.length; ii++) {
-            var entry = entries[ii];
-            var isCurrent = ii === currentTurn;
-            html += '<div class="init-entry' + (isCurrent ? ' current' : '') + '">';
-            html += '<span class="init-roll">' + entry.initiative + '</span>';
-            html += '<span class="init-name">' + escapeHtml(entry.name) + '</span>';
-            if (entry.charId) {
-                var ecfg = loadCharConfig(entry.charId);
-                if (ecfg) html += '<span class="init-class">' + classDisplayName(ecfg.className) + '</span>';
-            }
-            html += '<button class="init-remove" data-action="remove-init" data-init-idx="' + ii + '">&times;</button>';
-            html += '</div>';
-        }
-        html += '</div>';
+        html += '<div class="init-columns">';
 
-        // Add to initiative
-        html += '<div class="init-add">';
-        html += '<select class="edit-input" id="init-char" style="flex:1;">';
-        html += '<option value="">' + t('dm.choosechar') + '</option>';
+        // LEFT: Available players
+        html += '<div class="init-col init-col-players">';
+        html += '<div class="init-col-title">Players</div>';
         var iCharIds = getCharacterIds();
         for (var ici = 0; ici < iCharIds.length; ici++) {
             var iccfg = loadCharConfig(iCharIds[ici]);
-            if (iccfg) html += '<option value="' + iCharIds[ici] + '">' + escapeHtml(iccfg.name) + '</option>';
+            if (!iccfg) continue;
+            // Check if already in initiative
+            var inInit = false;
+            for (var ei = 0; ei < entries.length; ei++) {
+                if (entries[ei].charId === iCharIds[ici]) { inInit = true; break; }
+            }
+            if (!inInit) {
+                html += '<div class="init-available" data-action="init-add-player" data-char-id="' + iCharIds[ici] + '">';
+                html += '<span style="color:' + iccfg.accentColor + '">' + escapeHtml(iccfg.name) + '</span>';
+                html += '</div>';
+            }
         }
-        html += '<option value="custom">' + t('dm.npcmonster') + '</option>';
-        html += '</select>';
-        html += '<input type="text" class="edit-input" id="init-custom-name" placeholder="' + t('dm.npcname') + '" style="display:none;flex:1;">';
-        html += '<input type="number" class="edit-input" id="init-roll" placeholder="' + t('dm.init') + '" style="width:60px;">';
-        html += '<button class="btn btn-sm btn-primary" data-action="add-init">+</button>';
         html += '</div>';
 
-        // Clear initiative
-        if (entries.length > 0) {
-            html += '<button class="btn btn-ghost btn-sm" data-action="clear-init" style="margin-top:0.5rem;">' + t('dm.resetinit') + '</button>';
+        // CENTER: Ordered initiative
+        html += '<div class="init-col init-col-order">';
+        html += '<div class="init-col-title">Initiative Order</div>';
+        for (var ii = 0; ii < entries.length; ii++) {
+            var entry = entries[ii];
+            var isCurrent = ii === currentTurn;
+            var entryColor = entry.disposition === 'hostile' ? 'var(--danger)' : entry.disposition === 'friendly' ? 'var(--success)' : entry.disposition === 'neutral' ? 'var(--warning)' : 'var(--accent)';
+            if (entry.charId) {
+                var ecfg = loadCharConfig(entry.charId);
+                if (ecfg) entryColor = ecfg.accentColor;
+            }
+            html += '<div class="init-entry' + (isCurrent ? ' current' : '') + '" style="border-left-color:' + entryColor + '">';
+            html += '<span class="init-num">' + (ii + 1) + '</span>';
+            html += '<span class="init-roll">' + entry.initiative + '</span>';
+            html += '<span class="init-name">' + escapeHtml(entry.name) + '</span>';
+            html += '<div class="init-entry-actions">';
+            if (ii > 0) html += '<button class="init-move" data-action="init-move-up" data-init-idx="' + ii + '" title="Move up">&uarr;</button>';
+            if (ii < entries.length - 1) html += '<button class="init-move" data-action="init-move-down" data-init-idx="' + ii + '" title="Move down">&darr;</button>';
+            html += '<button class="init-remove" data-action="remove-init" data-init-idx="' + ii + '">&times;</button>';
+            html += '</div>';
+            html += '</div>';
         }
+        if (entries.length === 0) html += '<p class="text-dim" style="text-align:center;padding:1rem 0;">Click players or NPCs to add</p>';
+        html += '</div>';
 
+        // RIGHT: NPCs/Monsters
+        html += '<div class="init-col init-col-npcs">';
+        html += '<div class="init-col-title">NPCs / Monsters</div>';
+        for (var ni = 0; ni < initNpcs.length; ni++) {
+            var inpc = initNpcs[ni];
+            var inInit = false;
+            for (var ei = 0; ei < entries.length; ei++) {
+                if (entries[ei].npcIdx === ni) { inInit = true; break; }
+            }
+            if (!inInit) {
+                var npcColor = inpc.disposition === 'hostile' ? 'var(--danger)' : inpc.disposition === 'friendly' ? 'var(--success)' : 'var(--warning)';
+                html += '<div class="init-available init-npc" data-action="init-add-npc" data-npc-idx="' + ni + '" style="border-left-color:' + npcColor + '">';
+                html += '<span>' + escapeHtml(inpc.name) + '</span>';
+                html += '<button class="init-npc-del" data-action="init-delete-npc" data-npc-idx="' + ni + '">&times;</button>';
+                html += '</div>';
+            }
+        }
+        html += '<div class="init-add-npc-form">';
+        html += '<input type="text" class="edit-input" id="init-npc-name" placeholder="Name..." style="flex:1;">';
+        html += '<select class="edit-input" id="init-npc-disp" style="width:auto;">';
+        html += '<option value="hostile">Hostile</option>';
+        html += '<option value="neutral">Neutral</option>';
+        html += '<option value="friendly">Friendly</option>';
+        html += '</select>';
+        html += '<button class="btn btn-ghost btn-sm" data-action="init-create-npc">+</button>';
+        html += '</div>';
+        html += '</div>';
+
+        html += '</div>'; // init-columns
         html += '</div>'; // dm-tool-card
 
         // Quick Dice Roller
@@ -5025,29 +5085,94 @@ function bindPageEvents(route) {
             return;
         }
 
-        // Add to initiative
-        if (target.matches('[data-action="add-init"]')) {
-            var charSelect = document.getElementById('init-char');
-            var customName = document.getElementById('init-custom-name');
-            var rollInput = document.getElementById('init-roll');
-            if (!rollInput || !rollInput.value) return;
-
-            var initData = JSON.parse(localStorage.getItem('dw_initiative') || '{"entries":[],"currentTurn":0,"round":1}');
-            var iName = '';
-            var iCharId = null;
-
-            if (charSelect && charSelect.value === 'custom') {
-                iName = customName ? customName.value.trim() : 'NPC';
-            } else if (charSelect && charSelect.value) {
-                iCharId = charSelect.value;
-                var icfg = loadCharConfig(iCharId);
-                iName = icfg ? icfg.name : iCharId;
-            }
-
-            if (!iName) return;
-
-            initData.entries.push({ name: iName, charId: iCharId, initiative: parseInt(rollInput.value) || 0 });
+        // Add player to initiative
+        if (target.matches('[data-action="init-add-player"]') || target.closest('[data-action="init-add-player"]')) {
+            var btn = target.closest('[data-action="init-add-player"]') || target;
+            var cId = btn.dataset.charId;
+            var cfg = loadCharConfig(cId);
+            if (!cfg) return;
+            var roll = prompt('Initiative roll for ' + cfg.name + ':');
+            if (roll === null) return;
+            var initData = JSON.parse(localStorage.getItem('dw_initiative') || '{"entries":[],"currentTurn":0,"round":1,"npcs":[]}');
+            initData.entries.push({ name: cfg.name, charId: cId, initiative: parseInt(roll) || 0 });
             initData.entries.sort(function(a, b) { return b.initiative - a.initiative; });
+            localStorage.setItem('dw_initiative', JSON.stringify(initData));
+            if (typeof syncUpload === 'function') syncUpload('dw_initiative');
+            renderApp();
+            return;
+        }
+
+        // Add NPC to initiative
+        if (target.matches('[data-action="init-add-npc"]') || target.closest('[data-action="init-add-npc"]')) {
+            var btn = target.closest('[data-action="init-add-npc"]') || target;
+            if (btn.matches('[data-action="init-delete-npc"]')) return; // don't trigger on delete button inside
+            var nIdx = parseInt(btn.dataset.npcIdx);
+            var initData = JSON.parse(localStorage.getItem('dw_initiative') || '{"entries":[],"currentTurn":0,"round":1,"npcs":[]}');
+            var npc = initData.npcs[nIdx];
+            if (!npc) return;
+            var roll = prompt('Initiative roll for ' + npc.name + ':');
+            if (roll === null) return;
+            initData.entries.push({ name: npc.name, npcIdx: nIdx, initiative: parseInt(roll) || 0, disposition: npc.disposition });
+            initData.entries.sort(function(a, b) { return b.initiative - a.initiative; });
+            localStorage.setItem('dw_initiative', JSON.stringify(initData));
+            if (typeof syncUpload === 'function') syncUpload('dw_initiative');
+            renderApp();
+            return;
+        }
+
+        // Create NPC for initiative
+        if (target.matches('[data-action="init-create-npc"]')) {
+            var nameEl = document.getElementById('init-npc-name');
+            var dispEl = document.getElementById('init-npc-disp');
+            if (!nameEl || !nameEl.value.trim()) return;
+            var initData = JSON.parse(localStorage.getItem('dw_initiative') || '{"entries":[],"currentTurn":0,"round":1,"npcs":[]}');
+            if (!initData.npcs) initData.npcs = [];
+            initData.npcs.push({ name: nameEl.value.trim(), disposition: dispEl ? dispEl.value : 'hostile' });
+            localStorage.setItem('dw_initiative', JSON.stringify(initData));
+            if (typeof syncUpload === 'function') syncUpload('dw_initiative');
+            renderApp();
+            return;
+        }
+
+        // Delete NPC from initiative pool
+        if (target.matches('[data-action="init-delete-npc"]')) {
+            var nIdx = parseInt(target.dataset.npcIdx);
+            var initData = JSON.parse(localStorage.getItem('dw_initiative') || '{"entries":[],"currentTurn":0,"round":1,"npcs":[]}');
+            if (!isNaN(nIdx)) {
+                initData.npcs.splice(nIdx, 1);
+                // Also remove from entries if present
+                initData.entries = initData.entries.filter(function(e) { return e.npcIdx !== nIdx; });
+            }
+            localStorage.setItem('dw_initiative', JSON.stringify(initData));
+            if (typeof syncUpload === 'function') syncUpload('dw_initiative');
+            renderApp();
+            return;
+        }
+
+        // Move up in initiative
+        if (target.matches('[data-action="init-move-up"]')) {
+            var idx = parseInt(target.dataset.initIdx);
+            var initData = JSON.parse(localStorage.getItem('dw_initiative') || '{"entries":[],"currentTurn":0,"round":1,"npcs":[]}');
+            if (idx > 0) {
+                var temp = initData.entries[idx];
+                initData.entries[idx] = initData.entries[idx - 1];
+                initData.entries[idx - 1] = temp;
+            }
+            localStorage.setItem('dw_initiative', JSON.stringify(initData));
+            if (typeof syncUpload === 'function') syncUpload('dw_initiative');
+            renderApp();
+            return;
+        }
+
+        // Move down in initiative
+        if (target.matches('[data-action="init-move-down"]')) {
+            var idx = parseInt(target.dataset.initIdx);
+            var initData = JSON.parse(localStorage.getItem('dw_initiative') || '{"entries":[],"currentTurn":0,"round":1,"npcs":[]}');
+            if (idx < initData.entries.length - 1) {
+                var temp = initData.entries[idx];
+                initData.entries[idx] = initData.entries[idx + 1];
+                initData.entries[idx + 1] = temp;
+            }
             localStorage.setItem('dw_initiative', JSON.stringify(initData));
             if (typeof syncUpload === 'function') syncUpload('dw_initiative');
             renderApp();
@@ -5056,7 +5181,7 @@ function bindPageEvents(route) {
 
         // Next turn
         if (target.matches('[data-action="next-turn"]')) {
-            var initData = JSON.parse(localStorage.getItem('dw_initiative') || '{"entries":[],"currentTurn":0,"round":1}');
+            var initData = JSON.parse(localStorage.getItem('dw_initiative') || '{"entries":[],"currentTurn":0,"round":1,"npcs":[]}');
             if (initData.entries.length > 0) {
                 initData.currentTurn = (initData.currentTurn + 1) % initData.entries.length;
                 if (initData.currentTurn === 0) initData.round++;
@@ -5070,7 +5195,7 @@ function bindPageEvents(route) {
         // Remove from initiative
         if (target.matches('[data-action="remove-init"]')) {
             var ridx = parseInt(target.dataset.initIdx);
-            var initData = JSON.parse(localStorage.getItem('dw_initiative') || '{"entries":[],"currentTurn":0,"round":1}');
+            var initData = JSON.parse(localStorage.getItem('dw_initiative') || '{"entries":[],"currentTurn":0,"round":1,"npcs":[]}');
             if (!isNaN(ridx)) {
                 initData.entries.splice(ridx, 1);
                 if (initData.currentTurn >= initData.entries.length) initData.currentTurn = 0;
@@ -5083,7 +5208,11 @@ function bindPageEvents(route) {
 
         // Clear initiative
         if (target.matches('[data-action="clear-init"]')) {
-            localStorage.setItem('dw_initiative', JSON.stringify({entries:[], currentTurn:0, round:1}));
+            var initData = JSON.parse(localStorage.getItem('dw_initiative') || '{"entries":[],"currentTurn":0,"round":1,"npcs":[]}');
+            initData.entries = [];
+            initData.currentTurn = 0;
+            initData.round = 1;
+            localStorage.setItem('dw_initiative', JSON.stringify(initData));
             if (typeof syncUpload === 'function') syncUpload('dw_initiative');
             renderApp();
             return;
@@ -5946,15 +6075,30 @@ function bindPageEvents(route) {
 
         // --- Dashboard: quests ---
         if (target.matches('[data-action="add-quest"]')) {
-            var qTitle = prompt('Quest title:');
-            if (qTitle && qTitle.trim()) {
-                var qDesc = prompt('Description (optional):') || '';
-                var qData = JSON.parse(localStorage.getItem('dw_quests') || '{"active":[],"completed":[]}');
-                qData.active.push({ title: qTitle.trim(), desc: qDesc.trim(), id: 'q' + Date.now() });
-                localStorage.setItem('dw_quests', JSON.stringify(qData));
-                if (typeof syncUpload === 'function') syncUpload('dw_quests');
-                renderApp();
-            }
+            var qForm = document.getElementById('quest-add-form');
+            if (qForm) qForm.style.display = qForm.style.display === 'none' ? 'block' : 'none';
+            return;
+        }
+        if (target.matches('[data-action="save-quest"]')) {
+            var qTitleEl = document.getElementById('quest-title');
+            if (!qTitleEl || !qTitleEl.value.trim()) return;
+            var qData = JSON.parse(localStorage.getItem('dw_quests') || '{"active":[],"completed":[]}');
+            qData.active.push({
+                title: qTitleEl.value.trim(),
+                desc: (document.getElementById('quest-desc') || {}).value || '',
+                giver: (document.getElementById('quest-giver') || {}).value || '',
+                reward: (document.getElementById('quest-reward') || {}).value || '',
+                tags: (document.getElementById('quest-tags') || {}).value || '',
+                id: 'q' + Date.now()
+            });
+            localStorage.setItem('dw_quests', JSON.stringify(qData));
+            if (typeof syncUpload === 'function') syncUpload('dw_quests');
+            renderApp();
+            return;
+        }
+        if (target.matches('[data-action="cancel-quest"]')) {
+            var qForm = document.getElementById('quest-add-form');
+            if (qForm) qForm.style.display = 'none';
             return;
         }
         if (target.matches('[data-action="complete-quest"]')) {
