@@ -401,7 +401,15 @@ var SEED_DATA = {
         personality: { traits: "", ideal: "", bond: "", flaw: "", fear: "" },
         backstory: "",
         quotes: [],
-        defaultItems: []
+        defaultItems: [
+            { name: 'Scale mail', weight: 45, notes: '' },
+            { name: 'Longbow', weight: 2, notes: '' },
+            { name: 'Arrows (20)', weight: 1, notes: '' },
+            { name: 'Shortsword', weight: 2, notes: '' },
+            { name: 'Quiver', weight: 1, notes: '' },
+            { name: "Explorer's pack", weight: 0, notes: 'Inhoud al verdeeld' },
+            { name: 'Druidic focus', weight: 0, notes: '' }
+        ]
     },
 
     wizard: {
@@ -420,7 +428,15 @@ var SEED_DATA = {
         personality: { traits: "", ideal: "", bond: "", flaw: "", fear: "" },
         backstory: "",
         quotes: [],
-        defaultItems: []
+        defaultItems: [
+            { name: 'Quarterstaff', weight: 4, notes: '' },
+            { name: 'Component pouch', weight: 2, notes: '' },
+            { name: 'Spellbook', weight: 3, notes: '' },
+            { name: "Scholar's pack", weight: 0, notes: 'Inhoud al verdeeld' },
+            { name: 'Dagger', weight: 1, notes: '' },
+            { name: 'Ink & pen set', weight: 0.5, notes: '' },
+            { name: 'Parchment (5 sheets)', weight: 0, notes: '' }
+        ]
     },
 
     paladin: {
@@ -440,7 +456,14 @@ var SEED_DATA = {
         personality: { traits: "", ideal: "", bond: "", flaw: "", fear: "" },
         backstory: "",
         quotes: [],
-        defaultItems: []
+        defaultItems: [
+            { name: 'Chain mail', weight: 55, notes: '' },
+            { name: 'Longsword', weight: 3, notes: '' },
+            { name: 'Shield', weight: 6, notes: '+2 AC' },
+            { name: 'Holy symbol', weight: 0.5, notes: '' },
+            { name: "Explorer's pack", weight: 0, notes: 'Inhoud al verdeeld' },
+            { name: '5 Javelins', weight: 10, notes: '' }
+        ]
     },
 
     druid: {
@@ -459,7 +482,14 @@ var SEED_DATA = {
         personality: { traits: "", ideal: "", bond: "", flaw: "", fear: "" },
         backstory: "",
         quotes: [],
-        defaultItems: []
+        defaultItems: [
+            { name: 'Leather armor', weight: 10, notes: '' },
+            { name: 'Wooden shield', weight: 6, notes: '+2 AC' },
+            { name: 'Scimitar', weight: 3, notes: '' },
+            { name: 'Druidic focus', weight: 0.5, notes: 'Holly sprig' },
+            { name: "Explorer's pack", weight: 0, notes: 'Inhoud al verdeeld' },
+            { name: 'Herbalism kit', weight: 3, notes: '' }
+        ]
     },
 
     fighter: {
@@ -479,7 +509,15 @@ var SEED_DATA = {
         personality: { traits: "", ideal: "", bond: "", flaw: "", fear: "" },
         backstory: "",
         quotes: [],
-        defaultItems: []
+        defaultItems: [
+            { name: 'Chain mail', weight: 55, notes: '' },
+            { name: 'Greatsword', weight: 6, notes: '' },
+            { name: 'Handaxe', weight: 2, notes: '' },
+            { name: 'Handaxe', weight: 2, notes: '' },
+            { name: 'Light crossbow', weight: 5, notes: '' },
+            { name: 'Crossbow bolts (20)', weight: 1.5, notes: '' },
+            { name: "Explorer's pack", weight: 0, notes: 'Inhoud al verdeeld' }
+        ]
     },
 
     warlock: {
@@ -498,7 +536,16 @@ var SEED_DATA = {
         personality: { traits: "", ideal: "", bond: "", flaw: "", fear: "" },
         backstory: "",
         quotes: [],
-        defaultItems: []
+        defaultItems: [
+            { name: 'Leather armor', weight: 10, notes: '' },
+            { name: 'Light crossbow', weight: 5, notes: '' },
+            { name: 'Crossbow bolts (20)', weight: 1.5, notes: '' },
+            { name: 'Component pouch', weight: 2, notes: '' },
+            { name: "Scholar's pack", weight: 0, notes: 'Inhoud al verdeeld' },
+            { name: 'Dagger', weight: 1, notes: '' },
+            { name: 'Dagger', weight: 1, notes: '' },
+            { name: 'Disguise kit', weight: 3, notes: 'Charlatan essentials' }
+        ]
     }
 };
 
@@ -704,6 +751,8 @@ function renderApp() {
                 if (validTabs.indexOf(route.parts[2]) >= 0) activeTab = route.parts[2];
             }
             html += renderCharacterSheet(route.parts[1]);
+        } else if (route.parts[0] === 'dm' && isDM()) {
+            html += renderDMPage(route.parts[1]);
         } else if (route.path === '/maps') {
             html += renderMaps();
         } else if (route.path === '/timeline') {
@@ -744,6 +793,7 @@ function renderApp() {
     var routeChanged = app._lastBasePath !== basePath;
     app._lastBasePath = basePath;
     if (mainEl && routeChanged && !app._firstRender) {
+        window.scrollTo(0, 0);
         mainEl.classList.add('page-exit');
         setTimeout(function() {
             app.innerHTML = html;
@@ -910,6 +960,9 @@ function renderNavbar(route) {
         { path: '/lore', label: t('nav.lore'), icon: svgI('<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>') },
         { path: '/notes', label: t('nav.notes'), icon: svgI('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>') }
     ];
+    if (isDM()) {
+        links.push({ path: '/dm', label: t('dm.tools'), icon: svgI('<path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>') });
+    }
 
     var html = '<nav class="navbar">';
     html += '<a class="nav-logo" href="#/dashboard">D&D <span class="logo-accent">Within</span></a>';
@@ -922,6 +975,7 @@ function renderNavbar(route) {
         if (link.path === '/characters' && route.parts[0] === 'characters') isActive = true;
         if (link.path === '/lore' && route.parts[0] === 'lore') isActive = true;
         if (link.path === '/notes' && route.parts[0] === 'notes') isActive = true;
+        if (link.path === '/dm' && route.parts[0] === 'dm') isActive = true;
         html += '<a class="nav-link' + (isActive ? ' active' : '') + '" href="#' + link.path + '"><span class="nav-icon">' + link.icon + '</span>' + link.label + '</a>';
     }
 
@@ -1087,24 +1141,6 @@ function renderDashboard() {
         html += '</div>';
     }
 
-    // DM whisper send tool (in DM tools area, but shown here for quick access)
-    if (isDM()) {
-        html += '<div class="dash-whisper-send">';
-        html += '<h2 class="section-title">&#128172; Send Whisper</h2>';
-        html += '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;">';
-        html += '<select class="edit-input" id="whisper-target" style="width:auto;">';
-        var charIdsW = getCharacterIds();
-        for (var wci = 0; wci < charIdsW.length; wci++) {
-            var wcfg = loadCharConfig(charIdsW[wci]);
-            if (wcfg) html += '<option value="' + charIdsW[wci] + '">' + escapeHtml(wcfg.name) + '</option>';
-        }
-        html += '</select>';
-        html += '<input type="text" class="edit-input" id="whisper-text" placeholder="Secret message..." style="flex:1;">';
-        html += '<button class="btn btn-primary btn-sm" data-action="send-whisper">Send</button>';
-        html += '</div>';
-        html += '</div>';
-    }
-
     // Quest tracker
     var questData = getQuestData();
     html += '<div class="dash-quests">';
@@ -1188,133 +1224,251 @@ function renderDashboard() {
     html += '</div>';
     html += '</div>';
 
-    // DM Tools section (only for DM)
+    // DM quick link
     if (isDM()) {
-        html += '<div class="dm-tools">';
-        html += '<h2 class="section-title">' + t('dm.tools') + '</h2>';
-
-        // Initiative Tracker — 3-column layout
-        html += '<div class="dm-tool-card init-tracker-card">';
-        html += '<h3>' + t('dm.initiative') + '</h3>';
-
-        var initData = JSON.parse(localStorage.getItem('dw_initiative') || '{"entries":[],"currentTurn":0,"round":1,"npcs":[]}');
-        var entries = initData.entries || [];
-        var currentTurn = initData.currentTurn || 0;
-        var initRound = initData.round || 1;
-        var initNpcs = initData.npcs || [];
-
-        html += '<div class="init-header">';
-        html += '<span class="init-round">' + t('dm.round') + ' ' + initRound + '</span>';
-        if (entries.length > 0) {
-            html += '<button class="btn btn-sm btn-primary" data-action="next-turn">' + t('dm.nextturn') + ' &rarr;</button>';
-            html += '<button class="btn btn-ghost btn-sm" data-action="clear-init">' + t('dm.resetinit') + '</button>';
-        }
+        html += '<div style="text-align:center;margin-top:1rem;">';
+        html += '<a class="btn btn-ghost" href="#/dm">' + t('dm.tools') + ' &rarr;</a>';
         html += '</div>';
-
-        html += '<div class="init-columns">';
-
-        // LEFT: Available players
-        html += '<div class="init-col init-col-players">';
-        html += '<div class="init-col-title">Players</div>';
-        var iCharIds = getCharacterIds();
-        for (var ici = 0; ici < iCharIds.length; ici++) {
-            var iccfg = loadCharConfig(iCharIds[ici]);
-            if (!iccfg) continue;
-            // Check if already in initiative
-            var inInit = false;
-            for (var ei = 0; ei < entries.length; ei++) {
-                if (entries[ei].charId === iCharIds[ici]) { inInit = true; break; }
-            }
-            if (!inInit) {
-                html += '<div class="init-available" data-action="init-add-player" data-char-id="' + iCharIds[ici] + '">';
-                html += '<span style="color:' + iccfg.accentColor + '">' + escapeHtml(iccfg.name) + '</span>';
-                html += '</div>';
-            }
-        }
-        html += '</div>';
-
-        // CENTER: Ordered initiative
-        html += '<div class="init-col init-col-order" data-action="init-drop-zone">';
-        html += '<div class="init-col-title">Initiative Order</div>';
-        for (var ii = 0; ii < entries.length; ii++) {
-            var entry = entries[ii];
-            var isCurrent = ii === currentTurn;
-            var entryColor = entry.disposition === 'hostile' ? 'var(--danger)' : entry.disposition === 'friendly' ? 'var(--success)' : entry.disposition === 'neutral' ? 'var(--warning)' : 'var(--accent)';
-            if (entry.charId) {
-                var ecfg = loadCharConfig(entry.charId);
-                if (ecfg) entryColor = ecfg.accentColor;
-            }
-            html += '<div class="init-entry' + (isCurrent ? ' current' : '') + '" draggable="true" data-init-idx="' + ii + '" style="border-left-color:' + entryColor + '">';
-            html += '<span class="init-drag-handle">&#9776;</span>';
-            html += '<span class="init-roll">' + entry.initiative + '</span>';
-            html += '<span class="init-name">' + escapeHtml(entry.name) + '</span>';
-            html += '<button class="init-remove" data-action="remove-init" data-init-idx="' + ii + '">&times;</button>';
-            html += '</div>';
-        }
-        if (entries.length === 0) html += '<p class="text-dim" style="text-align:center;padding:1rem 0;">Click players or NPCs to add</p>';
-        html += '</div>';
-
-        // RIGHT: NPCs/Monsters
-        html += '<div class="init-col init-col-npcs">';
-        html += '<div class="init-col-title">NPCs / Monsters</div>';
-        for (var ni = 0; ni < initNpcs.length; ni++) {
-            var inpc = initNpcs[ni];
-            var inInit = false;
-            for (var ei = 0; ei < entries.length; ei++) {
-                if (entries[ei].npcIdx === ni) { inInit = true; break; }
-            }
-            if (!inInit) {
-                var npcColor = inpc.disposition === 'hostile' ? 'var(--danger)' : inpc.disposition === 'friendly' ? 'var(--success)' : 'var(--warning)';
-                html += '<div class="init-available init-npc" data-action="init-add-npc" data-npc-idx="' + ni + '" style="border-left-color:' + npcColor + '">';
-                html += '<span>' + escapeHtml(inpc.name) + '</span>';
-                html += '<button class="init-npc-del" data-action="init-delete-npc" data-npc-idx="' + ni + '">&times;</button>';
-                html += '</div>';
-            }
-        }
-        html += '<div class="init-add-npc-form">';
-        html += '<input type="text" class="edit-input" id="init-npc-name" placeholder="Name..." style="flex:1;">';
-        html += '<select class="edit-input" id="init-npc-disp" style="width:auto;">';
-        html += '<option value="hostile">Hostile</option>';
-        html += '<option value="neutral">Neutral</option>';
-        html += '<option value="friendly">Friendly</option>';
-        html += '</select>';
-        html += '<button class="btn btn-ghost btn-sm" data-action="init-create-npc">+</button>';
-        html += '</div>';
-        html += '</div>';
-
-        html += '</div>'; // init-columns
-        html += '</div>'; // dm-tool-card
-
-        // Quick Dice Roller
-        html += '<div class="dm-tool-card">';
-        html += '<h3>' + t('dm.diceroller') + '</h3>';
-        html += '<div class="dice-buttons">';
-        var dice = [4, 6, 8, 10, 12, 20, 100];
-        for (var di = 0; di < dice.length; di++) {
-            html += '<button class="dice-btn" data-action="roll-dice" data-die="' + dice[di] + '">d' + dice[di] + '</button>';
-        }
-        html += '</div>';
-        html += '<div class="dice-result" id="dice-result"></div>';
-        html += '</div>'; // dm-tool-card
-
-        // Cloud sync card
-        html += '<div class="dm-tool-card">';
-        html += '<h3>&#9729; ' + t('dm.cloudsync') + '</h3>';
-        var syncSt = typeof getSyncStatus === 'function' ? getSyncStatus() : 'not-configured';
-        if (syncSt === 'online') {
-            html += '<p style="color:var(--success);font-size:0.85rem;margin-bottom:0.75rem;">' + t('dm.sync.connected') + '</p>';
-            html += '<button class="btn btn-ghost btn-sm" data-action="sync-upload-all">' + t('dm.sync.uploadall') + '</button> ';
-            html += '<button class="btn btn-ghost btn-sm" data-action="sync-seed-campaign" style="margin-top:0.5rem;">Seed Campaign Data</button>';
-        } else if (syncSt === 'not-configured') {
-            html += '<p style="color:var(--text-dim);font-size:0.85rem;">' + t('dm.sync.notconfig') + '</p>';
-        } else {
-            html += '<p style="color:var(--warning);font-size:0.85rem;">' + t('dm.sync.offline') + '</p>';
-        }
-        html += '</div>';
-
-        html += '</div>'; // dm-tools
     }
 
+    html += '</div>';
+    return html;
+}
+
+// ============================================================
+// Section 11b: DM Page
+// ============================================================
+
+var dmTab = 'initiative';
+
+function renderDMPage(subpage) {
+    if (!isDM()) return '<p>Access denied.</p>';
+    var html = '<div class="dm-page">';
+    html += '<h1 class="page-title">' + t('dm.tools') + '</h1>';
+
+    // Tab bar
+    var tabs = [
+        { id: 'initiative', label: t('dm.initiative'), icon: '&#9876;' },
+        { id: 'npcs', label: 'NPCs', icon: '&#127917;' },
+        { id: 'whispers', label: 'Whispers', icon: '&#128172;' },
+        { id: 'sync', label: t('dm.cloudsync'), icon: '&#9729;' }
+    ];
+    html += '<div class="dm-tabs">';
+    for (var ti = 0; ti < tabs.length; ti++) {
+        var tab = tabs[ti];
+        var isActive = (subpage || 'initiative') === tab.id;
+        html += '<a class="dm-tab' + (isActive ? ' active' : '') + '" href="#/dm/' + tab.id + '">' + tab.icon + ' ' + tab.label + '</a>';
+    }
+    html += '</div>';
+
+    var activeSection = subpage || 'initiative';
+
+    if (activeSection === 'initiative') {
+        html += renderDMInitiative();
+    } else if (activeSection === 'npcs') {
+        html += renderDMNPCs();
+    } else if (activeSection === 'whispers') {
+        html += renderDMWhispers();
+    } else if (activeSection === 'sync') {
+        html += renderDMSync();
+    }
+
+    html += '</div>';
+    return html;
+}
+
+function renderDMInitiative() {
+    var html = '<div class="dm-tool-card init-tracker-card">';
+
+    var initData = JSON.parse(localStorage.getItem('dw_initiative') || '{"entries":[],"currentTurn":0,"round":1,"npcs":[]}');
+    var entries = initData.entries || [];
+    var currentTurn = initData.currentTurn || 0;
+    var initRound = initData.round || 1;
+    var initNpcs = initData.npcs || [];
+
+    html += '<div class="init-header">';
+    html += '<span class="init-round">' + t('dm.round') + ' ' + initRound + '</span>';
+    if (entries.length > 0) {
+        html += '<button class="btn btn-sm btn-primary" data-action="next-turn">' + t('dm.nextturn') + ' &rarr;</button>';
+        html += '<button class="btn btn-ghost btn-sm" data-action="clear-init">' + t('dm.resetinit') + '</button>';
+    }
+    html += '</div>';
+
+    html += '<div class="init-columns">';
+
+    // LEFT: Available players
+    html += '<div class="init-col init-col-players">';
+    html += '<div class="init-col-title">Players</div>';
+    var iCharIds = getCharacterIds();
+    for (var ici = 0; ici < iCharIds.length; ici++) {
+        var iccfg = loadCharConfig(iCharIds[ici]);
+        if (!iccfg) continue;
+        var inInit = false;
+        for (var ei = 0; ei < entries.length; ei++) {
+            if (entries[ei].charId === iCharIds[ici]) { inInit = true; break; }
+        }
+        if (!inInit) {
+            html += '<div class="init-available" data-action="init-add-player" data-char-id="' + iCharIds[ici] + '">';
+            html += '<span style="color:' + iccfg.accentColor + '">' + escapeHtml(iccfg.name) + '</span>';
+            html += '</div>';
+        }
+    }
+    html += '</div>';
+
+    // CENTER: Ordered initiative
+    html += '<div class="init-col init-col-order" data-action="init-drop-zone">';
+    html += '<div class="init-col-title">Initiative Order</div>';
+    for (var ii = 0; ii < entries.length; ii++) {
+        var entry = entries[ii];
+        var isCurrent = ii === currentTurn;
+        var entryColor = entry.disposition === 'hostile' ? 'var(--danger)' : entry.disposition === 'friendly' ? 'var(--success)' : entry.disposition === 'neutral' ? 'var(--warning)' : 'var(--accent)';
+        if (entry.charId) {
+            var ecfg = loadCharConfig(entry.charId);
+            if (ecfg) entryColor = ecfg.accentColor;
+        }
+        html += '<div class="init-entry' + (isCurrent ? ' current' : '') + '" draggable="true" data-init-idx="' + ii + '" style="border-left-color:' + entryColor + '">';
+        html += '<span class="init-drag-handle">&#9776;</span>';
+        html += '<span class="init-roll">' + entry.initiative + '</span>';
+        html += '<span class="init-name">' + escapeHtml(entry.name) + '</span>';
+        html += '<button class="init-remove" data-action="remove-init" data-init-idx="' + ii + '">&times;</button>';
+        html += '</div>';
+    }
+    if (entries.length === 0) html += '<p class="text-dim" style="text-align:center;padding:1rem 0;">Click players or NPCs to add</p>';
+    html += '</div>';
+
+    // RIGHT: NPCs/Monsters
+    html += '<div class="init-col init-col-npcs">';
+    html += '<div class="init-col-title">NPCs / Monsters</div>';
+    for (var ni = 0; ni < initNpcs.length; ni++) {
+        var inpc = initNpcs[ni];
+        var inInit = false;
+        for (var ei = 0; ei < entries.length; ei++) {
+            if (entries[ei].npcIdx === ni) { inInit = true; break; }
+        }
+        if (!inInit) {
+            var npcColor = inpc.disposition === 'hostile' ? 'var(--danger)' : inpc.disposition === 'friendly' ? 'var(--success)' : 'var(--warning)';
+            html += '<div class="init-available init-npc" data-action="init-add-npc" data-npc-idx="' + ni + '" style="border-left-color:' + npcColor + '">';
+            html += '<span>' + escapeHtml(inpc.name) + '</span>';
+            html += '<button class="init-npc-del" data-action="init-delete-npc" data-npc-idx="' + ni + '">&times;</button>';
+            html += '</div>';
+        }
+    }
+    html += '<div class="init-add-npc-form">';
+    html += '<input type="text" class="edit-input" id="init-npc-name" placeholder="Name..." style="flex:1;">';
+    html += '<select class="edit-input" id="init-npc-disp" style="width:auto;">';
+    html += '<option value="hostile">Hostile</option>';
+    html += '<option value="neutral">Neutral</option>';
+    html += '<option value="friendly">Friendly</option>';
+    html += '</select>';
+    html += '<button class="btn btn-ghost btn-sm" data-action="init-create-npc">+</button>';
+    html += '</div>';
+    html += '</div>';
+
+    html += '</div>'; // init-columns
+    html += '</div>'; // dm-tool-card
+    return html;
+}
+
+function renderDMNPCs() {
+    var data = getNPCData();
+    var npcs = data.npcs || [];
+    var html = '<div class="dm-tool-card">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">';
+    html += '<h3>NPCs (' + npcs.length + ')</h3>';
+    html += '<button class="btn btn-primary btn-sm" data-action="add-npc">+ Add NPC</button>';
+    html += '</div>';
+
+    if (npcs.length === 0) {
+        html += '<p class="text-dim">No NPCs yet.</p>';
+    } else {
+        html += '<div class="npc-grid">';
+        for (var ni = 0; ni < npcs.length; ni++) {
+            var npc = npcs[ni];
+            var dispColor = npc.disposition === 'friendly' ? 'var(--success)' : npc.disposition === 'hostile' ? 'var(--danger)' : npc.disposition === 'neutral' ? 'var(--warning)' : 'var(--text-dim)';
+            html += '<div class="npc-card" style="border-left-color:' + dispColor + '">';
+            html += '<div class="npc-header">';
+            html += '<strong>' + escapeHtml(npc.name) + '</strong>';
+            if (npc.disposition) html += '<span class="npc-disposition" style="color:' + dispColor + '">' + escapeHtml(npc.disposition) + '</span>';
+            html += '</div>';
+            if (npc.location) html += '<p class="npc-location">&#128205; ' + escapeHtml(npc.location) + '</p>';
+            if (npc.notes) html += '<p class="npc-notes">' + escapeHtml(npc.notes) + '</p>';
+            html += '<div class="npc-actions">';
+            html += '<button class="btn btn-ghost btn-sm" data-action="edit-npc" data-npc-idx="' + ni + '">Edit</button>';
+            html += '<button class="btn btn-ghost btn-sm" data-action="delete-npc" data-npc-idx="' + ni + '" style="color:var(--danger);">Delete</button>';
+            html += '</div>';
+            html += '</div>';
+        }
+        html += '</div>';
+    }
+
+    html += '</div>';
+    return html;
+}
+
+function renderDMWhispers() {
+    var html = '<div class="dm-tool-card">';
+    html += '<h3>Send Whisper</h3>';
+    html += '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem;">';
+    html += '<select class="edit-input" id="whisper-target" style="width:auto;">';
+    var charIdsW = getCharacterIds();
+    for (var wci = 0; wci < charIdsW.length; wci++) {
+        var wcfg = loadCharConfig(charIdsW[wci]);
+        if (wcfg) html += '<option value="' + charIdsW[wci] + '">' + escapeHtml(wcfg.name) + '</option>';
+    }
+    html += '</select>';
+    html += '<input type="text" class="edit-input" id="whisper-text" placeholder="Secret message..." style="flex:1;">';
+    html += '<button class="btn btn-primary btn-sm" data-action="send-whisper">Send</button>';
+    html += '</div>';
+
+    // Show sent whispers per player
+    html += '<h3 style="margin-top:1.5rem;">Sent Whispers</h3>';
+    for (var wi = 0; wi < charIdsW.length; wi++) {
+        var wId = charIdsW[wi];
+        var wCfg = loadCharConfig(wId);
+        if (!wCfg) continue;
+        var whispers = JSON.parse(localStorage.getItem('dw_whisper_' + wId) || '[]');
+        if (whispers.length > 0) {
+            html += '<div style="margin-bottom:0.75rem;">';
+            html += '<strong style="color:' + wCfg.accentColor + ';font-size:0.85rem;">' + escapeHtml(wCfg.name) + '</strong>';
+            for (var wj = 0; wj < whispers.length; wj++) {
+                html += '<div class="whisper-card" style="margin:0.25rem 0;padding:0.4rem 0.6rem;">';
+                html += '<span style="font-size:0.8rem;">' + escapeHtml(whispers[wj].text) + '</span>';
+                html += '<span class="combat-log-time">' + new Date(whispers[wj].time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + '</span>';
+                html += '</div>';
+            }
+            html += '</div>';
+        }
+    }
+
+    html += '</div>';
+    return html;
+}
+
+function renderDMSync() {
+    var html = '<div class="dm-tool-card">';
+    html += '<h3>&#9729; ' + t('dm.cloudsync') + '</h3>';
+    var syncSt = typeof getSyncStatus === 'function' ? getSyncStatus() : 'not-configured';
+    if (syncSt === 'online') {
+        html += '<p style="color:var(--success);font-size:0.85rem;margin-bottom:0.75rem;">' + t('dm.sync.connected') + '</p>';
+        html += '<button class="btn btn-ghost btn-sm" data-action="sync-upload-all">' + t('dm.sync.uploadall') + '</button> ';
+        html += '<button class="btn btn-ghost btn-sm" data-action="sync-seed-campaign" style="margin-top:0.5rem;">Seed Campaign Data</button>';
+    } else if (syncSt === 'not-configured') {
+        html += '<p style="color:var(--text-dim);font-size:0.85rem;">' + t('dm.sync.notconfig') + '</p>';
+    } else {
+        html += '<p style="color:var(--warning);font-size:0.85rem;">' + t('dm.sync.offline') + '</p>';
+    }
+
+    // Quick Dice Roller
+    html += '</div>';
+    html += '<div class="dm-tool-card">';
+    html += '<h3>' + t('dm.diceroller') + '</h3>';
+    html += '<div class="dice-buttons">';
+    var dice = [4, 6, 8, 10, 12, 20, 100];
+    for (var di = 0; di < dice.length; di++) {
+        html += '<button class="dice-btn" data-action="roll-dice" data-die="' + dice[di] + '">d' + dice[di] + '</button>';
+    }
+    html += '</div>';
+    html += '<div class="dice-result" id="dice-result"></div>';
     html += '</div>';
     return html;
 }
@@ -1342,6 +1496,12 @@ function renderCharCard(cid, cfg, state, isOwn) {
     html += '<span class="char-card-name">' + escapeHtml(cfg.name) + '</span>';
     html += '<span class="char-card-detail">' + raceDisplayName(cfg.race) + ' ' + classDisplayName(cfg.className) + '</span>';
     html += '<span class="char-card-detail">Level ' + state.level + '</span>';
+    // HP mini bar
+    var maxHP = getHP(cfg, state);
+    var curHP = state.currentHP !== null ? state.currentHP : maxHP;
+    var hpPct = maxHP > 0 ? Math.max(0, Math.min(100, Math.round((curHP / maxHP) * 100))) : 100;
+    var hpCol = hpPct > 50 ? 'var(--success)' : (hpPct > 25 ? 'var(--warning)' : 'var(--danger)');
+    html += '<div class="char-card-hp"><div class="char-card-hp-fill" style="width:' + hpPct + '%;background:' + hpCol + '"></div><span class="char-card-hp-text">' + curHP + '/' + maxHP + '</span></div>';
     if (isOwn) html += '<span class="char-card-badge">' + t('char.yours') + '</span>';
     html += '</div>';
     html += '</a>';
@@ -3176,7 +3336,7 @@ function renderLore(subpage) {
     html += '<h3>' + t('lore.theparty') + '</h3>';
     html += '<p>' + t('lore.theparty.desc') + '</p>';
     html += '</a>';
-    html += '<a class="lore-card" href="#/lore/npcs">';
+    html += '<a class="lore-card" href="#/dm/npcs">';
     html += '<h3>NPCs</h3>';
     html += '<p>Known characters and contacts</p>';
     html += '</a>';
