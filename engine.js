@@ -117,7 +117,7 @@ function getAC(config, state) {
     var dexMod = getMod(getAbilityScore(config, state, 'dex'));
     var className = config.className;
 
-    if (className === 'rogue') {
+    if (className === 'rogue' || className === 'bard') {
         // Studded leather: 12 + DEX
         return 12 + dexMod;
     }
@@ -130,8 +130,12 @@ function getAC(config, state) {
     }
     if (className === 'fighter' || className === 'paladin') {
         // Chain mail: 16 (no DEX), or plate: 18
-        // Default to chain mail for now
         return 16;
+    }
+    if (className === 'cleric') {
+        // Depends on Divine Order: Protector = chain mail (16), Thaumaturge = scale mail (14 + DEX max 2)
+        // Default to scale mail
+        return 14 + Math.min(dexMod, 2);
     }
     if (className === 'ranger') {
         // Scale mail: 14 + DEX (max 2)
@@ -141,15 +145,31 @@ function getAC(config, state) {
         // Leather armor: 11 + DEX (druids don't wear metal)
         return 11 + dexMod;
     }
+    if (className === 'barbarian') {
+        // Unarmored Defense: 10 + DEX + CON
+        var conMod = getMod(getAbilityScore(config, state, 'con'));
+        return 10 + dexMod + conMod;
+    }
+    if (className === 'monk') {
+        // Unarmored Defense: 10 + DEX + WIS
+        var wisMod = getMod(getAbilityScore(config, state, 'wis'));
+        return 10 + dexMod + wisMod;
+    }
     // Default: 10 + DEX
     return 10 + dexMod;
 }
 
 function getMaxPrepared(state, abilityMod, className) {
     if (!className) className = 'sorcerer';
-    if (className === 'sorcerer' || className === 'wizard' || className === 'druid') {
+    // Full prepared casters: ability mod + class level
+    if (className === 'sorcerer' || className === 'wizard' || className === 'druid' || className === 'cleric') {
         return Math.max(1, abilityMod + state.level);
     }
+    // Bard: CHA mod + level (5.5e: prepares spells, swaps 1 per level-up)
+    if (className === 'bard') {
+        return Math.max(1, abilityMod + state.level);
+    }
+    // Half casters: ability mod + half class level
     if (className === 'paladin') {
         return Math.max(1, abilityMod + Math.floor(state.level / 2));
     }
@@ -160,6 +180,10 @@ function getMaxPrepared(state, abilityMod, className) {
     if (className === 'warlock') {
         var wknown = { 1:2, 2:3, 3:4, 4:5, 5:6, 6:7, 7:8, 8:9, 9:10, 10:10, 11:11, 12:11, 13:12, 14:12, 15:13, 16:13, 17:14, 18:14, 19:15, 20:15 };
         return wknown[state.level] || 2;
+    }
+    // Non-casters (barbarian, fighter, monk, rogue): 0
+    if (className === 'barbarian' || className === 'fighter' || className === 'monk' || className === 'rogue') {
+        return 0;
     }
     return Math.max(1, abilityMod + state.level);
 }
@@ -174,7 +198,7 @@ function getMaxCantrips(level, className) {
 }
 
 function getSpellcastingAbility(className) {
-    var map = { sorcerer: 'cha', wizard: 'int', druid: 'wis', paladin: 'cha', ranger: 'wis', warlock: 'cha' };
+    var map = { sorcerer: 'cha', wizard: 'int', druid: 'wis', paladin: 'cha', ranger: 'wis', warlock: 'cha', bard: 'cha', cleric: 'wis' };
     return map[className] || 'cha';
 }
 

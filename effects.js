@@ -26,6 +26,7 @@ function autoGrowTextarea(textarea) {
 // === Dice Hand System ===
 var DiceHand = {
     hand: [],      // dice in hand: [{die: 20}, {die: 6}, ...]
+    lastHand: [],  // remembers last rolled set for re-rolling
     results: null,  // null = not rolled, [{die:20, value:15}, ...]
 
     add: function(die) {
@@ -50,15 +51,18 @@ var DiceHand = {
 
     reset: function() {
         this.hand = [];
+        this.lastHand = [];
         this.results = null;
         this.render();
     },
 
     roll: function() {
-        if (this.hand.length === 0) return;
+        var source = this.hand.length > 0 ? this.hand : this.lastHand;
+        if (source.length === 0) return;
+        this.lastHand = source.slice();
         this.results = [];
-        for (var i = 0; i < this.hand.length; i++) {
-            var die = this.hand[i].die;
+        for (var i = 0; i < source.length; i++) {
+            var die = source[i].die;
             this.results.push({ die: die, value: Math.floor(Math.random() * die) + 1 });
         }
         this.hand = [];
@@ -114,7 +118,12 @@ var DiceHand = {
                 html += 'd' + r.die + ': <b>' + r.value + '</b>';
                 html += '</span>';
             }
-            html += '</div></div>';
+            html += '</div>';
+            html += '<div class="dice-hand-actions">';
+            html += '<button class="btn btn-primary btn-sm" data-action="dice-roll-hand">Re-roll</button>';
+            html += '<button class="btn btn-ghost btn-sm" data-action="dice-reset">Reset</button>';
+            html += '</div>';
+            html += '</div>';
         }
 
         if (this.hand.length === 0 && !this.results) {

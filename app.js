@@ -635,6 +635,15 @@ function hasSpellcasting(className) {
     return ['sorcerer', 'wizard', 'druid', 'ranger', 'paladin', 'warlock'].indexOf(className) !== -1;
 }
 
+function getQuestData() {
+    var qd = JSON.parse(localStorage.getItem('dw_quests') || '{"active":[],"completed":[]}');
+    if (qd.active && !Array.isArray(qd.active)) qd.active = Object.values(qd.active);
+    if (qd.completed && !Array.isArray(qd.completed)) qd.completed = Object.values(qd.completed);
+    if (!qd.active) qd.active = [];
+    if (!qd.completed) qd.completed = [];
+    return qd;
+}
+
 function getCharacterIds() {
     // Collect character IDs from localStorage configs + SEED_DATA
     var ids = {};
@@ -729,10 +738,11 @@ function renderApp() {
         html += '</div>';
     }
 
-    // Page transition — only on actual route change
+    // Page transition — only on actual page change (not tab switches)
     var mainEl = app.querySelector('.main-content');
-    var routeChanged = app._lastRoute !== route.path;
-    app._lastRoute = route.path;
+    var basePath = '/' + route.parts.slice(0, 2).join('/');
+    var routeChanged = app._lastBasePath !== basePath;
+    app._lastBasePath = basePath;
     if (mainEl && routeChanged && !app._firstRender) {
         mainEl.classList.add('page-exit');
         setTimeout(function() {
@@ -761,6 +771,100 @@ function postRenderEffects(route) {
         if (typeof GlowRing !== 'undefined') {
             GlowRing.apply(portraitWrap, effectColor);
         }
+    }
+    // Initiative drag-and-drop
+    initInitiativeDragDrop();
+}
+
+function initInitiativeDragDrop() {
+    var col = document.querySelector('.init-col-order');
+    if (!col) return;
+    var dragIdx = null;
+
+    col.addEventListener('dragstart', function(e) {
+        var entry = e.target.closest('.init-entry');
+        if (!entry) return;
+        dragIdx = parseInt(entry.dataset.initIdx);
+        entry.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+    });
+
+    col.addEventListener('dragend', function(e) {
+        var entry = e.target.closest('.init-entry');
+        if (entry) entry.classList.remove('dragging');
+        var placeholder = col.querySelector('.init-drop-placeholder');
+        if (placeholder) placeholder.remove();
+        dragIdx = null;
+    });
+
+    col.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        var afterEl = getDragAfterElement(col, e.clientY);
+        var placeholder = col.querySelector('.init-drop-placeholder');
+        if (!placeholder) {
+            placeholder = document.createElement('div');
+            placeholder.className = 'init-drop-placeholder';
+        }
+        if (afterEl) {
+            col.insertBefore(placeholder, afterEl);
+        } else {
+            col.appendChild(placeholder);
+        }
+    });
+
+    col.addEventListener('dragleave', function(e) {
+        if (!col.contains(e.relatedTarget)) {
+            var placeholder = col.querySelector('.init-drop-placeholder');
+            if (placeholder) placeholder.remove();
+        }
+    });
+
+    col.addEventListener('drop', function(e) {
+        e.preventDefault();
+        var placeholder = col.querySelector('.init-drop-placeholder');
+        if (placeholder) placeholder.remove();
+        if (dragIdx === null) return;
+        var afterEl = getDragAfterElement(col, e.clientY);
+        var entries = col.querySelectorAll('.init-entry');
+        var dropIdx = entries.length;
+        if (afterEl) {
+            for (var i = 0; i < entries.length; i++) {
+                if (entries[i] === afterEl) { dropIdx = i; break; }
+            }
+        }
+        if (dropIdx > dragIdx) dropIdx--;
+        if (dropIdx === dragIdx) return;
+        var initData = JSON.parse(localStorage.getItem('dw_initiative') || '{"entries":[],"currentTurn":0,"round":1,"npcs":[]}');
+        var moved = initData.entries.splice(dragIdx, 1)[0];
+        initData.entries.splice(dropIdx, 0, moved);
+        // Adjust currentTurn pointer
+        var ct = initData.currentTurn;
+        if (dragIdx === ct) {
+            initData.currentTurn = dropIdx;
+        } else if (dragIdx < ct && dropIdx >= ct) {
+            initData.currentTurn--;
+        } else if (dragIdx > ct && dropIdx <= ct) {
+            initData.currentTurn++;
+        }
+        localStorage.setItem('dw_initiative', JSON.stringify(initData));
+        if (typeof syncUpload === 'function') syncUpload('dw_initiative');
+        renderApp();
+    });
+
+    function getDragAfterElement(container, y) {
+        var els = Array.prototype.slice.call(container.querySelectorAll('.init-entry:not(.dragging)'));
+        var closest = null;
+        var closestOffset = Number.NEGATIVE_INFINITY;
+        for (var i = 0; i < els.length; i++) {
+            var box = els[i].getBoundingClientRect();
+            var offset = y - box.top - box.height / 2;
+            if (offset < 0 && offset > closestOffset) {
+                closestOffset = offset;
+                closest = els[i];
+            }
+        }
+        return closest;
     }
 }
 
@@ -900,12 +1004,14 @@ function renderDashboard() {
     var charIds = getCharacterIds();
     var partySize = 0;
     var groupLevel = 1;
+    var partyGold = 0;
     for (var si = 0; si < charIds.length; si++) {
         var scfg = loadCharConfig(charIds[si]);
         if (!scfg) continue;
         var sstate = loadCharState(charIds[si]);
         partySize++;
         groupLevel = sstate.level; // group level (all same)
+        partyGold += (sstate.gold || 0);
     }
 
     html += '<div class="dash-stats">';
@@ -921,18 +1027,10 @@ function renderDashboard() {
     html += '</div>';
     html += '<div class="dash-stat-card"><span class="dash-stat-value">' + partySize + '</span><span class="dash-stat-label">' + t('dash.party') + '</span></div>';
 
-    // Party gold
-    var partyGold = parseInt(localStorage.getItem('dw_party_gold') || '0');
+    // Party gold (sum of all character gold)
     html += '<div class="dash-stat-card party-gold-card">';
     html += '<span class="dash-stat-value" style="color:var(--gold);">' + partyGold + '</span>';
     html += '<span class="dash-stat-label">Party Gold</span>';
-    if (isDM()) {
-        html += '<div class="session-controls">';
-        html += '<button class="session-btn" data-action="party-gold-minus">&minus;</button>';
-        html += '<input type="number" class="gold-input" id="party-gold-input" value="10" min="1" style="width:50px;text-align:center;">';
-        html += '<button class="session-btn" data-action="party-gold-plus">+</button>';
-        html += '</div>';
-    }
     html += '</div>';
     html += '<div class="dash-stat-card"><span class="dash-stat-value">' + groupLevel + '</span><span class="dash-stat-label">' + t('dash.level') + '</span></div>';
     html += '</div>';
@@ -1008,7 +1106,7 @@ function renderDashboard() {
     }
 
     // Quest tracker
-    var questData = JSON.parse(localStorage.getItem('dw_quests') || '{"active":[],"completed":[]}');
+    var questData = getQuestData();
     html += '<div class="dash-quests">';
     html += '<div class="dash-quests-header">';
     html += '<h2 class="section-title">Active Quests</h2>';
@@ -1046,6 +1144,16 @@ function renderDashboard() {
         if (quest.desc) html += '<p class="text-dim" style="margin:0;font-size:0.8rem;">' + escapeHtml(quest.desc) + '</p>';
         if (quest.giver) html += '<span class="quest-meta">From: ' + escapeHtml(quest.giver) + '</span>';
         if (quest.reward) html += '<span class="quest-meta">Reward: ' + escapeHtml(quest.reward) + '</span>';
+        if (quest.tags) {
+            var tagArr = quest.tags.split(',').map(function(t) { return t.trim(); }).filter(Boolean);
+            if (tagArr.length > 0) {
+                html += '<div class="quest-tags">';
+                for (var ti = 0; ti < tagArr.length; ti++) {
+                    html += '<span class="quest-tag">' + escapeHtml(tagArr[ti]) + '</span>';
+                }
+                html += '</div>';
+            }
+        }
         html += '</div>';
         if (isDM()) {
             html += '<button class="btn btn-ghost btn-sm" data-action="complete-quest" data-quest-idx="' + qi + '" title="Complete">&#10003;</button>';
@@ -1126,7 +1234,7 @@ function renderDashboard() {
         html += '</div>';
 
         // CENTER: Ordered initiative
-        html += '<div class="init-col init-col-order">';
+        html += '<div class="init-col init-col-order" data-action="init-drop-zone">';
         html += '<div class="init-col-title">Initiative Order</div>';
         for (var ii = 0; ii < entries.length; ii++) {
             var entry = entries[ii];
@@ -1136,15 +1244,11 @@ function renderDashboard() {
                 var ecfg = loadCharConfig(entry.charId);
                 if (ecfg) entryColor = ecfg.accentColor;
             }
-            html += '<div class="init-entry' + (isCurrent ? ' current' : '') + '" style="border-left-color:' + entryColor + '">';
-            html += '<span class="init-num">' + (ii + 1) + '</span>';
+            html += '<div class="init-entry' + (isCurrent ? ' current' : '') + '" draggable="true" data-init-idx="' + ii + '" style="border-left-color:' + entryColor + '">';
+            html += '<span class="init-drag-handle">&#9776;</span>';
             html += '<span class="init-roll">' + entry.initiative + '</span>';
             html += '<span class="init-name">' + escapeHtml(entry.name) + '</span>';
-            html += '<div class="init-entry-actions">';
-            if (ii > 0) html += '<button class="init-move" data-action="init-move-up" data-init-idx="' + ii + '" title="Move up">&uarr;</button>';
-            if (ii < entries.length - 1) html += '<button class="init-move" data-action="init-move-down" data-init-idx="' + ii + '" title="Move down">&darr;</button>';
             html += '<button class="init-remove" data-action="remove-init" data-init-idx="' + ii + '">&times;</button>';
-            html += '</div>';
             html += '</div>';
         }
         if (entries.length === 0) html += '<p class="text-dim" style="text-align:center;padding:1rem 0;">Click players or NPCs to add</p>';
@@ -1879,8 +1983,11 @@ function renderTabCombat(charId, config, state) {
             var logText = logE.type === 'damage' ? '-' + logE.amount + ' damage' : logE.type === 'heal' ? '+' + logE.amount + ' healed' : logE.source || 'Rest';
             if (logE.source && logE.type !== 'rest') logText += ' (' + logE.source + ')';
             var logTime = logE.time ? new Date(logE.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-            html += '<div class="combat-log-entry combat-log-' + logE.type + '">' + logIcon + ' ' + logText + '<span class="combat-log-time">' + logTime + '</span></div>';
+            html += '<div class="combat-log-entry combat-log-' + logE.type + '">' + logIcon + ' ' + logText + '<span class="combat-log-time">' + logTime + '</span>';
+            if (editable) html += '<button class="btn-inline-delete" data-action="delete-combat-log" data-log-idx="' + cli + '" title="Remove">&times;</button>';
+            html += '</div>';
         }
+        if (editable) html += '<button class="btn btn-ghost btn-sm" data-action="clear-combat-log" style="margin-top:0.3rem;font-size:0.75rem;">Clear log</button>';
         html += '</div></details>';
     }
 
@@ -2006,7 +2113,7 @@ function renderTabCombat(charId, config, state) {
             html += '<h2>' + (t('combat.preparedspells') || 'Prepared Spells') + '</h2>';
             html += '<div class="prepared-spells-compact">';
             for (var psi = 0; psi < preparedSpells.length; psi++) {
-                html += '<span class="prepared-spell-tag">' + escapeHtml(preparedSpells[psi]) + '</span>';
+                html += '<span class="prepared-spell-tag" data-spell="' + escapeAttr(preparedSpells[psi]) + '">' + escapeHtml(preparedSpells[psi]) + '</span>';
             }
             html += '</div></div>';
         }
@@ -2517,6 +2624,14 @@ function renderTabInventory(charId, config, state) {
         html += '<span class="gold-amount">' + (state.gold || 0) + ' gp</span>';
     }
     html += '</div>';
+    // Secret stash (only visible to owner and admin)
+    if (editable) {
+        html += '<div class="gold-row gold-secret">';
+        html += '<span class="gold-label">&#128274; Secret stash: </span>';
+        html += '<input type="number" class="gold-input" value="' + (state.secretGold || 0) + '" min="0" step="1" data-action="update-secret-gold">';
+        html += '<span class="gold-suffix"> gp</span>';
+        html += '</div>';
+    }
 
     if (editable) {
         html += '<div class="item-add-form" style="display:none;">';
@@ -5151,36 +5266,6 @@ function bindPageEvents(route) {
 
         // (delete-npc handler moved earlier in chain)
 
-        // Move up in initiative
-        if (target.matches('[data-action="init-move-up"]')) {
-            var idx = parseInt(target.dataset.initIdx);
-            var initData = JSON.parse(localStorage.getItem('dw_initiative') || '{"entries":[],"currentTurn":0,"round":1,"npcs":[]}');
-            if (idx > 0) {
-                var temp = initData.entries[idx];
-                initData.entries[idx] = initData.entries[idx - 1];
-                initData.entries[idx - 1] = temp;
-            }
-            localStorage.setItem('dw_initiative', JSON.stringify(initData));
-            if (typeof syncUpload === 'function') syncUpload('dw_initiative');
-            renderApp();
-            return;
-        }
-
-        // Move down in initiative
-        if (target.matches('[data-action="init-move-down"]')) {
-            var idx = parseInt(target.dataset.initIdx);
-            var initData = JSON.parse(localStorage.getItem('dw_initiative') || '{"entries":[],"currentTurn":0,"round":1,"npcs":[]}');
-            if (idx < initData.entries.length - 1) {
-                var temp = initData.entries[idx];
-                initData.entries[idx] = initData.entries[idx + 1];
-                initData.entries[idx + 1] = temp;
-            }
-            localStorage.setItem('dw_initiative', JSON.stringify(initData));
-            if (typeof syncUpload === 'function') syncUpload('dw_initiative');
-            renderApp();
-            return;
-        }
-
         // Next turn
         if (target.matches('[data-action="next-turn"]')) {
             var initData = JSON.parse(localStorage.getItem('dw_initiative') || '{"entries":[],"currentTurn":0,"round":1,"npcs":[]}');
@@ -5927,7 +6012,7 @@ function bindPageEvents(route) {
                 resultDiv.className = 'weapon-roll-result' + (isNat20 ? ' nat20' : '') + (isNat1 ? ' nat1' : '');
                 resultDiv.innerHTML = '<strong>' + escapeHtml(weaponName) + '</strong><br>' +
                     'Attack: ' + attackRoll + ' + ' + hitMod + ' = <b>' + totalHit + '</b>' +
-                    (isNat20 ? ' CRIT!' : '') + (isNat1 ? ' MISS!' : '') +
+                    (isNat20 ? ' NAT 20!' : '') + (isNat1 ? ' NAT 1!' : '') +
                     '<br>Damage: <b>' + dmgTotal + '</b>';
                 rollBtn.closest('.weapon').appendChild(resultDiv);
                 setTimeout(function() { resultDiv.remove(); }, 3000);
@@ -6023,6 +6108,27 @@ function bindPageEvents(route) {
                 return;
             }
 
+            // Delete combat log entry
+            if (target.matches('[data-action="delete-combat-log"]')) {
+                if (!canEdit(charId)) return;
+                var logIdx = parseInt(target.dataset.logIdx);
+                if (state.combatLog && state.combatLog[logIdx] !== undefined) {
+                    state.combatLog.splice(logIdx, 1);
+                    saveCharState(charId, state);
+                    renderApp();
+                }
+                return;
+            }
+
+            // Clear combat log
+            if (target.matches('[data-action="clear-combat-log"]')) {
+                if (!canEdit(charId)) return;
+                state.combatLog = [];
+                saveCharState(charId, state);
+                renderApp();
+                return;
+            }
+
             // Toggle inspiration
             if (target.matches('[data-action="toggle-inspiration"]') || target.closest('[data-action="toggle-inspiration"]')) {
                 if (!canEdit(charId)) return;
@@ -6084,7 +6190,7 @@ function bindPageEvents(route) {
         if (target.matches('[data-action="save-quest"]')) {
             var qTitleEl = document.getElementById('quest-title');
             if (!qTitleEl || !qTitleEl.value.trim()) return;
-            var qData = JSON.parse(localStorage.getItem('dw_quests') || '{"active":[],"completed":[]}');
+            var qData = getQuestData();
             qData.active.push({
                 title: qTitleEl.value.trim(),
                 desc: (document.getElementById('quest-desc') || {}).value || '',
@@ -6103,9 +6209,10 @@ function bindPageEvents(route) {
             if (qForm) qForm.style.display = 'none';
             return;
         }
-        if (target.matches('[data-action="complete-quest"]')) {
-            var qIdx = parseInt(target.dataset.questIdx);
-            var qData = JSON.parse(localStorage.getItem('dw_quests') || '{"active":[],"completed":[]}');
+        var completeBtn = target.matches('[data-action="complete-quest"]') ? target : target.closest('[data-action="complete-quest"]');
+        if (completeBtn) {
+            var qIdx = parseInt(completeBtn.dataset.questIdx);
+            var qData = getQuestData();
             if (qData.active[qIdx]) {
                 qData.completed.push(qData.active[qIdx]);
                 qData.active.splice(qIdx, 1);
@@ -6115,30 +6222,13 @@ function bindPageEvents(route) {
             }
             return;
         }
-        if (target.matches('[data-action="delete-quest"]')) {
-            var qIdx = parseInt(target.dataset.questIdx);
-            var qData = JSON.parse(localStorage.getItem('dw_quests') || '{"active":[],"completed":[]}');
+        var deleteBtn = target.matches('[data-action="delete-quest"]') ? target : target.closest('[data-action="delete-quest"]');
+        if (deleteBtn) {
+            var qIdx = parseInt(deleteBtn.dataset.questIdx);
+            var qData = getQuestData();
             qData.active.splice(qIdx, 1);
             localStorage.setItem('dw_quests', JSON.stringify(qData));
             if (typeof syncUpload === 'function') syncUpload('dw_quests');
-            renderApp();
-            return;
-        }
-
-        // --- Dashboard: party gold ---
-        if (target.matches('[data-action="party-gold-plus"]')) {
-            var amt = parseInt(document.getElementById('party-gold-input').value) || 10;
-            var pg = parseInt(localStorage.getItem('dw_party_gold') || '0');
-            localStorage.setItem('dw_party_gold', String(pg + amt));
-            if (typeof syncUpload === 'function') syncUpload('dw_party_gold');
-            renderApp();
-            return;
-        }
-        if (target.matches('[data-action="party-gold-minus"]')) {
-            var amt = parseInt(document.getElementById('party-gold-input').value) || 10;
-            var pg = parseInt(localStorage.getItem('dw_party_gold') || '0');
-            localStorage.setItem('dw_party_gold', String(Math.max(0, pg - amt)));
-            if (typeof syncUpload === 'function') syncUpload('dw_party_gold');
             renderApp();
             return;
         }
@@ -6610,6 +6700,16 @@ function bindPageEvents(route) {
     app.onchange = function(e) {
         var target = e.target;
 
+        // Set concentration via select
+        if (target.matches('[data-action="set-concentration"]')) {
+            if (!charId || !canEdit(charId)) return;
+            var concState = loadCharState(charId);
+            concState.concentrating = target.value || null;
+            saveCharState(charId, concState);
+            renderApp();
+            return;
+        }
+
         // Show custom NPC name when "custom" selected in initiative
         if (target.matches('#init-char')) {
             var customField = document.getElementById('init-custom-name');
@@ -6863,10 +6963,19 @@ function bindPageEvents(route) {
         }
 
         // Gold input
-        if (target.matches('[data-action="update-gold"]') || target.matches('.gold-input')) {
+        if (target.matches('[data-action="update-gold"]')) {
             if (charId && canEdit(charId)) {
                 var goldState = loadCharState(charId);
                 goldState.gold = parseInt(target.value) || 0;
+                saveCharState(charId, goldState);
+            }
+        }
+
+        // Secret gold input
+        if (target.matches('[data-action="update-secret-gold"]')) {
+            if (charId && canEdit(charId)) {
+                var goldState = loadCharState(charId);
+                goldState.secretGold = parseInt(target.value) || 0;
                 saveCharState(charId, goldState);
             }
         }
@@ -6915,6 +7024,20 @@ function bindPageEvents(route) {
             }
         }
 
+        // Condition tag tooltip
+        var condTag = target.closest('.condition-tag[data-tip]');
+        if (condTag) {
+            showTooltipPopup('<div>' + escapeHtml(condTag.dataset.tip) + '</div>', condTag);
+            return;
+        }
+
+        // Prepared spell tooltip (combat tab)
+        var prepSpell = target.closest('.prepared-spell-tag[data-spell]');
+        if (prepSpell) {
+            showSpellTooltip(prepSpell.dataset.spell, prepSpell);
+            return;
+        }
+
         // Info item tooltip
         var infoItem = target.closest('.info-item');
         if (infoItem) {
@@ -6932,11 +7055,15 @@ function bindPageEvents(route) {
         var abilityEl = target.closest('.ability[data-ability]');
         var spellBtn = target.closest('.spell-toggle');
         var infoItem = target.closest('.info-item');
-        if (abilityEl || spellBtn || infoItem) {
+        var condTag = target.closest('.condition-tag[data-tip]');
+        var prepSpell = target.closest('.prepared-spell-tag[data-spell]');
+        if (abilityEl || spellBtn || infoItem || condTag || prepSpell) {
             var related = e.relatedTarget;
             if (abilityEl && abilityEl.contains(related)) return;
             if (spellBtn && spellBtn.contains(related)) return;
             if (infoItem && infoItem.contains(related)) return;
+            if (condTag && condTag.contains(related)) return;
+            if (prepSpell && prepSpell.contains(related)) return;
             removeTooltipPopup();
         }
     };
