@@ -8,16 +8,16 @@
 // ============================================================
 
 var DEFAULT_USERS = {
-    admin:   { name: "Admin", role: "admin", password: "admin" },
-    dm:      { name: "Dungeon Master", role: "dm", password: "dm" },
-    ren:     { name: "Joshua", role: "player", password: "ren" },
-    saya:    { name: "Speler 2", role: "player", password: "saya" },
-    ranger:  { name: "Speler 3", role: "player", password: "ranger" },
-    wizard:  { name: "Speler 4", role: "player", password: "wizard" },
-    paladin: { name: "Speler 5", role: "player", password: "paladin" },
-    druid:   { name: "Speler 6", role: "player", password: "druid" },
-    fighter: { name: "Speler 7", role: "player", password: "fighter" },
-    warlock: { name: "Speler 8", role: "player", password: "warlock" }
+    admin:   { name: "Admin", role: "admin", password: "admin", characters: [] },
+    dm:      { name: "Dungeon Master", role: "dm", password: "dm", characters: [] },
+    ren:     { name: "Joshua", role: "player", password: "ren", characters: ["ren"] },
+    saya:    { name: "Speler 2", role: "player", password: "saya", characters: ["saya"] },
+    ranger:  { name: "Speler 3", role: "player", password: "ranger", characters: ["ranger"] },
+    wizard:  { name: "Speler 4", role: "player", password: "wizard", characters: ["wizard"] },
+    paladin: { name: "Speler 5", role: "player", password: "paladin", characters: ["paladin"] },
+    druid:   { name: "Speler 6", role: "player", password: "druid", characters: ["druid"] },
+    fighter: { name: "Speler 7", role: "player", password: "fighter", characters: ["fighter"] },
+    warlock: { name: "Speler 8", role: "player", password: "warlock", characters: ["warlock"] }
 };
 
 // Users cache populated from Firebase; falls back to DEFAULT_USERS
@@ -37,7 +37,11 @@ function getUserCharacters(userId) {
 
 function userOwnsCharacter(userId, charId) {
     var chars = getUserCharacters(userId);
-    return chars.indexOf(charId) !== -1;
+    if (chars.length > 0) return chars.indexOf(charId) !== -1;
+    // Fallback: player owns character with matching ID
+    var u = getUserData(userId);
+    if (u && u.role === 'player') return charId === userId;
+    return false;
 }
 
 function getSession() {
@@ -1860,28 +1864,36 @@ function renderTabOverview(charId, config, state) {
     html += '</div>';
 
     // Appearance
-    var hasAppearance = config.appearance && (config.appearance[0] || config.appearance[1]);
-    if (hasAppearance || canEdit(charId)) {
+    var appearanceArr = config.appearance || [];
+    var hasAppearance = appearanceArr.some(function(a) { return !!a; });
+    if (hasAppearance || editable) {
         html += '<div class="sheet-block appearance-mini">';
         html += '<h2>' + t('overview.appearance') + '</h2>';
         var appearImg = loadImage(charId, 'appearance');
         if (appearImg) {
             html += '<img class="appearance-img" src="' + appearImg + '" alt="">';
         }
-        if (canEdit(charId)) {
-            html += '<div class="editable-field" data-edit-field="appearance0" data-char-id="' + charId + '">';
-            html += '<p class="field-display">' + escapeHtml(config.appearance ? config.appearance[0] || '' : '') + (!(config.appearance && config.appearance[0]) ? '<em class="placeholder-text">' + t('overview.appearance.add') + '</em>' : '') + '</p>';
-            html += '<button class="edit-trigger" data-action="edit-field" data-field="appearance0" title="' + t('generic.edit') + '">&#9998;</button>';
-            html += '</div>';
-            html += '<div class="editable-field" data-edit-field="appearance1" data-char-id="' + charId + '">';
-            html += '<p class="field-display">' + escapeHtml(config.appearance ? config.appearance[1] || '' : '') + (!(config.appearance && config.appearance[1]) ? '<em class="placeholder-text">' + t('overview.appearance.add') + '</em>' : '') + '</p>';
-            html += '<button class="edit-trigger" data-action="edit-field" data-field="appearance1" title="' + t('generic.edit') + '">&#9998;</button>';
-            html += '</div>';
+        if (editable) {
+            for (var ai = 0; ai < appearanceArr.length; ai++) {
+                html += '<div class="editable-field" data-edit-field="appearance' + ai + '" data-char-id="' + charId + '">';
+                html += '<p class="field-display">' + escapeHtml(appearanceArr[ai] || '') + (!appearanceArr[ai] ? '<em class="placeholder-text">' + t('overview.appearance.add') + '</em>' : '') + '</p>';
+                html += '<button class="edit-trigger" data-action="edit-field" data-field="appearance' + ai + '" title="' + t('generic.edit') + '">&#9998;</button>';
+                html += '<button class="btn-inline-delete" data-action="remove-appearance" data-appear-idx="' + ai + '" title="Remove">&times;</button>';
+                html += '</div>';
+            }
+            if (appearanceArr.length === 0) {
+                html += '<div class="editable-field" data-edit-field="appearance0" data-char-id="' + charId + '">';
+                html += '<p class="field-display"><em class="placeholder-text">' + t('overview.appearance.add') + '</em></p>';
+                html += '<button class="edit-trigger" data-action="edit-field" data-field="appearance0" title="' + t('generic.edit') + '">&#9998;</button>';
+                html += '</div>';
+            }
+            html += '<button class="btn btn-ghost btn-sm" data-action="add-appearance" style="margin-top:0.3rem;">+ Add description</button>';
         } else {
-            if (config.appearance && config.appearance[0]) html += '<p>' + escapeHtml(config.appearance[0]) + '</p>';
-            if (config.appearance && config.appearance[1]) html += '<p>' + escapeHtml(config.appearance[1]) + '</p>';
+            for (var ai2 = 0; ai2 < appearanceArr.length; ai2++) {
+                if (appearanceArr[ai2]) html += '<p>' + escapeHtml(appearanceArr[ai2]) + '</p>';
+            }
         }
-        if (canEdit(charId)) {
+        if (editable) {
             html += '<label class="btn btn-ghost btn-sm appearance-upload-btn">&#128247; ' + t('overview.appearance.image') + '<input type="file" accept="image/*" data-action="upload-appearance" style="display:none"></label>';
         }
         html += '</div>';
@@ -6119,7 +6131,8 @@ function bindPageEvents(route) {
 
                 if (saveFieldName.indexOf('appearance') === 0) {
                     var aIdx = parseInt(saveFieldName.replace('appearance', ''));
-                    var curAppearance = (config.appearance || ['', '']).slice();
+                    var curAppearance = (config.appearance || []).slice();
+                    while (curAppearance.length <= aIdx) curAppearance.push('');
                     curAppearance[aIdx] = newVal;
                     saveCharConfigField(charId, 'appearance', curAppearance);
                 } else if (saveFieldName.indexOf('personality.') === 0) {
@@ -6139,6 +6152,30 @@ function bindPageEvents(route) {
             // Cancel edit (generic)
             if (target.matches('[data-action="cancel-edit"]') || target.closest('[data-action="cancel-edit"]')) {
                 renderApp();
+                return;
+            }
+
+            // Add appearance entry
+            if (target.matches('[data-action="add-appearance"]')) {
+                if (!canEdit(charId)) return;
+                var curAppear = (config.appearance || []).slice();
+                curAppear.push('');
+                saveCharConfigField(charId, 'appearance', curAppear);
+                renderApp();
+                return;
+            }
+
+            // Remove appearance entry
+            if (target.matches('[data-action="remove-appearance"]')) {
+                if (!canEdit(charId)) return;
+                var removeIdx = parseInt(target.dataset.appearIdx);
+                if (!isNaN(removeIdx)) {
+                    var curAppear2 = (config.appearance || []).slice();
+                    curAppear2.splice(removeIdx, 1);
+                    saveCharConfigField(charId, 'appearance', curAppear2);
+                    config = loadCharConfig(charId);
+                    renderApp();
+                }
                 return;
             }
 

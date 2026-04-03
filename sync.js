@@ -185,11 +185,16 @@ function initFirebaseSync() {
         syncReady = true;
         console.log('[Sync] Firebase verbonden!');
 
-        syncDownloadAll(function() {
-            console.log('[Sync] Download voltooid.');
-            syncStartListeners();
-            initPresence();
-            if (typeof renderApp === 'function') renderApp();
+        // Download users first, then all data
+        syncDownloadUsers(function() {
+            seedUsers();
+            syncDownloadAll(function() {
+                console.log('[Sync] Download voltooid.');
+                syncStartListeners();
+                syncListenUsers();
+                initPresence();
+                if (typeof renderApp === 'function') renderApp();
+            });
         });
 
     } catch (e) {
@@ -462,4 +467,99 @@ function initPresence() {
 
 function isUserOnline(userId) {
     return onlineUsers[userId] && onlineUsers[userId].online;
+}
+
+// ===== User Sync =====
+
+function syncDownloadUsers(callback) {
+    if (!syncDb) { if (callback) callback(); return; }
+
+    syncDb.ref('dw/users').once('value', function(snapshot) {
+        var data = snapshot.val();
+        if (data) {
+            usersCache = data;
+            localStorage.setItem('dw_users', JSON.stringify(usersCache));
+            console.log('[Sync] Users gedownload:', Object.keys(usersCache).length);
+        } else {
+            // Load from localStorage cache
+            var cached = localStorage.getItem('dw_users');
+            if (cached) {
+                try { usersCache = JSON.parse(cached); } catch (e) { usersCache = null; }
+            }
+        }
+        if (callback) callback();
+    }, function(err) {
+        console.error('[Sync] Users download mislukt:', err);
+        // Fallback to localStorage cache
+        var cached = localStorage.getItem('dw_users');
+        if (cached) {
+            try { usersCache = JSON.parse(cached); } catch (e) { usersCache = null; }
+        }
+        if (callback) callback();
+    });
+}
+
+function syncSaveUser(userId, userData) {
+    if (!syncReady || !syncDb) return;
+    syncDb.ref('dw/users/' + userId).set(userData);
+    // Also update local cache
+    if (!usersCache) usersCache = {};
+    usersCache[userId] = userData;
+    localStorage.setItem('dw_users', JSON.stringify(usersCache));
+}
+
+function syncListenUsers() {
+    if (!syncDb) return;
+
+    syncDb.ref('dw/users').on('value', function(snapshot) {
+        var data = snapshot.val();
+        if (data) {
+            usersCache = data;
+            localStorage.setItem('dw_users', JSON.stringify(usersCache));
+        }
+    });
+}
+
+function seedUsers() {
+    if (!syncReady || !syncDb) {
+        console.warn('[Sync] Firebase niet klaar voor user seeding.');
+        return;
+    }
+    if (typeof DEFAULT_USERS === 'undefined') return;
+
+    syncDb.ref('dw/users').once('value', function(snapshot) {
+        var existing = snapshot.val() || {};
+        var userIds = Object.keys(DEFAULT_USERS);
+        var updates = {};
+
+        for (var i = 0; i < userIds.length; i++) {
+            var uid = userIds[i];
+            var expectedChars = DEFAULT_USERS[uid].characters || ((uid !== 'admin' && uid !== 'dm') ? [uid] : []);
+            if (!existing[uid]) {
+                updates[uid] = {
+                    name: DEFAULT_USERS[uid].name,
+                    password: DEFAULT_USERS[uid].password,
+                    role: DEFAULT_USERS[uid].role,
+                    characters: expectedChars
+                };
+            } else if (!existing[uid].characters || !Array.isArray(existing[uid].characters) || existing[uid].characters.length === 0) {
+                // Fix existing users missing characters array
+                if (expectedChars.length > 0) {
+                    updates[uid + '/characters'] = expectedChars;
+                }
+            }
+        }
+
+        if (Object.keys(updates).length > 0) {
+            syncDb.ref('dw/users').update(updates, function(err) {
+                if (err) {
+                    console.error('[Sync] User seeding mislukt:', err);
+                } else {
+                    console.log('[Sync] Default users geseeded:', Object.keys(updates).length);
+                    // Refresh cache
+                    syncDownloadUsers();
+                }
+            });
+        }
+    });
 }
