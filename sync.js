@@ -194,6 +194,8 @@ function initFirebaseSync() {
                 console.log('[Sync] Download voltooid.');
                 syncStartListeners();
                 syncListenUsers();
+                syncDownloadBugs();
+                syncListenBugs();
                 initPresence();
                 if (typeof renderApp === 'function') renderApp();
             });
@@ -469,6 +471,34 @@ function initPresence() {
 
 function isUserOnline(userId) {
     return onlineUsers[userId] && onlineUsers[userId].online;
+}
+
+// ===== Bug Report Sync =====
+
+function syncUploadBugs(bugs) {
+    if (!syncReady || !syncDb) return;
+    syncDb.ref('dw/bugs').set(bugs);
+}
+
+function syncDownloadBugs(callback) {
+    if (!syncDb) { if (callback) callback([]); return; }
+    syncDb.ref('dw/bugs').once('value', function(snapshot) {
+        var data = snapshot.val();
+        var bugs = Array.isArray(data) ? data.filter(Boolean) : [];
+        localStorage.setItem('dw_bugs', JSON.stringify(bugs));
+        if (callback) callback(bugs);
+    }, function() {
+        if (callback) callback([]);
+    });
+}
+
+function syncListenBugs() {
+    if (!syncDb) return;
+    syncDb.ref('dw/bugs').on('value', function(snapshot) {
+        var data = snapshot.val();
+        var bugs = Array.isArray(data) ? data.filter(Boolean) : [];
+        localStorage.setItem('dw_bugs', JSON.stringify(bugs));
+    });
 }
 
 // ===== User Sync =====

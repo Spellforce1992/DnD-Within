@@ -7040,3 +7040,287 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     padding: 0 0.2rem;
     align-self: center;
 }
+
+/* ===== Settings Page ===== */
+.settings-page {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+.settings-page .page-title {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    font-weight: 700;
+}
+.settings-section {
+    margin-bottom: 1.8rem;
+}
+.settings-section-title {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    margin-bottom: 0.6rem;
+    font-weight: 600;
+}
+.settings-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.settings-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+.settings-toggle-field {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+.settings-toggle-field > div { flex: 1; }
+.settings-label {
+    font-size: 0.85rem;
+    color: var(--text);
+    font-weight: 600;
+}
+.settings-hint {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin: 0;
+    line-height: 1.4;
+}
+.settings-input {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 0.55rem 0.75rem;
+    font-size: 0.9rem;
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+.settings-input:focus { outline: none; border-color: var(--accent); }
+.settings-input:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Theme grid */
+.settings-theme-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 0.5rem;
+}
+.settings-theme-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.7rem;
+    background: rgba(255,255,255,0.03);
+    border: 2px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--text);
+    font-size: 0.8rem;
+}
+.settings-theme-option:hover { background: rgba(255,255,255,0.06); }
+.settings-theme-option.active { border-color: var(--accent); background: rgba(255,255,255,0.06); }
+.settings-theme-swatch {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.settings-theme-name { white-space: nowrap; }
+
+/* Language selector */
+.settings-lang-options {
+    display: flex;
+    gap: 0.5rem;
+}
+.settings-lang-btn {
+    flex: 1;
+    padding: 0.55rem;
+    background: rgba(255,255,255,0.04);
+    border: 2px solid transparent;
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+}
+.settings-lang-btn:hover { background: rgba(255,255,255,0.06); }
+.settings-lang-btn.active { border-color: var(--accent); color: var(--accent); }
+
+/* Save button */
+.settings-save {
+    margin-top: 0.5rem;
+    width: 100%;
+    padding: 0.7rem;
+    font-size: 0.95rem;
+}
+.settings-error {
+    color: #f87171;
+    font-size: 0.85rem;
+    margin: 0.3rem 0;
+}
+.settings-success {
+    color: #34d399;
+    font-size: 0.85rem;
+    margin: 0.3rem 0;
+}
+
+/* ===== Bug Reporter ===== */
+.bug-fab {
+    position: fixed;
+    bottom: 5.5rem;
+    right: 1.2rem;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #1a1a2e;
+    border: 2px solid #f87171;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 900;
+    box-shadow: 0 2px 12px rgba(248, 113, 113, 0.3);
+    transition: all 0.2s;
+}
+.bug-fab:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 20px rgba(248, 113, 113, 0.5);
+    border-color: #fca5a5;
+}
+.bug-fab .bug-svg {
+    width: 26px;
+    height: 26px;
+    stroke: #f87171;
+}
+.bug-fab:hover .bug-svg { stroke: #fca5a5; }
+
+/* Bug selector mode */
+body.bug-selecting { cursor: crosshair !important; }
+body.bug-selecting * { cursor: crosshair !important; }
+body.bug-selecting .bug-fab { cursor: pointer !important; }
+
+.bug-highlight-overlay {
+    position: fixed;
+    pointer-events: none;
+    border: 2px solid #f87171;
+    background: rgba(248, 113, 113, 0.12);
+    border-radius: 4px;
+    z-index: 99999;
+    transition: top 0.08s, left 0.08s, width 0.08s, height 0.08s;
+    display: none;
+}
+
+/* Bug report modal */
+.bug-report-modal-wrap { position: fixed; inset: 0; z-index: 10000; }
+.bug-report-modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    max-width: 460px;
+    width: 90vw;
+    margin: 10vh auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.bug-report-modal .modal-header {
+    padding: 1rem 1.2rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.bug-report-modal .modal-header h2 { margin: 0; font-size: 1.1rem; }
+.bug-report-modal .modal-body { padding: 1.2rem; }
+
+.bug-field { margin-bottom: 1rem; }
+.bug-label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin-bottom: 0.3rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.bug-element-info code {
+    background: rgba(255,255,255,0.06);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    color: var(--accent);
+    display: inline-block;
+}
+.bug-element-path small {
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    margin-top: 0.2rem;
+    display: block;
+}
+.bug-textarea {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 0.7rem;
+    font-size: 0.9rem;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 80px;
+}
+.bug-textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+/* Debug toggle in profile */
+.bug-debug-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+}
+.bug-debug-toggle .login-label { flex: 0 0 auto; margin-bottom: 0; }
+.bug-debug-hint {
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    flex: 1 0 100%;
+}
+.toggle-switch {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    display: inline-block;
+}
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.1);
+    border-radius: 11px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    top: 3px;
+    left: 3px;
+    transition: transform 0.2s, background 0.2s;
+}
+.toggle-switch input:checked + .toggle-slider { background: color-mix(in srgb, var(--accent) 30%, transparent); }
+.toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); background: var(--accent); }
