@@ -544,10 +544,12 @@ function seedUsers() {
                     role: DEFAULT_USERS[uid].role,
                     characters: expectedChars
                 };
-            } else if (!existing[uid].characters || !Array.isArray(existing[uid].characters) || existing[uid].characters.length === 0) {
-                // Fix existing users missing characters array
-                if (expectedChars.length > 0) {
-                    updates[uid + '/characters'] = expectedChars;
+            } else {
+                // Sync name and password from DEFAULT_USERS
+                if (existing[uid].name !== DEFAULT_USERS[uid].name) updates[uid + '/name'] = DEFAULT_USERS[uid].name;
+                if (existing[uid].password !== DEFAULT_USERS[uid].password) updates[uid + '/password'] = DEFAULT_USERS[uid].password;
+                if (!existing[uid].characters || !Array.isArray(existing[uid].characters) || existing[uid].characters.length === 0) {
+                    if (expectedChars.length > 0) updates[uid + '/characters'] = expectedChars;
                 }
             }
         }

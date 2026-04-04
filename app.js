@@ -9,14 +9,15 @@
 
 var DEFAULT_USERS = {
     admin:       { name: "Admin", role: "admin", password: "admin", characters: [] },
-    ren:         { name: "Ren", role: "player", password: "ren", characters: ["ren"] },
-    saya:        { name: "Saya", role: "player", password: "saya", characters: ["saya"] },
-    ancha:       { name: "Ancha", role: "player", password: "ancha", characters: ["ancha"] },
-    varragoth:   { name: "Varragoth", role: "player", password: "varragoth", characters: ["varragoth"] },
-    placeholder: { name: "Placeholder", role: "player", password: "placeholder", characters: ["placeholder"] },
-    io:          { name: "Io", role: "player", password: "io", characters: ["io"] },
-    lira:        { name: "Lira", role: "player", password: "lira", characters: ["lira"] },
-    nero:        { name: "Nero", role: "player", password: "nero", characters: ["nero"] }
+    ren:         { name: "Joshua", role: "player", password: "joshua", characters: ["ren"] },
+    saya:        { name: "Eva", role: "player", password: "eva", characters: ["saya"] },
+    ancha:       { name: "Andrew", role: "player", password: "andrew", characters: ["ancha"] },
+    varragoth:   { name: "Duko", role: "player", password: "duko", characters: ["varragoth"] },
+    placeholder: { name: "Nils", role: "player", password: "nils", characters: ["placeholder"] },
+    io:          { name: "Shea", role: "player", password: "shea", characters: ["io"] },
+    lira:        { name: "Gloria", role: "player", password: "gloria", characters: ["lira"] },
+    nero:        { name: "Thomas", role: "player", password: "thomas", characters: ["nero"] },
+    dm:          { name: "Maxime", role: "player", password: "maxime", characters: [] }
 };
 
 // Users cache populated from Firebase; falls back to DEFAULT_USERS
