@@ -145,6 +145,45 @@ function applyUserTheme() {
 }
 
 // ============================================================
+// Section 1c: Campaign System
+// ============================================================
+
+function getActiveCampaign() {
+    return localStorage.getItem('dw_active_campaign') || 'valoria';
+}
+
+function setActiveCampaign(campaignId) {
+    localStorage.setItem('dw_active_campaign', campaignId);
+}
+
+function getCampaigns() {
+    var saved = localStorage.getItem('dw_campaigns');
+    if (saved) try { return JSON.parse(saved); } catch(e) {}
+    return { valoria: { name: 'Valoria', dm: 'dm', created: Date.now() } };
+}
+
+function saveCampaigns(campaigns) {
+    localStorage.setItem('dw_campaigns', JSON.stringify(campaigns));
+    if (typeof syncUpload === 'function') syncUpload('dw_campaigns');
+}
+
+function getUserCampaigns() {
+    var uid = currentUserId();
+    if (!uid) return [];
+    var u = getUserData(uid);
+    if (u && u.role === 'admin') return Object.keys(getCampaigns());
+    if (u && u.campaigns && Array.isArray(u.campaigns)) return u.campaigns;
+    // Default: user belongs to 'valoria'
+    return ['valoria'];
+}
+
+function getCharacterCampaign(charId) {
+    var config = loadCharConfig(charId);
+    if (config && config.campaign) return config.campaign;
+    return 'valoria'; // legacy characters default to valoria
+}
+
+// ============================================================
 // Section 2: Router
 // ============================================================
 
@@ -802,24 +841,28 @@ function getQuestData() {
     return qd;
 }
 
-function getCharacterIds() {
+function getCharacterIds(ignoreCampaign) {
     // Collect character IDs from localStorage configs + SEED_DATA
     var ids = {};
-    // From localStorage
     for (var i = 0; i < localStorage.length; i++) {
         var key = localStorage.key(i);
         if (key.indexOf('dw_charconfig_') === 0) {
             ids[key.substring(14)] = true;
         }
     }
-    // From SEED_DATA fallback
     if (typeof SEED_DATA !== 'undefined') {
         var seedKeys = Object.keys(SEED_DATA);
         for (var j = 0; j < seedKeys.length; j++) {
             ids[seedKeys[j]] = true;
         }
     }
-    return Object.keys(ids);
+    var allIds = Object.keys(ids);
+    if (ignoreCampaign) return allIds;
+    // Filter by active campaign
+    var active = getActiveCampaign();
+    return allIds.filter(function(id) {
+        return getCharacterCampaign(id) === active;
+    });
 }
 
 // ============================================================
@@ -1022,6 +1065,21 @@ function renderNavbar(route) {
         html += '<span class="sync-indicator sync-online" title="' + t('nav.sync.online') + '">&#9729;</span>';
     } else if (syncStatus === 'offline') {
         html += '<span class="sync-indicator sync-offline" title="' + t('nav.sync.offline') + '">&#9729;</span>';
+    }
+    // Campaign selector
+    var userCampaigns = getUserCampaigns();
+    var campaigns = getCampaigns();
+    var activeCamp = getActiveCampaign();
+    if (userCampaigns.length > 1) {
+        html += '<select class="campaign-selector" data-action="switch-campaign">';
+        for (var ci = 0; ci < userCampaigns.length; ci++) {
+            var cId = userCampaigns[ci];
+            var cName = campaigns[cId] ? campaigns[cId].name : cId;
+            html += '<option value="' + escapeAttr(cId) + '"' + (cId === activeCamp ? ' selected' : '') + '>' + escapeHtml(cName) + '</option>';
+        }
+        html += '</select>';
+    } else if (userCampaigns.length === 1 && campaigns[userCampaigns[0]]) {
+        html += '<span class="campaign-label">' + escapeHtml(campaigns[userCampaigns[0]].name) + '</span>';
     }
     html += '<button class="nav-lang-btn" data-action="toggle-lang" title="' + t('nav.language') + '">' + (getLang() === 'nl' ? 'NL' : 'EN') + '</button>';
     html += '<span class="nav-avatar" data-action="open-profile" title="Profiel instellingen" style="cursor:pointer;">' + escapeHtml(user ? user.name.charAt(0) : '') + '</span>';
@@ -1273,7 +1331,8 @@ function renderDMPage(subpage) {
     var tabs = [
         { id: 'initiative', label: t('dm.initiative'), icon: '&#9876;' },
         { id: 'npcs', label: 'NPCs', icon: '&#127917;' },
-        { id: 'families', label: 'Families', icon: '&#128106;' }
+        { id: 'families', label: 'Families', icon: '&#128106;' },
+        { id: 'campaigns', label: 'Campaigns', icon: '&#127760;' }
     ];
     html += '<div class="dm-tabs">';
     for (var ti = 0; ti < tabs.length; ti++) {
@@ -1291,6 +1350,8 @@ function renderDMPage(subpage) {
         html += renderDMNPCs();
     } else if (activeSection === 'families') {
         html += renderDMFamilies();
+    } else if (activeSection === 'campaigns') {
+        html += renderDMCampaigns();
     }
 
     html += '</div>';
@@ -1630,6 +1691,73 @@ function renderDMFamilies() {
     return html;
 }
 
+function renderDMCampaigns() {
+    var campaigns = getCampaigns();
+    var campIds = Object.keys(campaigns);
+    var activeCamp = getActiveCampaign();
+    var allChars = getCharacterIds(true); // ignore campaign filter
+
+    var html = '<div class="dm-tool-card">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">';
+    html += '<h3>Campaigns (' + campIds.length + ')</h3>';
+    html += '<button class="btn btn-primary btn-sm" data-action="create-campaign">+ New Campaign</button>';
+    html += '</div>';
+
+    for (var ci = 0; ci < campIds.length; ci++) {
+        var cId = campIds[ci];
+        var camp = campaigns[cId];
+        var isActive = cId === activeCamp;
+        var charCount = 0;
+        for (var chi = 0; chi < allChars.length; chi++) {
+            if (getCharacterCampaign(allChars[chi]) === cId) charCount++;
+        }
+        html += '<div class="campaign-card' + (isActive ? ' active' : '') + '">';
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;">';
+        html += '<div>';
+        html += '<strong style="color:var(--text-bright);">' + escapeHtml(camp.name) + '</strong>';
+        if (isActive) html += ' <span style="font-size:0.65rem;color:var(--accent);">ACTIVE</span>';
+        html += '<br><span style="font-size:0.75rem;color:var(--text-dim);">' + charCount + ' characters</span>';
+        html += '</div>';
+        html += '<div style="display:flex;gap:0.4rem;">';
+        if (!isActive) html += '<button class="btn btn-ghost btn-sm" data-action="activate-campaign" data-campaign-id="' + escapeAttr(cId) + '">Activate</button>';
+        html += '<button class="btn btn-ghost btn-sm" data-action="rename-campaign" data-campaign-id="' + escapeAttr(cId) + '">Rename</button>';
+        if (campIds.length > 1 && charCount === 0) html += '<button class="btn btn-ghost btn-sm" data-action="delete-campaign" data-campaign-id="' + escapeAttr(cId) + '" style="color:var(--danger);">Delete</button>';
+        html += '</div></div>';
+
+        // Character assignment
+        html += '<div style="margin-top:0.5rem;">';
+        for (var ai = 0; ai < allChars.length; ai++) {
+            var aCfg = loadCharConfig(allChars[ai]);
+            if (!aCfg) continue;
+            var charCamp = getCharacterCampaign(allChars[ai]);
+            if (charCamp === cId) {
+                html += '<span class="campaign-char-tag">' + escapeHtml(aCfg.name) + '</span>';
+            }
+        }
+        html += '</div>';
+        html += '</div>';
+    }
+
+    // Unassigned characters
+    var unassigned = [];
+    for (var ui = 0; ui < allChars.length; ui++) {
+        var uCamp = getCharacterCampaign(allChars[ui]);
+        if (!campaigns[uCamp]) unassigned.push(allChars[ui]);
+    }
+    if (unassigned.length > 0) {
+        html += '<div style="margin-top:1rem;padding:0.75rem;border:1px dashed var(--border);border-radius:var(--radius);">';
+        html += '<h4 style="color:var(--warning);margin-bottom:0.5rem;">Unassigned Characters</h4>';
+        for (var uj = 0; uj < unassigned.length; uj++) {
+            var uCfg = loadCharConfig(unassigned[uj]);
+            html += '<span class="campaign-char-tag">' + escapeHtml(uCfg ? uCfg.name : unassigned[uj]) + '</span>';
+        }
+        html += '</div>';
+    }
+
+    html += '</div>';
+    return html;
+}
+
 function renderDMWhispers() {
     var html = '<div class="dm-tool-card">';
     html += '<h3>Send Whisper</h3>';
@@ -1869,6 +1997,7 @@ function renderCharacterSheet(charId) {
     html += '<span class="xp-label">' + currentXP.toLocaleString() + ' / ' + (state.level >= 20 ? 'MAX' : xpForNext.toLocaleString()) + ' XP</span>';
     if (editable) {
         html += '<div class="xp-controls">';
+        html += '<button class="btn btn-ghost btn-sm" data-action="remove-xp" style="color:var(--danger);">&minus;XP</button>';
         html += '<input type="number" class="xp-input" id="xp-add-input" value="100" min="1" style="width:70px;">';
         html += '<button class="btn btn-ghost btn-sm" data-action="add-xp">+XP</button>';
         html += '</div>';
@@ -5809,6 +5938,55 @@ function bindPageEvents(route) {
             return;
         }
 
+        // --- Campaign management ---
+        if (target.matches('[data-action="create-campaign"]')) {
+            var campName = prompt('Campaign name:');
+            if (campName && campName.trim()) {
+                var campId = campName.trim().toLowerCase().replace(/[^a-z0-9]/g, '_');
+                var camps = getCampaigns();
+                camps[campId] = { name: campName.trim(), dm: currentUserId(), created: Date.now() };
+                saveCampaigns(camps);
+                // Add to current user's campaigns list
+                var u = getUserData(currentUserId());
+                if (u) {
+                    if (!u.campaigns) u.campaigns = ['valoria'];
+                    if (u.campaigns.indexOf(campId) === -1) u.campaigns.push(campId);
+                    if (typeof syncSaveUser === 'function') syncSaveUser(currentUserId(), u);
+                }
+                renderApp();
+            }
+            return;
+        }
+        if (target.matches('[data-action="activate-campaign"]')) {
+            setActiveCampaign(target.dataset.campaignId);
+            renderApp();
+            return;
+        }
+        if (target.matches('[data-action="rename-campaign"]')) {
+            var cId = target.dataset.campaignId;
+            var camps = getCampaigns();
+            if (camps[cId]) {
+                var newName = prompt('New name:', camps[cId].name);
+                if (newName && newName.trim()) {
+                    camps[cId].name = newName.trim();
+                    saveCampaigns(camps);
+                    renderApp();
+                }
+            }
+            return;
+        }
+        if (target.matches('[data-action="delete-campaign"]')) {
+            var cId = target.dataset.campaignId;
+            if (confirm('Delete campaign "' + cId + '"?')) {
+                var camps = getCampaigns();
+                delete camps[cId];
+                saveCampaigns(camps);
+                if (getActiveCampaign() === cId) setActiveCampaign(Object.keys(camps)[0] || 'valoria');
+                renderApp();
+            }
+            return;
+        }
+
         // --- NPC handlers ---
         if (target.matches('[data-action="add-npc"]')) {
             var npcName = prompt('NPC name:');
@@ -6184,6 +6362,20 @@ function bindPageEvents(route) {
                     state.xp = (state.xp || 0) + xpAmt;
                     saveCharState(charId, state);
                     showToast('+' + xpAmt + ' XP');
+                    renderApp();
+                }
+                return;
+            }
+
+            // Remove XP
+            if (target.matches('[data-action="remove-xp"]')) {
+                if (!canEdit(charId)) return;
+                var xpInput = document.getElementById('xp-add-input');
+                var xpAmt = xpInput ? parseInt(xpInput.value) || 0 : 0;
+                if (xpAmt > 0) {
+                    state.xp = Math.max(0, (state.xp || 0) - xpAmt);
+                    saveCharState(charId, state);
+                    showToast('-' + xpAmt + ' XP', 'warning');
                     renderApp();
                 }
                 return;
@@ -7665,6 +7857,13 @@ function bindPageEvents(route) {
     app.onchange = function(e) {
         var target = e.target;
 
+        // Campaign switch
+        if (target.matches('[data-action="switch-campaign"]')) {
+            setActiveCampaign(target.value);
+            renderApp();
+            return;
+        }
+
         // Set concentration via select
         if (target.matches('[data-action="set-concentration"]')) {
             if (!charId || !canEdit(charId)) return;
@@ -8829,7 +9028,8 @@ function createCharacterFromWizard() {
         quotes: [],
         defaultItems: [],
         charTimeline: [],
-        family: []
+        family: [],
+        campaign: getActiveCampaign()
     };
 
     // Save config
@@ -8908,76 +9108,68 @@ function bindWizardEvents() {
     var container = document.getElementById('wizard-container');
     if (!container) return;
 
-    container.onclick = function(e) {
-        var target = e.target;
+    // Direct button bindings (more robust than delegation through fixed overlay)
+    var closeBtn = container.querySelector('.modal-close');
+    if (closeBtn) closeBtn.addEventListener('click', function(e) { e.stopPropagation(); closeWizard(); });
 
-        // Close on overlay click (direct, not bubbled) or close button
-        if (target.matches('.wizard-overlay') || target.matches('.modal-close') || target.closest('.modal-close')) {
-            closeWizard();
-            return;
-        }
+    var overlay = container.querySelector('.wizard-overlay');
+    if (overlay) overlay.addEventListener('click', function(e) { if (e.target === overlay) closeWizard(); });
 
-        if (target.matches('[data-action="wizard-prev"]') || target.closest('[data-action="wizard-prev"]')) {
-            saveWizardStepData();
-            if (wizardState.step > 1) {
-                wizardState.step--;
-                refreshWizard();
-            }
-            return;
-        }
+    var prevBtn = container.querySelector('[data-action="wizard-prev"]');
+    if (prevBtn) prevBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        saveWizardStepData();
+        if (wizardState.step > 1) { wizardState.step--; refreshWizard(); }
+    });
 
-        if (target.matches('[data-action="wizard-next"]') || target.closest('[data-action="wizard-next"]')) {
-            saveWizardStepData();
-            if (wizardState.step < 6) {
-                wizardState.step++;
-                refreshWizard();
-            }
-            return;
-        }
+    var nextBtn = container.querySelector('[data-action="wizard-next"]');
+    if (nextBtn) nextBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        saveWizardStepData();
+        if (wizardState.step < 6) { wizardState.step++; refreshWizard(); }
+    });
 
-        if (target.matches('[data-action="wizard-create"]') || target.closest('[data-action="wizard-create"]')) {
-            saveWizardStepData();
-            var newCharId = createCharacterFromWizard();
-            if (newCharId) {
-                closeWizard();
-                navigate('/characters/' + newCharId);
-            }
-            return;
-        }
+    var createBtn = container.querySelector('[data-action="wizard-create"]');
+    if (createBtn) createBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        saveWizardStepData();
+        var newCharId = createCharacterFromWizard();
+        if (newCharId) { closeWizard(); navigate('/characters/' + newCharId); }
+    });
 
-        if (target.matches('[data-action="wizard-color"]') || target.closest('[data-action="wizard-color"]')) {
-            var colorEl = target.matches('[data-action="wizard-color"]') ? target : target.closest('[data-action="wizard-color"]');
-            wizardState.accentColor = colorEl.dataset.color;
+    // Color buttons
+    var colorBtns = container.querySelectorAll('[data-action="wizard-color"]');
+    for (var ci = 0; ci < colorBtns.length; ci++) {
+        colorBtns[ci].addEventListener('click', function(e) {
+            e.stopPropagation();
+            wizardState.accentColor = this.dataset.color;
             refreshWizard();
-            return;
-        }
+        });
+    }
 
-        // Skill checkbox
-        if (target.matches('[data-action="wizard-skill"]')) {
-            var sk = target.dataset.skill;
+    // Skill checkboxes
+    var skillBoxes = container.querySelectorAll('[data-action="wizard-skill"]');
+    for (var si = 0; si < skillBoxes.length; si++) {
+        skillBoxes[si].addEventListener('click', function() {
+            var sk = this.dataset.skill;
             var idx = wizardState.skills.indexOf(sk);
-            if (target.checked && idx === -1) {
-                wizardState.skills.push(sk);
-            } else if (!target.checked && idx !== -1) {
-                wizardState.skills.splice(idx, 1);
-            }
+            if (this.checked && idx === -1) wizardState.skills.push(sk);
+            else if (!this.checked && idx !== -1) wizardState.skills.splice(idx, 1);
             refreshWizard();
-            return;
-        }
+        });
+    }
 
-        // Cantrip checkbox
-        if (target.matches('[data-action="wizard-cantrip"]')) {
-            var cn = target.dataset.cantrip;
+    // Cantrip checkboxes
+    var cantripBoxes = container.querySelectorAll('[data-action="wizard-cantrip"]');
+    for (var cbi = 0; cbi < cantripBoxes.length; cbi++) {
+        cantripBoxes[cbi].addEventListener('click', function() {
+            var cn = this.dataset.cantrip;
             var idx = wizardState.cantrips.indexOf(cn);
-            if (target.checked && idx === -1) {
-                wizardState.cantrips.push(cn);
-            } else if (!target.checked && idx !== -1) {
-                wizardState.cantrips.splice(idx, 1);
-            }
+            if (this.checked && idx === -1) wizardState.cantrips.push(cn);
+            else if (!this.checked && idx !== -1) wizardState.cantrips.splice(idx, 1);
             refreshWizard();
-            return;
-        }
-    };
+        });
+    }
 
     container.onchange = function(e) {
         var target = e.target;

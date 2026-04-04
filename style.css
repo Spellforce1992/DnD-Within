@@ -245,6 +245,46 @@ a { color: inherit; text-decoration: none; }
 
 .nav-logout:hover { border-color: var(--danger); color: var(--danger); }
 
+.campaign-selector {
+    background: var(--bg-block);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-bright);
+    padding: 0.2rem 0.4rem;
+    font-size: 0.7rem;
+    font-family: inherit;
+    cursor: pointer;
+    max-width: 120px;
+}
+.campaign-selector:focus { border-color: var(--accent); outline: none; }
+.campaign-card {
+    background: var(--bg-block);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
+}
+.campaign-card.active { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 5%, var(--bg-block)); }
+.campaign-char-tag {
+    display: inline-block;
+    font-size: 0.7rem;
+    padding: 0.15rem 0.5rem;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    margin: 0.15rem;
+    color: var(--text-main);
+}
+
+.campaign-label {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    padding: 0.2rem 0.4rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+}
+
 .nav-lang-btn {
     background: none;
     border: 1px solid var(--accent);

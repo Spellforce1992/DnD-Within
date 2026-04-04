@@ -56,7 +56,7 @@ var SYNC_PREFIXES = [
 ];
 var SYNC_EXACT = [
     'dw_maps', 'dw_timeline', 'dw_lore',
-    'dw_initiative', 'dw_session_number', 'dw_dashboard', 'dw_party_gold', 'dw_quests', 'dw_npcs'
+    'dw_initiative', 'dw_session_number', 'dw_dashboard', 'dw_party_gold', 'dw_quests', 'dw_npcs', 'dw_campaigns'
 ];
 
 function isSyncableKey(key) {
@@ -116,6 +116,7 @@ function keyToPath(key) {
     if (key === 'dw_party_gold') return 'campaign/party_gold';
     if (key === 'dw_quests') return 'world/quests';
     if (key === 'dw_npcs') return 'world/npcs';
+    if (key === 'dw_campaigns') return 'campaign/campaigns';
 
     return 'other/' + key;
 }
@@ -160,6 +161,7 @@ function firebasePathToLocalKey(path) {
     if (p[0] === 'campaign' && p[1] === 'session_number') return 'dw_session_number';
     if (p[0] === 'campaign' && p[1] === 'dashboard') return 'dw_dashboard';
     if (p[0] === 'campaign' && p[1] === 'party_gold') return 'dw_party_gold';
+    if (p[0] === 'campaign' && p[1] === 'campaigns') return 'dw_campaigns';
 
     return null;
 }
