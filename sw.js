@@ -1,9 +1,16 @@
 // Cache version — bump this on every deploy to force update
-var CACHE_VERSION = 9;
+var CACHE_VERSION = 10;
 var CACHE_NAME = 'dnd-within-v' + CACHE_VERSION;
 var ASSETS = [
     './',
     './index.html',
+    './core.js',
+    './ui-pages.js',
+    './ui-character.js',
+    './ui-world.js',
+    './ui-modals.js',
+    './ui-settings.js',
+    './events.js',
     './app.js',
     './data.js',
     './engine.js',
