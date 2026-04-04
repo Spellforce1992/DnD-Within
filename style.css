@@ -1869,6 +1869,17 @@ a { color: inherit; text-decoration: none; }
     font-size: 0.75rem;
 }
 
+.mastery-tooltip { padding: 0.25rem 0; }
+.mastery-tooltip-title {
+    color: var(--accent);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.3rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+}
+
 .tooltip-popup .tooltip-value {
     color: var(--text-main);
     font-size: 0.8rem;
@@ -5908,7 +5919,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
    Page Transitions
    ============================================================ */
 .main-content {
-    animation: pageEnter 0.25s ease-out;
+    /* animation only via .page-enter class on route changes */
 }
 .page-exit {
     opacity: 0;

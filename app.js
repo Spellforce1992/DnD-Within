@@ -1272,7 +1272,8 @@ function renderDMPage(subpage) {
     // Tab bar
     var tabs = [
         { id: 'initiative', label: t('dm.initiative'), icon: '&#9876;' },
-        { id: 'npcs', label: 'NPCs', icon: '&#127917;' }
+        { id: 'npcs', label: 'NPCs', icon: '&#127917;' },
+        { id: 'families', label: 'Families', icon: '&#128106;' }
     ];
     html += '<div class="dm-tabs">';
     for (var ti = 0; ti < tabs.length; ti++) {
@@ -1288,6 +1289,8 @@ function renderDMPage(subpage) {
         html += renderDMInitiative();
     } else if (activeSection === 'npcs') {
         html += renderDMNPCs();
+    } else if (activeSection === 'families') {
+        html += renderDMFamilies();
     }
 
     html += '</div>';
@@ -1532,21 +1535,39 @@ function initInitiativeDragDrop() {
     });
 }
 
+var npcSearchQuery = '';
+
 function renderDMNPCs() {
     var data = getNPCData();
     var npcs = data.npcs || [];
     var html = '<div class="dm-tool-card">';
-    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;gap:0.5rem;flex-wrap:wrap;">';
     html += '<h3>NPCs (' + npcs.length + ')</h3>';
+    html += '<div style="display:flex;gap:0.5rem;align-items:center;flex:1;min-width:150px;max-width:300px;">';
+    html += '<input type="text" class="edit-input npc-search" id="npc-search" placeholder="Search NPCs..." value="' + escapeAttr(npcSearchQuery) + '" style="flex:1;font-size:0.8rem;">';
+    html += '</div>';
     html += '<button class="btn btn-primary btn-sm" data-action="add-npc">+ Add NPC</button>';
     html += '</div>';
 
-    if (npcs.length === 0) {
-        html += '<p class="text-dim">No NPCs yet.</p>';
+    // Filter NPCs by search query
+    var query = npcSearchQuery.toLowerCase();
+    var filteredNpcs = [];
+    for (var fi = 0; fi < npcs.length; fi++) {
+        if (!query || (npcs[fi].name && npcs[fi].name.toLowerCase().indexOf(query) >= 0) ||
+            (npcs[fi].location && npcs[fi].location.toLowerCase().indexOf(query) >= 0) ||
+            (npcs[fi].disposition && npcs[fi].disposition.toLowerCase().indexOf(query) >= 0) ||
+            (npcs[fi].notes && npcs[fi].notes.toLowerCase().indexOf(query) >= 0)) {
+            filteredNpcs.push({ npc: npcs[fi], idx: fi });
+        }
+    }
+
+    if (filteredNpcs.length === 0) {
+        html += '<p class="text-dim">' + (query ? 'No NPCs matching "' + escapeHtml(query) + '".' : 'No NPCs yet.') + '</p>';
     } else {
         html += '<div class="npc-grid">';
-        for (var ni = 0; ni < npcs.length; ni++) {
-            var npc = npcs[ni];
+        for (var ni = 0; ni < filteredNpcs.length; ni++) {
+            var npc = filteredNpcs[ni].npc;
+            var realIdx = filteredNpcs[ni].idx;
             var dispColor = npc.disposition === 'friendly' ? 'var(--success)' : npc.disposition === 'hostile' ? 'var(--danger)' : npc.disposition === 'neutral' ? 'var(--warning)' : 'var(--text-dim)';
             html += '<div class="npc-card" style="border-left-color:' + dispColor + '">';
             html += '<div class="npc-header">';
@@ -1559,16 +1580,50 @@ function renderDMNPCs() {
             var npcFamily = npc.family || [];
             if (npcFamily.length > 0 || isDM()) {
                 html += '<div class="npc-family-section">';
-                html += renderFamilyTree(npcFamily, 'npc:' + ni, npc.name, isDM());
+                html += renderFamilyTree(npcFamily, 'npc:' + realIdx, npc.name, isDM());
                 html += '</div>';
             }
             html += '<div class="npc-actions">';
-            html += '<button class="btn btn-ghost btn-sm" data-action="edit-npc" data-npc-idx="' + ni + '">Edit</button>';
-            html += '<button class="btn btn-ghost btn-sm" data-action="delete-npc" data-npc-idx="' + ni + '" style="color:var(--danger);">Delete</button>';
+            html += '<button class="btn btn-ghost btn-sm" data-action="edit-npc" data-npc-idx="' + realIdx + '">Edit</button>';
+            html += '<button class="btn btn-ghost btn-sm" data-action="delete-npc" data-npc-idx="' + realIdx + '" style="color:var(--danger);">Delete</button>';
             html += '</div>';
             html += '</div>';
         }
         html += '</div>';
+    }
+
+    html += '</div>';
+    return html;
+}
+
+function renderDMFamilies() {
+    var html = '<div class="dm-tool-card">';
+    html += '<h3>Family Trees</h3>';
+
+    // Character family trees
+    var charIds = getCharacterIds();
+    for (var ci = 0; ci < charIds.length; ci++) {
+        var cfg = loadCharConfig(charIds[ci]);
+        if (!cfg) continue;
+        var family = cfg.family || [];
+        html += '<div class="family-section" style="margin-bottom:1.5rem;">';
+        html += '<h4 style="color:' + (cfg.accentColor || 'var(--accent)') + ';margin-bottom:0.5rem;">' + escapeHtml(cfg.name) + '</h4>';
+        html += renderFamilyTree(family, charIds[ci], cfg.name, true);
+        html += '</div>';
+    }
+
+    // NPC family trees
+    var npcData = getNPCData();
+    var npcs = npcData.npcs || [];
+    for (var ni = 0; ni < npcs.length; ni++) {
+        var npc = npcs[ni];
+        var npcFamily = npc.family || [];
+        if (npcFamily.length > 0) {
+            html += '<div class="family-section" style="margin-bottom:1.5rem;">';
+            html += '<h4 style="color:var(--text-dim);margin-bottom:0.5rem;">' + escapeHtml(npc.name) + ' <span style="font-size:0.7rem;opacity:0.5;">(NPC)</span></h4>';
+            html += renderFamilyTree(npcFamily, 'npc:' + ni, npc.name, true);
+            html += '</div>';
+        }
     }
 
     html += '</div>';
@@ -3313,7 +3368,7 @@ function renderTabInventory(charId, config, state) {
                     if (dw.mastery && dw.name.toLowerCase() === weaponName) {
                         var mKey = dw.mastery;
                         var mDesc = DATA.items.weaponMasteryDesc && DATA.items.weaponMasteryDesc[mKey] ? DATA.items.weaponMasteryDesc[mKey] : '';
-                        masteryTag = '<span class="item-mastery" title="' + escapeAttr(mDesc) + '">' + capitalize(mKey) + '</span>';
+                        masteryTag = '<span class="item-mastery" data-mastery="' + escapeAttr(mKey) + '" data-mastery-desc="' + escapeAttr(mDesc) + '">' + capitalize(mKey) + '</span>';
                         break;
                     }
                 }
@@ -6731,6 +6786,23 @@ function bindPageEvents(route) {
                 }
             }
 
+            // Weapon mastery tooltip
+            if (target.matches('.item-mastery') || target.closest('.item-mastery')) {
+                var badge = target.matches('.item-mastery') ? target : target.closest('.item-mastery');
+                var mName = badge.dataset.mastery;
+                var mDesc = badge.dataset.masteryDesc;
+                if (mName && mDesc) {
+                    showTooltipPopup(
+                        '<div class="mastery-tooltip">' +
+                        '<h4 class="mastery-tooltip-title">' + capitalize(mName) + '</h4>' +
+                        '<p>' + escapeHtml(mDesc) + '</p>' +
+                        '</div>',
+                        badge
+                    );
+                }
+                return;
+            }
+
             // Item add button
             if (target.matches('[data-action="add-item"]')) {
                 var form = app.querySelector('.item-add-form');
@@ -6918,15 +6990,6 @@ function bindPageEvents(route) {
                     '<br>Damage: <b>' + dmgTotal + '</b>';
                 rollBtn.closest('.weapon').appendChild(resultDiv);
                 setTimeout(function() { resultDiv.remove(); }, 3000);
-                return;
-            }
-
-            // Set concentration
-            if (target.matches('[data-action="set-concentration"]')) {
-                if (!canEdit(charId)) return;
-                state.concentrating = target.value || null;
-                saveCharState(charId, state);
-                renderApp();
                 return;
             }
 
@@ -7860,6 +7923,20 @@ function bindPageEvents(route) {
     app.oninput = function(e) {
         var target = e.target;
 
+        // NPC search
+        if (target.matches('#npc-search')) {
+            npcSearchQuery = target.value;
+            // Debounced re-render
+            clearTimeout(target._searchTimer);
+            target._searchTimer = setTimeout(function() {
+                var cursorPos = target.selectionStart;
+                renderApp();
+                var el = document.getElementById('npc-search');
+                if (el) { el.focus(); el.setSelectionRange(cursorPos, cursorPos); }
+            }, 200);
+            return;
+        }
+
         // Auto-fill weight from datalist
         if (target.matches('.item-name-input')) {
             var val = target.value.trim();
@@ -8252,8 +8329,8 @@ function renderWizardModal() {
     var step = wizardState.step;
     var totalSteps = 6;
 
-    var html = '<div class="modal-overlay wizard-overlay" data-action="close-wizard">';
-    html += '<div class="wizard-modal" onclick="event.stopPropagation();">';
+    var html = '<div class="modal-overlay wizard-overlay">';
+    html += '<div class="wizard-modal">';
 
     // Header with progress
     html += '<div class="wizard-header">';
@@ -8834,11 +8911,10 @@ function bindWizardEvents() {
     container.onclick = function(e) {
         var target = e.target;
 
-        if (target.matches('[data-action="close-wizard"]') || target.closest('[data-action="close-wizard"]')) {
-            if (target.matches('.wizard-overlay') || target.matches('.modal-close') || target.closest('.modal-close')) {
-                closeWizard();
-                return;
-            }
+        // Close on overlay click (direct, not bubbled) or close button
+        if (target.matches('.wizard-overlay') || target.matches('.modal-close') || target.closest('.modal-close')) {
+            closeWizard();
+            return;
         }
 
         if (target.matches('[data-action="wizard-prev"]') || target.closest('[data-action="wizard-prev"]')) {
