@@ -2021,14 +2021,17 @@ function renderDMNPCs() {
             var npc = filteredNpcs[ni].npc;
             var realIdx = filteredNpcs[ni].idx;
             var dispColor = npc.disposition === 'friendly' ? 'var(--success)' : npc.disposition === 'hostile' ? 'var(--danger)' : npc.disposition === 'neutral' ? 'var(--warning)' : 'var(--text-dim)';
-            html += '<div class="npc-card" style="border-left-color:' + dispColor + '">';
-            html += '<div class="npc-header">';
+            html += '<div class="npc-card" style="border-left-color:' + dispColor + '" data-npc-idx="' + realIdx + '">';
+            html += '<div class="npc-header" data-action="toggle-npc-card">';
+            html += '<div class="npc-header-info">';
             html += '<strong>' + escapeHtml(npc.name) + '</strong>';
             if (npc.disposition) html += '<span class="npc-disposition" style="color:' + dispColor + '">' + escapeHtml(npc.disposition) + '</span>';
+            if (npc.location) html += '<span class="npc-location-inline">&#128205; ' + escapeHtml(npc.location) + '</span>';
             html += '</div>';
-            if (npc.location) html += '<p class="npc-location">&#128205; ' + escapeHtml(npc.location) + '</p>';
+            html += '<span class="npc-expand-icon">&#9660;</span>';
+            html += '</div>';
+            html += '<div class="npc-details">';
             if (npc.notes) html += '<p class="npc-notes">' + escapeHtml(npc.notes) + '</p>';
-            // NPC family tree
             var npcFamily = npc.family || [];
             if (npcFamily.length > 0 || isDM()) {
                 html += '<div class="npc-family-section">';
@@ -2038,6 +2041,7 @@ function renderDMNPCs() {
             html += '<div class="npc-actions">';
             html += '<button class="btn btn-ghost btn-sm" data-action="edit-npc" data-npc-idx="' + realIdx + '">Edit</button>';
             html += '<button class="btn btn-ghost btn-sm" data-action="delete-npc" data-npc-idx="' + realIdx + '" style="color:var(--danger);">Delete</button>';
+            html += '</div>';
             html += '</div>';
             html += '</div>';
         }
@@ -4486,12 +4490,16 @@ function renderNPCTracker() {
         for (var ni = 0; ni < npcs.length; ni++) {
             var npc = npcs[ni];
             var dispColor = npc.disposition === 'friendly' ? 'var(--success)' : npc.disposition === 'hostile' ? 'var(--danger)' : npc.disposition === 'neutral' ? 'var(--warning)' : 'var(--text-dim)';
-            html += '<div class="npc-card" style="border-left-color:' + dispColor + '">';
-            html += '<div class="npc-header">';
+            html += '<div class="npc-card" style="border-left-color:' + dispColor + '" data-npc-idx="' + ni + '">';
+            html += '<div class="npc-header" data-action="toggle-npc-card">';
+            html += '<div class="npc-header-info">';
             html += '<strong>' + escapeHtml(npc.name) + '</strong>';
             if (npc.disposition) html += '<span class="npc-disposition" style="color:' + dispColor + '">' + escapeHtml(npc.disposition) + '</span>';
+            if (npc.location) html += '<span class="npc-location-inline">&#128205; ' + escapeHtml(npc.location) + '</span>';
             html += '</div>';
-            if (npc.location) html += '<p class="npc-location">&#128205; ' + escapeHtml(npc.location) + '</p>';
+            html += '<span class="npc-expand-icon">&#9660;</span>';
+            html += '</div>';
+            html += '<div class="npc-details">';
             if (npc.notes) html += '<p class="npc-notes">' + escapeHtml(npc.notes) + '</p>';
             if (isDM()) {
                 html += '<div class="npc-actions">';
@@ -4499,6 +4507,7 @@ function renderNPCTracker() {
                 html += '<button class="btn btn-ghost btn-sm" data-action="delete-npc" data-npc-idx="' + ni + '" style="color:var(--danger);">Delete</button>';
                 html += '</div>';
             }
+            html += '</div>';
             html += '</div>';
         }
         html += '</div>';
@@ -6473,6 +6482,13 @@ function bindPageEvents(route) {
                 if (getActiveCampaign() === cId) setActiveCampaign(Object.keys(camps)[0] || '');
                 renderApp();
             }
+            return;
+        }
+
+        // --- NPC card expand/collapse ---
+        if (target.matches('[data-action="toggle-npc-card"]') || target.closest('[data-action="toggle-npc-card"]')) {
+            var card = target.closest('.npc-card');
+            if (card) card.classList.toggle('expanded');
             return;
         }
 
@@ -10030,7 +10046,7 @@ function openBugReportModal() {
     var info = bugSelectedElement || { descriptor: 'Algemeen', path: '', route: window.location.hash || '#/' };
     var html = '<div class="bug-report-modal-wrap">';
     html += '<div class="modal-overlay" data-action="close-bug-modal">';
-    html += '<div class="bug-report-modal" onclick="event.stopPropagation();">';
+    html += '<div class="bug-report-modal">';
     html += '<div class="modal-header"><h2>🪲 Bug Rapporteren</h2><button class="modal-close" data-action="close-bug-modal">&times;</button></div>';
     html += '<div class="modal-body">';
     html += '<div class="bug-field"><label class="bug-label">Element</label>';
@@ -10047,6 +10063,18 @@ function openBugReportModal() {
     wrap.innerHTML = html;
     document.body.appendChild(wrap.firstChild);
     lockBodyScroll();
+
+    // Direct event listeners (modal is outside #app, delegation unreliable)
+    var modalWrap = document.querySelector('.bug-report-modal-wrap');
+    if (modalWrap) {
+        var submitBtn = modalWrap.querySelector('[data-action="submit-bug"]');
+        if (submitBtn) submitBtn.addEventListener('click', function(e) { e.stopPropagation(); submitBugReport(); });
+        var closeBtns = modalWrap.querySelectorAll('[data-action="close-bug-modal"]');
+        for (var i = 0; i < closeBtns.length; i++) {
+            closeBtns[i].addEventListener('click', function(e) { if (e.target === this) closeBugReportModal(); });
+        }
+    }
+
     var ta = document.getElementById('bug-description');
     if (ta) ta.focus();
 }

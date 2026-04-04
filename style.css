@@ -6135,13 +6135,23 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     border: 1px solid var(--border);
     border-left: 3px solid var(--text-dim);
     border-radius: var(--radius);
-    padding: 1rem;
+    padding: 0;
 }
 .npc-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.3rem;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    user-select: none;
+}
+.npc-header:hover { background: var(--bg-hover); }
+.npc-header-info {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    min-width: 0;
 }
 .npc-header strong { font-size: 1rem; }
 .npc-disposition {
@@ -6149,8 +6159,21 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     text-transform: capitalize;
     font-weight: 600;
 }
+.npc-location-inline { font-size: 0.75rem; color: var(--text-dim); }
+.npc-expand-icon {
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    transition: transform 0.2s;
+}
+.npc-card.expanded .npc-expand-icon { transform: rotate(180deg); }
+.npc-details {
+    display: none;
+    padding: 0 1rem 0.75rem;
+    border-top: 1px solid var(--border);
+}
+.npc-card.expanded .npc-details { display: block; }
 .npc-location { font-size: 0.8rem; color: var(--text-dim); margin: 0.2rem 0; }
-.npc-notes { font-size: 0.85rem; color: var(--text-dim); line-height: 1.5; margin: 0.3rem 0; }
+.npc-notes { font-size: 0.85rem; color: var(--text-dim); line-height: 1.5; margin: 0.5rem 0; }
 .npc-actions { display: flex; gap: 0.4rem; margin-top: 0.5rem; }
 
 /* ============================================================
