@@ -8,16 +8,15 @@
 // ============================================================
 
 var DEFAULT_USERS = {
-    admin:   { name: "Admin", role: "admin", password: "admin", characters: [] },
-    dm:      { name: "Dungeon Master", role: "dm", password: "dm", characters: [] },
-    ren:     { name: "Joshua", role: "player", password: "ren", characters: ["ren"] },
-    saya:    { name: "Speler 2", role: "player", password: "saya", characters: ["saya"] },
-    ranger:  { name: "Speler 3", role: "player", password: "ranger", characters: ["ranger"] },
-    wizard:  { name: "Speler 4", role: "player", password: "wizard", characters: ["wizard"] },
-    paladin: { name: "Speler 5", role: "player", password: "paladin", characters: ["paladin"] },
-    druid:   { name: "Speler 6", role: "player", password: "druid", characters: ["druid"] },
-    fighter: { name: "Speler 7", role: "player", password: "fighter", characters: ["fighter"] },
-    warlock: { name: "Speler 8", role: "player", password: "warlock", characters: ["warlock"] }
+    admin:       { name: "Admin", role: "admin", password: "admin", characters: [] },
+    ren:         { name: "Ren", role: "player", password: "ren", characters: ["ren"] },
+    saya:        { name: "Saya", role: "player", password: "saya", characters: ["saya"] },
+    ancha:       { name: "Ancha", role: "player", password: "ancha", characters: ["ancha"] },
+    varragoth:   { name: "Varragoth", role: "player", password: "varragoth", characters: ["varragoth"] },
+    placeholder: { name: "Placeholder", role: "player", password: "placeholder", characters: ["placeholder"] },
+    io:          { name: "Io", role: "player", password: "io", characters: ["io"] },
+    lira:        { name: "Lira", role: "player", password: "lira", characters: ["lira"] },
+    nero:        { name: "Nero", role: "player", password: "nero", characters: ["nero"] }
 };
 
 // Users cache populated from Firebase; falls back to DEFAULT_USERS
@@ -71,9 +70,39 @@ function isAdmin() {
     return u && u.role === 'admin';
 }
 
+function isDMMode() {
+    return localStorage.getItem('dw_dm_mode') === 'true';
+}
+
+function setDMMode(enabled) {
+    localStorage.setItem('dw_dm_mode', enabled ? 'true' : 'false');
+}
+
 function isDM() {
     var u = currentUser();
-    return u && (u.role === 'dm' || u.role === 'admin');
+    if (u && u.role === 'admin') return true;
+    return isDMMode();
+}
+
+function isCampaignDM(campaignId) {
+    var camps = getCampaigns();
+    var camp = camps[campaignId || getActiveCampaign()];
+    return camp && camp.dm === currentUserId();
+}
+
+function getPartyCharIds(campaignId) {
+    var camps = getCampaigns();
+    var camp = camps[campaignId || getActiveCampaign()];
+    if (!camp || !camp.party) return [];
+    var ids = [];
+    for (var uid in camp.party) {
+        if (camp.party[uid]) ids.push(camp.party[uid]);
+    }
+    return ids;
+}
+
+function generateInviteCode() {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
 
 function canEdit(charId) {
@@ -156,10 +185,51 @@ function setActiveCampaign(campaignId) {
     localStorage.setItem('dw_active_campaign', campaignId);
 }
 
+var DEFAULT_VALORIA = { name: 'Valoria', dm: 'ren', created: Date.now(), members: ['ren','saya','ancha','varragoth','placeholder','io','lira','nero'], party: { ren: 'ren', saya: 'saya', ancha: 'ancha', varragoth: 'varragoth', placeholder: 'placeholder', io: 'io', lira: 'lira', nero: 'nero' }, inviteCode: 'VALORIA' };
+
 function getCampaigns() {
     var saved = localStorage.getItem('dw_campaigns');
-    if (saved) try { return JSON.parse(saved); } catch(e) {}
-    return { valoria: { name: 'Valoria', dm: 'dm', created: Date.now() } };
+    if (!saved) return { valoria: DEFAULT_VALORIA };
+    var camps;
+    try { camps = JSON.parse(saved); } catch(e) { return { valoria: DEFAULT_VALORIA }; }
+    // Migrate old campaigns missing members/party
+    var needsSave = false;
+    for (var cid in camps) {
+        if (!camps[cid].members) {
+            camps[cid].members = camps[cid].dm ? [camps[cid].dm] : [];
+            needsSave = true;
+        }
+        if (!camps[cid].party) {
+            camps[cid].party = {};
+            needsSave = true;
+        }
+        if (!camps[cid].inviteCode) {
+            camps[cid].inviteCode = generateInviteCode();
+            needsSave = true;
+        }
+    }
+    // Ensure valoria has all 8 members
+    if (camps.valoria && camps.valoria.members && camps.valoria.members.length < 8) {
+        var allPlayers = ['ren','saya','ancha','varragoth','placeholder','io','lira','nero'];
+        for (var pi = 0; pi < allPlayers.length; pi++) {
+            if (camps.valoria.members.indexOf(allPlayers[pi]) === -1) {
+                camps.valoria.members.push(allPlayers[pi]);
+                needsSave = true;
+            }
+        }
+        // Also ensure party mappings
+        for (var pj = 0; pj < allPlayers.length; pj++) {
+            if (!camps.valoria.party[allPlayers[pj]]) {
+                camps.valoria.party[allPlayers[pj]] = allPlayers[pj];
+                needsSave = true;
+            }
+        }
+    }
+    if (needsSave) {
+        localStorage.setItem('dw_campaigns', JSON.stringify(camps));
+        if (typeof syncUpload === 'function') syncUpload('dw_campaigns');
+    }
+    return camps;
 }
 
 function saveCampaigns(campaigns) {
@@ -172,9 +242,14 @@ function getUserCampaigns() {
     if (!uid) return [];
     var u = getUserData(uid);
     if (u && u.role === 'admin') return Object.keys(getCampaigns());
-    if (u && u.campaigns && Array.isArray(u.campaigns)) return u.campaigns;
-    // Default: user belongs to 'valoria'
-    return ['valoria'];
+    var camps = getCampaigns();
+    var result = [];
+    for (var cid in camps) {
+        var c = camps[cid];
+        if (c.dm === uid) { result.push(cid); continue; }
+        if (c.members && c.members.indexOf(uid) !== -1) result.push(cid);
+    }
+    return result;
 }
 
 function getCharacterCampaign(charId) {
@@ -449,8 +524,8 @@ var SEED_DATA = {
         ]
     },
 
-    ranger: {
-        id: "ranger", name: null, player: "ranger",
+    ancha: {
+        id: "ancha", name: "Ancha", player: "ancha",
         race: "human", className: "ranger", subclass: "hunter",
         background: "Guide", alignment: "Neutral Good", age: 25,
         accentColor: "#4ade80",
@@ -477,8 +552,8 @@ var SEED_DATA = {
         ]
     },
 
-    wizard: {
-        id: "wizard", name: null, player: "wizard",
+    varragoth: {
+        id: "varragoth", name: "Varragoth", player: "varragoth",
         race: "halfling", className: "wizard", subclass: "evocation",
         background: "Sage", alignment: "Neutral", age: 40,
         accentColor: "#818cf8",
@@ -504,8 +579,8 @@ var SEED_DATA = {
         ]
     },
 
-    paladin: {
-        id: "paladin", name: null, player: "paladin",
+    placeholder: {
+        id: "placeholder", name: "Placeholder", player: "placeholder",
         race: "tiefling", className: "paladin", subclass: "devotion",
         background: "Soldier", alignment: "Lawful Good", age: 28,
         accentColor: "#fbbf24",
@@ -531,8 +606,8 @@ var SEED_DATA = {
         ]
     },
 
-    druid: {
-        id: "druid", name: null, player: "druid",
+    io: {
+        id: "io", name: "Io", player: "io",
         race: "aasimar", className: "druid", subclass: "land",
         background: "Acolyte", alignment: "Neutral Good", age: 30,
         accentColor: "#34d399",
@@ -557,8 +632,8 @@ var SEED_DATA = {
         ]
     },
 
-    fighter: {
-        id: "fighter", name: null, player: "fighter",
+    lira: {
+        id: "lira", name: "Lira", player: "lira",
         race: "tiefling", className: "fighter", subclass: "champion",
         background: "Soldier", alignment: "Chaotic Neutral", age: 22,
         accentColor: "#f87171",
@@ -585,8 +660,8 @@ var SEED_DATA = {
         ]
     },
 
-    warlock: {
-        id: "warlock", name: null, player: "warlock",
+    nero: {
+        id: "nero", name: "Nero", player: "nero",
         race: "tiefling", className: "warlock", subclass: "fiend",
         background: "Charlatan", alignment: "Chaotic Neutral", age: 26,
         accentColor: "#a78bfa",
@@ -841,8 +916,7 @@ function getQuestData() {
     return qd;
 }
 
-function getCharacterIds(ignoreCampaign) {
-    // Collect character IDs from localStorage configs + SEED_DATA
+function getAllCharacterIds() {
     var ids = {};
     for (var i = 0; i < localStorage.length; i++) {
         var key = localStorage.key(i);
@@ -856,12 +930,24 @@ function getCharacterIds(ignoreCampaign) {
             ids[seedKeys[j]] = true;
         }
     }
-    var allIds = Object.keys(ids);
+    return Object.keys(ids);
+}
+
+function getCharacterIds(ignoreCampaign) {
+    var allIds = getAllCharacterIds();
     if (ignoreCampaign) return allIds;
-    // Filter by active campaign
-    var active = getActiveCampaign();
+    // Filter by active campaign party
+    var partyIds = getPartyCharIds();
     return allIds.filter(function(id) {
-        return getCharacterCampaign(id) === active;
+        return partyIds.indexOf(id) !== -1;
+    });
+}
+
+function getMyCharacterIds() {
+    var uid = currentUserId();
+    var allIds = getAllCharacterIds();
+    return allIds.filter(function(id) {
+        return userOwnsCharacter(uid, id);
     });
 }
 
@@ -891,11 +977,19 @@ function renderApp() {
 
     if (route.path === '/login' || !user) {
         html = renderLogin();
+    } else if (route.parts[0] === 'join' && route.parts[1]) {
+        html = renderNavbar(route) + '<main class="main-content">';
+        html += handleJoinCampaign(route.parts[1]);
+        html += '</main>';
     } else {
         html = renderNavbar(route) + '<main class="main-content">';
 
-        if (route.path === '/' || route.path === '/dashboard') {
+        if (route.path === '/' || route.path === '/home') {
+            html += renderHome();
+        } else if (route.path === '/dashboard') {
             html += renderDashboard();
+        } else if (route.path === '/party') {
+            html += renderParty();
         } else if (route.path === '/characters') {
             html += renderCharacterList();
         } else if (route.parts[0] === 'characters' && route.parts[1]) {
@@ -1018,58 +1112,90 @@ function renderLogin() {
 function renderNavbar(route) {
     var user = currentUser();
     var svgI = function(d) { return '<svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>'; };
-    var links = [
+
+    var activeCamp = getActiveCampaign();
+    var campaigns = getCampaigns();
+    var hasCampaign = campaigns[activeCamp] != null;
+    var inCampaignView = hasCampaign && ['dashboard', 'party', 'maps', 'timeline', 'lore', 'notes', 'dm'].indexOf(route.parts[0] || 'dashboard') !== -1;
+
+    // Campaign navigation links
+    var campLinks = [
         { path: '/dashboard', label: t('nav.dashboard'), icon: svgI('<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>') },
-        { path: '/characters', label: t('nav.characters'), icon: svgI('<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>') },
+        { path: '/party', label: 'Party', icon: svgI('<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>') },
         { path: '/maps', label: t('nav.maps'), icon: svgI('<polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>') },
         { path: '/timeline', label: t('nav.timeline'), icon: svgI('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>') },
         { path: '/lore', label: t('nav.lore'), icon: svgI('<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>') },
         { path: '/notes', label: t('nav.notes'), icon: svgI('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>') }
     ];
     if (isDM()) {
-        links.push({ path: '/dm', label: t('dm.tools'), icon: svgI('<path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>') });
+        campLinks.push({ path: '/dm', label: t('dm.tools'), icon: svgI('<path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>') });
     }
 
+    // Personal links (main menu)
+    var personalLinks = [
+        { path: '/home', label: 'Campaigns', icon: svgI('<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>') },
+        { path: '/characters', label: t('nav.characters'), icon: svgI('<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>') }
+    ];
+
     var html = '<nav class="navbar">';
-    html += '<a class="nav-logo" href="#/dashboard">D&D <span class="logo-accent">Within</span></a>';
+    html += '<a class="nav-logo" href="#/home">D&D <span class="logo-accent">Within</span></a>';
     html += '<div class="nav-links">';
 
-    for (var i = 0; i < links.length; i++) {
-        var link = links[i];
-        var isActive = route.path === link.path || (link.path === '/dashboard' && route.path === '/');
-        // Also active on sub-paths
-        if (link.path === '/characters' && route.parts[0] === 'characters') isActive = true;
-        if (link.path === '/lore' && route.parts[0] === 'lore') isActive = true;
-        if (link.path === '/notes' && route.parts[0] === 'notes') isActive = true;
-        if (link.path === '/dm' && route.parts[0] === 'dm') isActive = true;
-        html += '<a class="nav-link' + (isActive ? ' active' : '') + '" href="#' + link.path + '"><span class="nav-icon">' + link.icon + '</span>' + link.label + '</a>';
+    if (inCampaignView) {
+        // Back to main menu
+        html += '<a class="nav-link nav-back" href="#/home"><span class="nav-icon">' + svgI('<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>') + '</span>Menu</a>';
+        html += '<span class="nav-separator">|</span>';
+        // Campaign links
+        for (var i = 0; i < campLinks.length; i++) {
+            var link = campLinks[i];
+            var isActive = route.path === link.path;
+            if (link.path === '/dashboard' && route.path === '/dashboard') isActive = true;
+            if (link.path === '/party' && route.parts[0] === 'party') isActive = true;
+            if (link.path === '/lore' && route.parts[0] === 'lore') isActive = true;
+            if (link.path === '/notes' && route.parts[0] === 'notes') isActive = true;
+            if (link.path === '/dm' && route.parts[0] === 'dm') isActive = true;
+            html += '<a class="nav-link' + (isActive ? ' active' : '') + '" href="#' + link.path + '"><span class="nav-icon">' + link.icon + '</span>' + link.label + '</a>';
+        }
+    } else {
+        // Main menu links
+        for (var pi = 0; pi < personalLinks.length; pi++) {
+            var plink = personalLinks[pi];
+            var pActive = route.path === plink.path || (plink.path === '/home' && route.path === '/');
+            if (plink.path === '/characters' && route.parts[0] === 'characters') pActive = true;
+            html += '<a class="nav-link' + (pActive ? ' active' : '') + '" href="#' + plink.path + '"><span class="nav-icon">' + plink.icon + '</span>' + plink.label + '</a>';
+        }
     }
 
     html += '</div>';
     html += '<div class="nav-right">';
+
+    // DM mode toggle
+    html += '<button class="dm-toggle' + (isDMMode() ? ' active' : '') + '" data-action="toggle-dm-mode" title="DM Mode">';
+    html += svgI('<path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>');
+    html += '<span class="dm-toggle-label">' + (isDMMode() ? 'DM' : 'Player') + '</span>';
+    html += '</button>';
+
     html += '<div class="theme-picker-wrap">';
     html += '<button class="theme-picker-btn" data-action="toggle-theme-picker" title="' + t('nav.theme') + '">&#127912;</button>';
     html += '<div class="theme-picker-popup" id="theme-picker" style="display:none;">';
     html += '<div class="theme-picker-grid">';
     for (var ti = 0; ti < COLOR_THEMES.length; ti++) {
         var theme = COLOR_THEMES[ti];
-        var isActive = getUserTheme() === theme.id;
-        html += '<button class="theme-option' + (isActive ? ' active' : '') + '" data-action="select-theme" data-theme="' + theme.id + '" style="background:' + theme.accent + ';" title="' + theme.name + '"></button>';
+        var themeActive = getUserTheme() === theme.id;
+        html += '<button class="theme-option' + (themeActive ? ' active' : '') + '" data-action="select-theme" data-theme="' + theme.id + '" style="background:' + theme.accent + ';" title="' + theme.name + '"></button>';
     }
     html += '</div>';
     html += '</div>';
     html += '</div>';
-    // Sync status indicator
+    // Sync status
     var syncStatus = typeof getSyncStatus === 'function' ? getSyncStatus() : 'not-configured';
     if (syncStatus === 'online') {
         html += '<span class="sync-indicator sync-online" title="' + t('nav.sync.online') + '">&#9729;</span>';
     } else if (syncStatus === 'offline') {
         html += '<span class="sync-indicator sync-offline" title="' + t('nav.sync.offline') + '">&#9729;</span>';
     }
-    // Campaign selector
+    // Campaign selector (if in campaign view and multiple campaigns)
     var userCampaigns = getUserCampaigns();
-    var campaigns = getCampaigns();
-    var activeCamp = getActiveCampaign();
     if (userCampaigns.length > 1) {
         html += '<select class="campaign-selector" data-action="switch-campaign">';
         for (var ci = 0; ci < userCampaigns.length; ci++) {
@@ -1106,6 +1232,263 @@ function saveDashboardData(data) {
     localStorage.setItem('dw_dashboard', JSON.stringify(data));
     if (typeof syncUpload === 'function') syncUpload('dw_dashboard');
 }
+
+// ============================================================
+// Section 10b: Home Page (Campaign Select + Personal Overview)
+// ============================================================
+
+function renderHome() {
+    var user = currentUser();
+    var uid = currentUserId();
+    var campaigns = getCampaigns();
+    var userCampaigns = getUserCampaigns();
+    var activeCamp = getActiveCampaign();
+
+    var html = '<div class="dashboard">';
+
+    // Welcome
+    html += '<div class="welcome-banner">';
+    html += '<h1>Welkom, ' + escapeHtml(user.name) + '</h1>';
+    html += '<p class="text-dim">Kies een campaign of beheer je characters</p>';
+    html += '</div>';
+
+    // My Campaigns
+    html += '<div class="home-section">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">';
+    html += '<h2 class="section-title">Mijn Campaigns</h2>';
+    if (isDM()) {
+        html += '<button class="btn btn-primary btn-sm" data-action="create-campaign">+ Nieuwe Campaign</button>';
+    }
+    html += '</div>';
+
+    if (userCampaigns.length === 0) {
+        html += '<p class="text-dim">Je bent nog niet lid van een campaign.</p>';
+    }
+
+    html += '<div class="campaign-grid">';
+    for (var ci = 0; ci < userCampaigns.length; ci++) {
+        var cId = userCampaigns[ci];
+        var camp = campaigns[cId];
+        if (!camp) continue;
+        var isActive = cId === activeCamp;
+        var memberCount = camp.members ? camp.members.length : 0;
+        var partyCount = camp.party ? Object.keys(camp.party).length : 0;
+        var isDMOfCamp = camp.dm === uid;
+
+        html += '<div class="campaign-home-card' + (isActive ? ' active' : '') + '" data-action="enter-campaign" data-campaign-id="' + escapeAttr(cId) + '">';
+        html += '<div class="campaign-home-header">';
+        html += '<h3>' + escapeHtml(camp.name) + '</h3>';
+        if (isDMOfCamp) html += '<span class="campaign-dm-badge">DM</span>';
+        html += '</div>';
+        html += '<div class="campaign-home-stats">';
+        html += '<span>' + memberCount + ' spelers</span>';
+        html += '<span>' + partyCount + ' in party</span>';
+        html += '</div>';
+        if (isActive) html += '<span class="campaign-active-badge">Actief</span>';
+
+        // Show invite code for DM
+        if (isDMOfCamp && camp.inviteCode) {
+            html += '<div class="campaign-invite-info">';
+            html += '<span class="text-dim" style="font-size:0.7rem;">Invite code: <strong>' + escapeHtml(camp.inviteCode) + '</strong></span>';
+            html += '</div>';
+        }
+
+        html += '</div>';
+    }
+    html += '</div>';
+
+    // Join campaign
+    html += '<div class="join-campaign-section" style="margin-top:1rem;">';
+    html += '<div style="display:flex;gap:0.5rem;align-items:center;">';
+    html += '<input type="text" class="edit-input" id="join-code-input" placeholder="Invite code invoeren..." style="flex:1;max-width:200px;">';
+    html += '<button class="btn btn-ghost btn-sm" data-action="join-campaign-code">Deelnemen</button>';
+    html += '</div>';
+    html += '</div>';
+
+    html += '</div>'; // home-section
+
+    // My Characters (quick overview)
+    var myChars = getMyCharacterIds();
+    html += '<div class="home-section">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">';
+    html += '<h2 class="section-title">Mijn Characters (' + myChars.length + ')</h2>';
+    html += '<a class="btn btn-ghost btn-sm" href="#/characters">Bekijk alle &rarr;</a>';
+    html += '</div>';
+    html += '<div class="character-cards">';
+    for (var mi = 0; mi < myChars.length; mi++) {
+        var mcid = myChars[mi];
+        var mcfg = loadCharConfig(mcid);
+        var mstate = loadCharState(mcid);
+        if (!mcfg) continue;
+        html += renderCharCard(mcid, mcfg, mstate, true);
+    }
+    // Create new character card
+    html += '<div class="char-card char-card-create" data-action="open-create-wizard">';
+    html += '<div class="char-card-img"><div class="char-card-placeholder" style="font-size:2.5rem;">+</div></div>';
+    html += '<div class="char-card-overlay">';
+    html += '<span class="char-card-name">Nieuw Character</span>';
+    html += '<span class="char-card-detail">Maak een nieuw character aan</span>';
+    html += '</div>';
+    html += '</div>';
+    html += '</div>';
+    html += '</div>'; // home-section
+
+    html += '</div>';
+    return html;
+}
+
+function handleJoinCampaign(inviteCode) {
+    var uid = currentUserId();
+    var campaigns = getCampaigns();
+    var found = null;
+    for (var cid in campaigns) {
+        if (campaigns[cid].inviteCode && campaigns[cid].inviteCode.toUpperCase() === inviteCode.toUpperCase()) {
+            found = cid;
+            break;
+        }
+    }
+    if (!found) {
+        return '<div class="page-placeholder"><h2>Ongeldige invite code</h2><p>Deze invite code bestaat niet. Vraag je DM om een nieuwe link.</p><a class="btn btn-primary" href="#/home">Terug naar Home</a></div>';
+    }
+    var camp = campaigns[found];
+    if (!camp.members) camp.members = [];
+    if (camp.members.indexOf(uid) === -1) {
+        camp.members.push(uid);
+        saveCampaigns(campaigns);
+    }
+    setActiveCampaign(found);
+    return '<div class="page-placeholder"><h2>Welkom bij ' + escapeHtml(camp.name) + '!</h2><p>Je bent toegevoegd aan de campaign. Kies een character voor de party.</p><a class="btn btn-primary" href="#/party">Ga naar Party</a></div>';
+}
+
+// ============================================================
+// Section 10c: Party Page (Campaign Characters)
+// ============================================================
+
+function renderParty() {
+    var activeCamp = getActiveCampaign();
+    var campaigns = getCampaigns();
+    var camp = campaigns[activeCamp];
+    if (!camp) {
+        return '<div class="page-placeholder"><h2>Geen actieve campaign</h2><p>Ga naar <a href="#/home">Home</a> om een campaign te kiezen.</p></div>';
+    }
+
+    var uid = currentUserId();
+    var html = '<div class="dashboard">';
+    html += '<h2 class="section-title">Party — ' + escapeHtml(camp.name) + '</h2>';
+
+    // Check if current user has a character in the party
+    var myPartyChar = camp.party && camp.party[uid] ? camp.party[uid] : null;
+    var isMember = camp.members && camp.members.indexOf(uid) !== -1;
+
+    // Character assignment prompt
+    if (isMember && !myPartyChar) {
+        var myChars = getMyCharacterIds();
+        html += '<div class="party-assign-prompt">';
+        html += '<h3>Kies een character voor deze campaign</h3>';
+        html += '<p class="text-dim">Selecteer welk character je wilt spelen in ' + escapeHtml(camp.name) + '.</p>';
+        if (myChars.length === 0) {
+            html += '<p>Je hebt nog geen characters. <a href="#/characters">Maak er eerst een aan</a>.</p>';
+        } else {
+            html += '<div class="party-assign-grid">';
+            for (var ai = 0; ai < myChars.length; ai++) {
+                var acfg = loadCharConfig(myChars[ai]);
+                var astate = loadCharState(myChars[ai]);
+                if (!acfg) continue;
+                html += '<div class="party-assign-card" data-action="assign-to-party" data-char-id="' + myChars[ai] + '">';
+                var aPortrait = loadImage(myChars[ai], 'portrait');
+                html += '<div class="char-card-img">';
+                if (aPortrait) html += '<img src="' + aPortrait + '" alt="">';
+                else html += '<div class="char-card-placeholder">&#128100;</div>';
+                html += '</div>';
+                html += '<strong>' + escapeHtml(acfg.name) + '</strong>';
+                html += '<span class="text-dim">' + raceDisplayName(acfg.race) + ' ' + classDisplayName(acfg.className) + '</span>';
+                html += '</div>';
+            }
+            html += '</div>';
+        }
+        html += '</div>';
+    } else if (isMember && myPartyChar) {
+        // Show change option
+        html += '<div class="party-your-char">';
+        var myCfg = loadCharConfig(myPartyChar);
+        html += '<span class="text-dim">Jouw character: <strong>' + escapeHtml(myCfg ? myCfg.name : myPartyChar) + '</strong></span>';
+        html += ' <button class="btn btn-ghost btn-sm" data-action="change-party-char">Wissel character</button>';
+        html += '</div>';
+    }
+
+    // Party members
+    html += '<div class="character-cards">';
+    var partyCharIds = getPartyCharIds();
+    for (var i = 0; i < partyCharIds.length; i++) {
+        var cid = partyCharIds[i];
+        var cfg = loadCharConfig(cid);
+        var state = loadCharState(cid);
+        if (!cfg) continue;
+        var isOwn = userOwnsCharacter(uid, cid);
+        html += renderCharCard(cid, cfg, state, isOwn);
+    }
+
+    if (partyCharIds.length === 0) {
+        html += '<p class="text-dim" style="padding:2rem;">Nog geen characters in de party.</p>';
+    }
+
+    html += '</div>';
+
+    // DM: manage members
+    if (isDM() && isCampaignDM()) {
+        html += '<div class="dm-party-manage" style="margin-top:2rem;">';
+        html += '<h3>Campaign Beheer</h3>';
+
+        // Invite link
+        if (camp.inviteCode) {
+            var inviteUrl = window.location.origin + window.location.pathname + '#/join/' + camp.inviteCode;
+            html += '<div style="margin-bottom:1rem;">';
+            html += '<label class="login-label">Invite Link</label>';
+            html += '<div style="display:flex;gap:0.5rem;">';
+            html += '<input type="text" class="edit-input" value="' + escapeAttr(inviteUrl) + '" readonly style="flex:1;" id="invite-link-input">';
+            html += '<button class="btn btn-ghost btn-sm" data-action="copy-invite-link">Kopieer</button>';
+            html += '</div>';
+            html += '<span class="text-dim" style="font-size:0.7rem;">Code: ' + escapeHtml(camp.inviteCode) + '</span>';
+            html += '</div>';
+        }
+
+        // Members list
+        html += '<h4>Leden (' + (camp.members ? camp.members.length : 0) + ')</h4>';
+        var members = camp.members || [];
+        for (var mi = 0; mi < members.length; mi++) {
+            var mUid = members[mi];
+            var mUser = getUserData(mUid);
+            var mCharId = camp.party && camp.party[mUid] ? camp.party[mUid] : null;
+            var mCharCfg = mCharId ? loadCharConfig(mCharId) : null;
+            html += '<div class="member-row">';
+            html += '<span>' + escapeHtml(mUser ? mUser.name : mUid) + '</span>';
+            if (mCharCfg) {
+                html += '<span class="text-dim"> — ' + escapeHtml(mCharCfg.name) + ' (' + classDisplayName(mCharCfg.className) + ')</span>';
+            } else {
+                html += '<span class="text-dim"> — geen character gekozen</span>';
+            }
+            if (mUid !== camp.dm) {
+                html += '<button class="btn btn-ghost btn-sm" data-action="remove-member" data-user-id="' + escapeAttr(mUid) + '" style="color:var(--danger);">&times;</button>';
+            }
+            html += '</div>';
+        }
+
+        // Add member manually
+        html += '<div style="margin-top:0.5rem;display:flex;gap:0.5rem;">';
+        html += '<input type="text" class="edit-input" id="add-member-input" placeholder="Gebruikersnaam..." style="flex:1;max-width:200px;">';
+        html += '<button class="btn btn-ghost btn-sm" data-action="add-member">Toevoegen</button>';
+        html += '</div>';
+
+        html += '</div>';
+    }
+
+    html += '</div>';
+    return html;
+}
+
+// ============================================================
+// Section 11: Dashboard
+// ============================================================
 
 function renderDashboard() {
     var user = currentUser();
@@ -1172,7 +1555,7 @@ function renderDashboard() {
 
     // Quick navigation cards
     html += '<div class="dash-nav-cards">';
-    html += '<a class="dash-nav-card" href="#/characters"><span class="dash-nav-icon">&#9876;</span><span class="dash-nav-title">' + t('nav.characters') + '</span><span class="dash-nav-desc">' + t('dash.characters.desc') + '</span></a>';
+    html += '<a class="dash-nav-card" href="#/party"><span class="dash-nav-icon">&#9876;</span><span class="dash-nav-title">Party</span><span class="dash-nav-desc">' + t('dash.characters.desc') + '</span></a>';
     html += '<a class="dash-nav-card" href="#/timeline"><span class="dash-nav-icon">&#128337;</span><span class="dash-nav-title">' + t('nav.timeline') + '</span><span class="dash-nav-desc">' + t('dash.timeline.desc') + '</span></a>';
     html += '<a class="dash-nav-card" href="#/maps"><span class="dash-nav-icon">&#128506;</span><span class="dash-nav-title">' + t('nav.maps') + '</span><span class="dash-nav-desc">' + t('dash.maps.desc') + '</span></a>';
     html += '<a class="dash-nav-card" href="#/lore"><span class="dash-nav-icon">&#128214;</span><span class="dash-nav-title">' + t('nav.lore') + '</span><span class="dash-nav-desc">' + t('dash.lore.desc') + '</span></a>';
@@ -1695,62 +2078,42 @@ function renderDMCampaigns() {
     var campaigns = getCampaigns();
     var campIds = Object.keys(campaigns);
     var activeCamp = getActiveCampaign();
-    var allChars = getCharacterIds(true); // ignore campaign filter
 
     var html = '<div class="dm-tool-card">';
     html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">';
     html += '<h3>Campaigns (' + campIds.length + ')</h3>';
-    html += '<button class="btn btn-primary btn-sm" data-action="create-campaign">+ New Campaign</button>';
+    html += '<button class="btn btn-primary btn-sm" data-action="create-campaign">+ Nieuwe Campaign</button>';
     html += '</div>';
 
     for (var ci = 0; ci < campIds.length; ci++) {
         var cId = campIds[ci];
         var camp = campaigns[cId];
         var isActive = cId === activeCamp;
-        var charCount = 0;
-        for (var chi = 0; chi < allChars.length; chi++) {
-            if (getCharacterCampaign(allChars[chi]) === cId) charCount++;
-        }
+        var memberCount = camp.members ? camp.members.length : 0;
+        var partyCount = camp.party ? Object.keys(camp.party).length : 0;
+
         html += '<div class="campaign-card' + (isActive ? ' active' : '') + '">';
         html += '<div style="display:flex;justify-content:space-between;align-items:center;">';
         html += '<div>';
         html += '<strong style="color:var(--text-bright);">' + escapeHtml(camp.name) + '</strong>';
-        if (isActive) html += ' <span style="font-size:0.65rem;color:var(--accent);">ACTIVE</span>';
-        html += '<br><span style="font-size:0.75rem;color:var(--text-dim);">' + charCount + ' characters</span>';
+        if (isActive) html += ' <span style="font-size:0.65rem;color:var(--accent);">ACTIEF</span>';
+        html += '<br><span style="font-size:0.75rem;color:var(--text-dim);">' + memberCount + ' leden, ' + partyCount + ' in party</span>';
+        if (camp.inviteCode) html += '<br><span style="font-size:0.7rem;color:var(--text-dim);">Invite: <strong>' + escapeHtml(camp.inviteCode) + '</strong></span>';
         html += '</div>';
         html += '<div style="display:flex;gap:0.4rem;">';
-        if (!isActive) html += '<button class="btn btn-ghost btn-sm" data-action="activate-campaign" data-campaign-id="' + escapeAttr(cId) + '">Activate</button>';
-        html += '<button class="btn btn-ghost btn-sm" data-action="rename-campaign" data-campaign-id="' + escapeAttr(cId) + '">Rename</button>';
-        if (campIds.length > 1 && charCount === 0) html += '<button class="btn btn-ghost btn-sm" data-action="delete-campaign" data-campaign-id="' + escapeAttr(cId) + '" style="color:var(--danger);">Delete</button>';
+        if (!isActive) html += '<button class="btn btn-ghost btn-sm" data-action="activate-campaign" data-campaign-id="' + escapeAttr(cId) + '">Activeer</button>';
+        html += '<button class="btn btn-ghost btn-sm" data-action="rename-campaign" data-campaign-id="' + escapeAttr(cId) + '">Hernoem</button>';
+        if (campIds.length > 1 && partyCount === 0) html += '<button class="btn btn-ghost btn-sm" data-action="delete-campaign" data-campaign-id="' + escapeAttr(cId) + '" style="color:var(--danger);">Verwijder</button>';
         html += '</div></div>';
 
-        // Character assignment
+        // Party members
         html += '<div style="margin-top:0.5rem;">';
-        for (var ai = 0; ai < allChars.length; ai++) {
-            var aCfg = loadCharConfig(allChars[ai]);
-            if (!aCfg) continue;
-            var charCamp = getCharacterCampaign(allChars[ai]);
-            if (charCamp === cId) {
-                html += '<span class="campaign-char-tag">' + escapeHtml(aCfg.name) + '</span>';
-            }
+        var party = camp.party || {};
+        for (var pUid in party) {
+            var pCfg = loadCharConfig(party[pUid]);
+            if (pCfg) html += '<span class="campaign-char-tag">' + escapeHtml(pCfg.name) + '</span>';
         }
         html += '</div>';
-        html += '</div>';
-    }
-
-    // Unassigned characters
-    var unassigned = [];
-    for (var ui = 0; ui < allChars.length; ui++) {
-        var uCamp = getCharacterCampaign(allChars[ui]);
-        if (!campaigns[uCamp]) unassigned.push(allChars[ui]);
-    }
-    if (unassigned.length > 0) {
-        html += '<div style="margin-top:1rem;padding:0.75rem;border:1px dashed var(--border);border-radius:var(--radius);">';
-        html += '<h4 style="color:var(--warning);margin-bottom:0.5rem;">Unassigned Characters</h4>';
-        for (var uj = 0; uj < unassigned.length; uj++) {
-            var uCfg = loadCharConfig(unassigned[uj]);
-            html += '<span class="campaign-char-tag">' + escapeHtml(uCfg ? uCfg.name : unassigned[uj]) + '</span>';
-        }
         html += '</div>';
     }
 
@@ -1847,30 +2210,33 @@ function renderCharCard(cid, cfg, state, isOwn) {
 }
 
 function renderCharacterList() {
+    var uid = currentUserId();
+    var myChars = getMyCharacterIds();
+
     var html = '<div class="dashboard">';
-    html += '<h2 class="section-title">Characters</h2>';
+    html += '<h2 class="section-title">Mijn Characters</h2>';
+    html += '<p class="text-dim">Je persoonlijke characters. Wijs ze toe aan een campaign via de Party pagina.</p>';
     html += '<div class="character-cards">';
 
-    var charIds = getCharacterIds();
-    var uid = currentUserId();
-    var myChars = getUserCharacters(uid);
-
-    // Show own characters first
-    var ownIds = [];
-    var otherIds = [];
-    for (var i = 0; i < charIds.length; i++) {
-        if (myChars.indexOf(charIds[i]) !== -1) {
-            ownIds.push(charIds[i]);
-        } else {
-            otherIds.push(charIds[i]);
-        }
-    }
-
-    for (var i = 0; i < ownIds.length; i++) {
-        var cid = ownIds[i];
+    for (var i = 0; i < myChars.length; i++) {
+        var cid = myChars[i];
         var cfg = loadCharConfig(cid);
         var state = loadCharState(cid);
         if (!cfg) continue;
+
+        // Show which campaign this character is in
+        var inCampaigns = [];
+        var camps = getCampaigns();
+        for (var campId in camps) {
+            var party = camps[campId].party || {};
+            for (var pUid in party) {
+                if (party[pUid] === cid) {
+                    inCampaigns.push(camps[campId].name);
+                    break;
+                }
+            }
+        }
+
         html += renderCharCard(cid, cfg, state, true);
     }
 
@@ -1882,15 +2248,6 @@ function renderCharacterList() {
     html += '<span class="char-card-detail">Maak een nieuw character aan</span>';
     html += '</div>';
     html += '</div>';
-
-    // Other players' characters
-    for (var i = 0; i < otherIds.length; i++) {
-        var cid = otherIds[i];
-        var cfg = loadCharConfig(cid);
-        var state = loadCharState(cid);
-        if (!cfg) continue;
-        html += renderCharCard(cid, cfg, state, false);
-    }
 
     html += '</div>';
     html += '</div>';
@@ -5666,13 +6023,20 @@ function bindPageEvents(route) {
 
                 setSession(matchedId);
                 applyUserTheme();
-                navigate('/dashboard');
+                navigate('/home');
                 return;
             }
             return;
         }
 
         // --- Navbar ---
+        // DM mode toggle
+        if (target.matches('[data-action="toggle-dm-mode"]') || target.closest('[data-action="toggle-dm-mode"]')) {
+            setDMMode(!isDMMode());
+            renderApp();
+            return;
+        }
+
         // Logout
         if (target.matches('[data-action="logout"]') || target.closest('[data-action="logout"]')) {
             clearSession();
@@ -5938,21 +6302,116 @@ function bindPageEvents(route) {
             return;
         }
 
-        // --- Campaign management ---
+        // --- Home: enter campaign ---
+        if (target.matches('[data-action="enter-campaign"]') || target.closest('[data-action="enter-campaign"]')) {
+            var card = target.matches('[data-action="enter-campaign"]') ? target : target.closest('[data-action="enter-campaign"]');
+            setActiveCampaign(card.dataset.campaignId);
+            navigate('/dashboard');
+            return;
+        }
+
+        // --- Home: join campaign by code ---
+        if (target.matches('[data-action="join-campaign-code"]')) {
+            var codeInput = document.getElementById('join-code-input');
+            if (codeInput && codeInput.value.trim()) {
+                navigate('/join/' + codeInput.value.trim());
+            }
+            return;
+        }
+
+        // --- Party: assign character ---
+        if (target.matches('[data-action="assign-to-party"]') || target.closest('[data-action="assign-to-party"]')) {
+            var assignCard = target.matches('[data-action="assign-to-party"]') ? target : target.closest('[data-action="assign-to-party"]');
+            var assignCharId = assignCard.dataset.charId;
+            var camps = getCampaigns();
+            var activeCampId = getActiveCampaign();
+            if (camps[activeCampId]) {
+                if (!camps[activeCampId].party) camps[activeCampId].party = {};
+                camps[activeCampId].party[currentUserId()] = assignCharId;
+                saveCampaigns(camps);
+                showToast('Character toegevoegd aan de party!', 'success');
+                renderApp();
+            }
+            return;
+        }
+
+        // --- Party: change character ---
+        if (target.matches('[data-action="change-party-char"]')) {
+            var camps = getCampaigns();
+            var activeCampId = getActiveCampaign();
+            if (camps[activeCampId] && camps[activeCampId].party) {
+                delete camps[activeCampId].party[currentUserId()];
+                saveCampaigns(camps);
+                renderApp();
+            }
+            return;
+        }
+
+        // --- Party: copy invite link ---
+        if (target.matches('[data-action="copy-invite-link"]')) {
+            var linkInput = document.getElementById('invite-link-input');
+            if (linkInput) {
+                linkInput.select();
+                document.execCommand('copy');
+                showToast('Link gekopieerd!', 'success');
+            }
+            return;
+        }
+
+        // --- Party: remove member ---
+        if (target.matches('[data-action="remove-member"]')) {
+            var removeUid = target.dataset.userId;
+            if (!confirm('Weet je zeker dat je deze speler wilt verwijderen?')) return;
+            var camps = getCampaigns();
+            var activeCampId = getActiveCampaign();
+            if (camps[activeCampId]) {
+                var members = camps[activeCampId].members || [];
+                var idx = members.indexOf(removeUid);
+                if (idx !== -1) members.splice(idx, 1);
+                if (camps[activeCampId].party) delete camps[activeCampId].party[removeUid];
+                saveCampaigns(camps);
+                renderApp();
+            }
+            return;
+        }
+
+        // --- Party: add member ---
+        if (target.matches('[data-action="add-member"]')) {
+            var addInput = document.getElementById('add-member-input');
+            if (!addInput || !addInput.value.trim()) return;
+            var addUid = addInput.value.trim().toLowerCase();
+            var addUser = getUserData(addUid);
+            if (!addUser) {
+                showToast('Gebruiker "' + addUid + '" niet gevonden.', 'error');
+                return;
+            }
+            var camps = getCampaigns();
+            var activeCampId = getActiveCampaign();
+            if (camps[activeCampId]) {
+                if (!camps[activeCampId].members) camps[activeCampId].members = [];
+                if (camps[activeCampId].members.indexOf(addUid) === -1) {
+                    camps[activeCampId].members.push(addUid);
+                    saveCampaigns(camps);
+                    showToast(addUser.name + ' toegevoegd!', 'success');
+                    renderApp();
+                } else {
+                    showToast('Al lid van de campaign.', 'info');
+                }
+            }
+            return;
+        }
+
+        // --- Campaign management (DM tools) ---
         if (target.matches('[data-action="create-campaign"]')) {
-            var campName = prompt('Campaign name:');
+            var campName = prompt('Campaign naam:');
             if (campName && campName.trim()) {
                 var campId = campName.trim().toLowerCase().replace(/[^a-z0-9]/g, '_');
                 var camps = getCampaigns();
-                camps[campId] = { name: campName.trim(), dm: currentUserId(), created: Date.now() };
+                var invCode = generateInviteCode();
+                camps[campId] = { name: campName.trim(), dm: currentUserId(), created: Date.now(), members: [currentUserId()], party: {}, inviteCode: invCode };
                 saveCampaigns(camps);
-                // Add to current user's campaigns list
-                var u = getUserData(currentUserId());
-                if (u) {
-                    if (!u.campaigns) u.campaigns = ['valoria'];
-                    if (u.campaigns.indexOf(campId) === -1) u.campaigns.push(campId);
-                    if (typeof syncSaveUser === 'function') syncSaveUser(currentUserId(), u);
-                }
+                setActiveCampaign(campId);
+                showToast('Campaign "' + campName.trim() + '" aangemaakt! Invite code: ' + invCode, 'success');
                 renderApp();
             }
             return;
@@ -5966,7 +6425,7 @@ function bindPageEvents(route) {
             var cId = target.dataset.campaignId;
             var camps = getCampaigns();
             if (camps[cId]) {
-                var newName = prompt('New name:', camps[cId].name);
+                var newName = prompt('Nieuwe naam:', camps[cId].name);
                 if (newName && newName.trim()) {
                     camps[cId].name = newName.trim();
                     saveCampaigns(camps);
@@ -5977,11 +6436,11 @@ function bindPageEvents(route) {
         }
         if (target.matches('[data-action="delete-campaign"]')) {
             var cId = target.dataset.campaignId;
-            if (confirm('Delete campaign "' + cId + '"?')) {
+            if (confirm('Campaign "' + cId + '" verwijderen?')) {
                 var camps = getCampaigns();
                 delete camps[cId];
                 saveCampaigns(camps);
-                if (getActiveCampaign() === cId) setActiveCampaign(Object.keys(camps)[0] || 'valoria');
+                if (getActiveCampaign() === cId) setActiveCampaign(Object.keys(camps)[0] || '');
                 renderApp();
             }
             return;
@@ -9028,8 +9487,7 @@ function createCharacterFromWizard() {
         quotes: [],
         defaultItems: [],
         charTimeline: [],
-        family: [],
-        campaign: getActiveCampaign()
+        family: []
     };
 
     // Save config

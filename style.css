@@ -206,6 +206,9 @@ a { color: inherit; text-decoration: none; }
     border-radius: 2px;
 }
 
+.nav-back { opacity: 0.7; font-size: 0.8rem; }
+.nav-back:hover { opacity: 1; }
+
 .nav-right {
     display: flex;
     align-items: center;
@@ -3256,6 +3259,7 @@ footer {
     .nav-links { display: none; position: fixed; top: 56px; left: 0; right: 0; background: var(--bg-card); border-bottom: 1px solid var(--border); flex-direction: column; padding: 1rem; gap: 0; z-index: 99; }
     .nav-links.open { display: flex; }
     .nav-link, .nav-links a { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+    .nav-separator { display: block; height: 1px; background: var(--border); margin: 0.5rem 0; width: 100%; font-size: 0; overflow: hidden; }
     .nav-toggle { display: flex; }
 
     /* Main content - pages handle their own padding-top */
@@ -6883,4 +6887,156 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     .wizard-nav { padding: 0.75rem 1rem; }
 
     .modal-card { max-width: 100%; border-radius: var(--radius); }
+
+    .campaign-grid { grid-template-columns: 1fr; }
+    .party-assign-grid { grid-template-columns: repeat(2, 1fr); }
+    .dm-toggle-label { display: none; }
+}
+
+/* ============================================================
+   Home / Campaign Select
+   ============================================================ */
+
+.home-section { margin-bottom: 2rem; }
+
+.campaign-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.campaign-home-card {
+    background: var(--bg-block);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+}
+.campaign-home-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.campaign-home-card.active { border-color: var(--accent); box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 25%, transparent); }
+
+.campaign-home-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+.campaign-home-header h3 { margin: 0; color: var(--text-bright); font-size: 1.1rem; }
+
+.campaign-dm-badge {
+    background: var(--accent);
+    color: var(--bg);
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.campaign-home-stats { display: flex; gap: 1rem; font-size: 0.8rem; color: var(--text-dim); }
+.campaign-active-badge {
+    display: inline-block;
+    margin-top: 0.5rem;
+    font-size: 0.7rem;
+    color: var(--accent);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.campaign-invite-info { margin-top: 0.5rem; }
+
+.join-campaign-section { padding: 0.5rem 0; }
+
+/* ============================================================
+   Party Page
+   ============================================================ */
+
+.party-assign-prompt {
+    background: var(--bg-block);
+    border: 1px dashed var(--accent);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+.party-assign-prompt h3 { margin: 0 0 0.5rem; color: var(--text-bright); }
+
+.party-assign-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.party-assign-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.75rem;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+}
+.party-assign-card:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 5%, var(--bg)); transform: translateY(-2px); }
+.party-assign-card .char-card-img { width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 0.5rem; overflow: hidden; }
+.party-assign-card .char-card-img img { width: 100%; height: 100%; object-fit: cover; }
+.party-assign-card strong { display: block; color: var(--text-bright); font-size: 0.85rem; }
+.party-assign-card .text-dim { font-size: 0.7rem; }
+
+.party-your-char {
+    background: var(--bg-block);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.member-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid var(--border);
+}
+.member-row:last-child { border-bottom: none; }
+
+.dm-party-manage {
+    background: var(--bg-block);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.2rem;
+}
+.dm-party-manage h3 { margin: 0 0 1rem; color: var(--text-bright); }
+.dm-party-manage h4 { margin: 0.5rem 0; color: var(--text-bright); }
+
+/* ============================================================
+   DM Mode Toggle
+   ============================================================ */
+
+.dm-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text-dim);
+    padding: 0.3rem 0.6rem;
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: all 0.2s;
+}
+.dm-toggle:hover { border-color: var(--text); color: var(--text); }
+.dm-toggle.active { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.dm-toggle .nav-svg { width: 14px; height: 14px; }
+.dm-toggle-label { font-weight: 600; }
+
+.nav-separator {
+    color: var(--border);
+    font-size: 1.2rem;
+    padding: 0 0.2rem;
+    align-self: center;
 }
