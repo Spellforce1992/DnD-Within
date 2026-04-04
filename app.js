@@ -1202,18 +1202,20 @@ function renderNavbar(route) {
     } else if (syncStatus === 'offline') {
         html += '<span class="sync-indicator sync-offline" title="' + t('nav.sync.offline') + '">&#9729;</span>';
     }
-    // Campaign selector (if in campaign view and multiple campaigns)
+    // Campaign selector (only show when in campaign view)
     var userCampaigns = getUserCampaigns();
-    if (userCampaigns.length > 1) {
-        html += '<select class="campaign-selector" data-action="switch-campaign">';
-        for (var ci = 0; ci < userCampaigns.length; ci++) {
-            var cId = userCampaigns[ci];
-            var cName = campaigns[cId] ? campaigns[cId].name : cId;
-            html += '<option value="' + escapeAttr(cId) + '"' + (cId === activeCamp ? ' selected' : '') + '>' + escapeHtml(cName) + '</option>';
+    if (inCampaignView) {
+        if (userCampaigns.length > 1) {
+            html += '<select class="campaign-selector" data-action="switch-campaign">';
+            for (var ci = 0; ci < userCampaigns.length; ci++) {
+                var cId = userCampaigns[ci];
+                var cName = campaigns[cId] ? campaigns[cId].name : cId;
+                html += '<option value="' + escapeAttr(cId) + '"' + (cId === activeCamp ? ' selected' : '') + '>' + escapeHtml(cName) + '</option>';
+            }
+            html += '</select>';
+        } else if (userCampaigns.length === 1 && campaigns[userCampaigns[0]]) {
+            html += '<span class="campaign-label">' + escapeHtml(campaigns[userCampaigns[0]].name) + '</span>';
         }
-        html += '</select>';
-    } else if (userCampaigns.length === 1 && campaigns[userCampaigns[0]]) {
-        html += '<span class="campaign-label">' + escapeHtml(campaigns[userCampaigns[0]].name) + '</span>';
     }
     html += '<button class="nav-lang-btn" data-action="toggle-lang" title="' + t('nav.language') + '">' + (getLang() === 'nl' ? 'NL' : 'EN') + '</button>';
     html += '<span class="nav-avatar" data-action="open-profile" title="Profiel instellingen" style="cursor:pointer;">' + escapeHtml(user ? user.name.charAt(0) : '') + '</span>';
@@ -1637,6 +1639,7 @@ function renderDashboard() {
         html += '<button class="edit-save" data-action="save-quest">Save Quest</button>';
         html += '<button class="edit-cancel" data-action="cancel-quest">Cancel</button>';
         html += '</div>';
+        html += '<input type="hidden" id="quest-edit-idx" value="">';
         html += '</div>';
     }
 
@@ -1664,8 +1667,11 @@ function renderDashboard() {
         }
         html += '</div>';
         if (isDM()) {
+            html += '<div class="quest-actions">';
+            html += '<button class="btn btn-ghost btn-sm" data-action="edit-quest" data-quest-idx="' + qi + '" title="Edit">&#9998;</button>';
             html += '<button class="btn btn-ghost btn-sm" data-action="complete-quest" data-quest-idx="' + qi + '" title="Complete">&#10003;</button>';
             html += '<button class="btn btn-ghost btn-sm" data-action="delete-quest" data-quest-idx="' + qi + '" style="color:var(--danger);" title="Delete">&times;</button>';
+            html += '</div>';
         }
         html += '</div>';
     }
@@ -1842,19 +1848,24 @@ function renderDMInitiative() {
     return html;
 }
 
+// Initiative drag-drop: uses global state + document-level delegation to survive re-renders
+var _initDrag = null;
+var _initGhost = null;
+var _initDragBound = false;
+
 function initInitiativeDragDrop() {
     var dropZone = document.getElementById('init-drop-zone');
     if (!dropZone) return;
 
-    // Shared state stored on the dropZone so document listeners can access it
-    if (dropZone._initDragBound) return; // prevent double-binding
-    dropZone._initDragBound = true;
+    if (_initDragBound) return;
+    _initDragBound = true;
 
-    var dragState = null;
-    var ghost = null;
+    function getDropZone() { return document.getElementById('init-drop-zone'); }
 
     function getInsertIdx(y) {
-        var entries = dropZone.querySelectorAll('.init-entry');
+        var dz = getDropZone();
+        if (!dz) return 0;
+        var entries = dz.querySelectorAll('.init-entry');
         var initData = JSON.parse(localStorage.getItem('dw_initiative') || '{"entries":[]}');
         var idx = initData.entries.length;
         for (var i = 0; i < entries.length; i++) {
@@ -1869,7 +1880,9 @@ function initInitiativeDragDrop() {
 
     function showIndicator(y) {
         document.querySelectorAll('.init-drop-indicator').forEach(function(ind) { ind.remove(); });
-        var entries = dropZone.querySelectorAll('.init-entry');
+        var dz = getDropZone();
+        if (!dz) return;
+        var entries = dz.querySelectorAll('.init-entry');
         var insertBefore = null;
         for (var i = 0; i < entries.length; i++) {
             var rect = entries[i].getBoundingClientRect();
@@ -1877,43 +1890,42 @@ function initInitiativeDragDrop() {
         }
         var indicator = document.createElement('div');
         indicator.className = 'init-drop-indicator';
-        if (insertBefore) dropZone.insertBefore(indicator, insertBefore);
-        else dropZone.appendChild(indicator);
+        if (insertBefore) dz.insertBefore(indicator, insertBefore);
+        else dz.appendChild(indicator);
     }
 
     function isOverDropZone(x, y) {
-        var dz = document.getElementById('init-drop-zone');
+        var dz = getDropZone();
         if (!dz) return false;
         var r = dz.getBoundingClientRect();
-        // Add 20px padding for easier targeting
         return x >= r.left - 20 && x <= r.right + 20 && y >= r.top - 20 && y <= r.bottom + 20;
     }
 
     function cleanup() {
-        if (ghost) { ghost.remove(); ghost = null; }
+        if (_initGhost) { _initGhost.remove(); _initGhost = null; }
         document.querySelectorAll('.init-drop-indicator').forEach(function(ind) { ind.remove(); });
         document.querySelectorAll('.init-draggable.dragging').forEach(function(el) { el.classList.remove('dragging'); });
-        var dz = document.getElementById('init-drop-zone');
+        var dz = getDropZone();
         if (dz) dz.classList.remove('drag-over');
-        dragState = null;
+        _initDrag = null;
     }
 
     function doDrop(y) {
-        if (!dragState) return;
+        if (!_initDrag) return;
         var initData = JSON.parse(localStorage.getItem('dw_initiative') || '{"entries":[],"currentTurn":0,"round":1,"npcs":[]}');
         var insertIdx = getInsertIdx(y);
 
-        if (dragState.type === 'player') {
-            var cfg = loadCharConfig(dragState.charId);
+        if (_initDrag.type === 'player') {
+            var cfg = loadCharConfig(_initDrag.charId);
             if (!cfg) { cleanup(); return; }
-            initData.entries.splice(insertIdx, 0, { name: cfg.name, charId: dragState.charId });
-        } else if (dragState.type === 'npc') {
-            var nIdx = parseInt(dragState.npcIdx);
+            initData.entries.splice(insertIdx, 0, { name: cfg.name, charId: _initDrag.charId });
+        } else if (_initDrag.type === 'npc') {
+            var nIdx = parseInt(_initDrag.npcIdx);
             var npc = initData.npcs[nIdx];
             if (!npc) { cleanup(); return; }
             initData.entries.splice(insertIdx, 0, { name: npc.name, npcIdx: nIdx, disposition: npc.disposition });
-        } else if (dragState.type === 'reorder') {
-            var oldIdx = parseInt(dragState.initIdx);
+        } else if (_initDrag.type === 'reorder') {
+            var oldIdx = parseInt(_initDrag.initIdx);
             var moved = initData.entries.splice(oldIdx, 1)[0];
             if (insertIdx > oldIdx) insertIdx--;
             initData.entries.splice(insertIdx, 0, moved);
@@ -1928,44 +1940,44 @@ function initInitiativeDragDrop() {
         renderApp();
     }
 
-    // Use document-level move/up so pointer capture isn't needed
-    document.querySelectorAll('.init-draggable').forEach(function(el) {
-        el.addEventListener('pointerdown', function(e) {
-            if (e.button && e.button !== 0) return;
-            e.preventDefault();
-            dragState = {
-                el: el,
-                type: el.dataset.dragType,
-                charId: el.dataset.charId,
-                npcIdx: el.dataset.npcIdx,
-                initIdx: el.dataset.initIdx,
-                pointerId: e.pointerId,
-                startX: e.clientX,
-                startY: e.clientY,
-                started: false
-            };
-        });
+    // Document-level delegation: works even after DOM re-renders
+    document.addEventListener('pointerdown', function(e) {
+        var el = e.target.closest('.init-draggable');
+        if (!el) return;
+        if (e.button && e.button !== 0) return;
+        e.preventDefault();
+        _initDrag = {
+            el: el,
+            type: el.dataset.dragType,
+            charId: el.dataset.charId,
+            npcIdx: el.dataset.npcIdx,
+            initIdx: el.dataset.initIdx,
+            pointerId: e.pointerId,
+            startX: e.clientX,
+            startY: e.clientY,
+            started: false
+        };
     });
 
     document.addEventListener('pointermove', function(e) {
-        if (!dragState || dragState.pointerId !== e.pointerId) return;
-        var dx = e.clientX - dragState.startX;
-        var dy = e.clientY - dragState.startY;
-        if (!dragState.started && Math.abs(dx) + Math.abs(dy) < 8) return;
+        if (!_initDrag || _initDrag.pointerId !== e.pointerId) return;
+        var dx = e.clientX - _initDrag.startX;
+        var dy = e.clientY - _initDrag.startY;
+        if (!_initDrag.started && Math.abs(dx) + Math.abs(dy) < 8) return;
 
-        if (!dragState.started) {
-            dragState.started = true;
-            dragState.el.classList.add('dragging');
-            ghost = document.createElement('div');
-            ghost.className = 'init-drag-ghost';
-            ghost.textContent = dragState.el.textContent.trim();
-            document.body.appendChild(ghost);
+        if (!_initDrag.started) {
+            _initDrag.started = true;
+            _initDrag.el.classList.add('dragging');
+            _initGhost = document.createElement('div');
+            _initGhost.className = 'init-drag-ghost';
+            _initGhost.textContent = _initDrag.el.textContent.trim();
+            document.body.appendChild(_initGhost);
         }
 
-        ghost.style.left = e.clientX + 'px';
-        ghost.style.top = e.clientY + 'px';
+        _initGhost.style.left = e.clientX + 'px';
+        _initGhost.style.top = e.clientY + 'px';
 
-        var dz = document.getElementById('init-drop-zone');
+        var dz = getDropZone();
         if (dz && isOverDropZone(e.clientX, e.clientY)) {
             dz.classList.add('drag-over');
             showIndicator(e.clientY);
@@ -1976,8 +1988,8 @@ function initInitiativeDragDrop() {
     });
 
     document.addEventListener('pointerup', function(e) {
-        if (!dragState || dragState.pointerId !== e.pointerId) return;
-        if (!dragState.started) { cleanup(); return; }
+        if (!_initDrag || _initDrag.pointerId !== e.pointerId) return;
+        if (!_initDrag.started) { cleanup(); return; }
 
         if (isOverDropZone(e.clientX, e.clientY)) {
             doDrop(e.clientY);
@@ -2052,32 +2064,60 @@ function renderDMNPCs() {
     return html;
 }
 
+var familiesExpandedId = null;
+
 function renderDMFamilies() {
     var html = '<div class="dm-tool-card">';
     html += '<h3>Family Trees</h3>';
 
-    // Character family trees
+    // Collect all people: characters + NPCs with families
+    var people = [];
     var charIds = getCharacterIds();
     for (var ci = 0; ci < charIds.length; ci++) {
         var cfg = loadCharConfig(charIds[ci]);
         if (!cfg) continue;
         var family = cfg.family || [];
-        html += '<div class="family-section" style="margin-bottom:1.5rem;">';
-        html += '<h4 style="color:' + (cfg.accentColor || 'var(--accent)') + ';margin-bottom:0.5rem;">' + escapeHtml(cfg.name) + '</h4>';
-        html += renderFamilyTree(family, charIds[ci], cfg.name, true);
-        html += '</div>';
+        people.push({ id: charIds[ci], name: cfg.name, color: cfg.accentColor || 'var(--accent)', family: family, type: 'character', contextId: charIds[ci] });
     }
-
-    // NPC family trees
     var npcData = getNPCData();
     var npcs = npcData.npcs || [];
     for (var ni = 0; ni < npcs.length; ni++) {
         var npc = npcs[ni];
-        var npcFamily = npc.family || [];
-        if (npcFamily.length > 0) {
-            html += '<div class="family-section" style="margin-bottom:1.5rem;">';
-            html += '<h4 style="color:var(--text-dim);margin-bottom:0.5rem;">' + escapeHtml(npc.name) + ' <span style="font-size:0.7rem;opacity:0.5;">(NPC)</span></h4>';
-            html += renderFamilyTree(npcFamily, 'npc:' + ni, npc.name, true);
+        if ((npc.family || []).length > 0) {
+            people.push({ id: 'npc:' + ni, name: npc.name, color: 'var(--text-dim)', family: npc.family, type: 'npc', contextId: 'npc:' + ni });
+        }
+    }
+
+    if (people.length === 0) {
+        html += '<p class="text-dim">Nog geen family trees aangemaakt.</p>';
+    }
+
+    // Person grid
+    html += '<div class="families-person-grid">';
+    for (var pi = 0; pi < people.length; pi++) {
+        var p = people[pi];
+        var memberCount = p.family.length;
+        var isExpanded = familiesExpandedId === p.id;
+        html += '<div class="families-person-card' + (isExpanded ? ' expanded' : '') + '" data-action="toggle-family-person" data-person-id="' + escapeAttr(p.id) + '" style="--person-color:' + p.color + '">';
+        html += '<div class="families-person-header">';
+        html += '<span class="families-person-name">' + escapeHtml(p.name) + '</span>';
+        if (p.type === 'npc') html += '<span class="families-person-badge">NPC</span>';
+        html += '<span class="families-person-count">' + memberCount + ' ' + (memberCount === 1 ? 'member' : 'members') + '</span>';
+        html += '</div>';
+        html += '</div>';
+    }
+    html += '</div>';
+
+    // Show expanded family tree below the grid
+    if (familiesExpandedId) {
+        var expanded = null;
+        for (var ei = 0; ei < people.length; ei++) {
+            if (people[ei].id === familiesExpandedId) { expanded = people[ei]; break; }
+        }
+        if (expanded) {
+            html += '<div class="families-tree-panel" style="border-left: 3px solid ' + expanded.color + ';">';
+            html += '<h4 style="color:' + expanded.color + ';margin-bottom:0.75rem;">' + escapeHtml(expanded.name) + '\'s Family</h4>';
+            html += renderFamilyTree(expanded.family, expanded.contextId, expanded.name, true);
             html += '</div>';
         }
     }
@@ -2366,9 +2406,9 @@ function renderCharacterSheet(charId) {
     html += '<span class="xp-label">' + currentXP.toLocaleString() + ' / ' + (state.level >= 20 ? 'MAX' : xpForNext.toLocaleString()) + ' XP</span>';
     if (editable) {
         html += '<div class="xp-controls">';
-        html += '<button class="btn btn-ghost btn-sm" data-action="remove-xp" style="color:var(--danger);">&minus;XP</button>';
+        html += '<button class="btn btn-ghost btn-sm xp-btn-minus" data-action="remove-xp">&minus;XP</button>';
         html += '<input type="number" class="xp-input" id="xp-add-input" value="100" min="1" style="width:70px;">';
-        html += '<button class="btn btn-ghost btn-sm" data-action="add-xp">+XP</button>';
+        html += '<button class="btn btn-ghost btn-sm xp-btn-plus" data-action="add-xp">+XP</button>';
         html += '</div>';
     }
     html += '</div>';
@@ -6093,6 +6133,12 @@ function bindPageEvents(route) {
         }
 
         // --- Settings page events ---
+        if (target.matches('[data-action="settings-switch-tab"]') || target.closest('[data-action="settings-switch-tab"]')) {
+            var tabBtn = target.matches('[data-action="settings-switch-tab"]') ? target : target.closest('[data-action="settings-switch-tab"]');
+            settingsTab = tabBtn.dataset.tab;
+            renderApp();
+            return;
+        }
         if (target.matches('[data-action="settings-select-theme"]') || target.closest('[data-action="settings-select-theme"]')) {
             var stBtn = target.matches('[data-action="settings-select-theme"]') ? target : target.closest('[data-action="settings-select-theme"]');
             setUserTheme(stBtn.dataset.theme);
@@ -6442,17 +6488,48 @@ function bindPageEvents(route) {
 
         // --- Campaign management (DM tools) ---
         if (target.matches('[data-action="create-campaign"]')) {
-            var campName = prompt('Campaign naam:');
-            if (campName && campName.trim()) {
-                var campId = campName.trim().toLowerCase().replace(/[^a-z0-9]/g, '_');
-                var camps = getCampaigns();
-                var invCode = generateInviteCode();
-                camps[campId] = { name: campName.trim(), dm: currentUserId(), created: Date.now(), members: [currentUserId()], party: {}, inviteCode: invCode };
-                saveCampaigns(camps);
-                setActiveCampaign(campId);
-                showToast('Campaign "' + campName.trim() + '" aangemaakt! Invite code: ' + invCode, 'success');
+            var wizHtml = '<div class="modal-overlay" id="campaign-wizard">';
+            wizHtml += '<div class="modal-box campaign-wizard" style="max-width:440px;">';
+            wizHtml += '<h3>&#127760; Nieuwe Campaign</h3>';
+            wizHtml += '<div style="display:flex;flex-direction:column;gap:1rem;margin-top:1rem;">';
+            wizHtml += '<div><label class="settings-label">Campaign naam *</label>';
+            wizHtml += '<input type="text" class="edit-input" id="wiz-camp-name" placeholder="bijv. The Serpent March" autofocus></div>';
+            wizHtml += '<div><label class="settings-label">Beschrijving</label>';
+            wizHtml += '<textarea class="edit-textarea auto-grow" id="wiz-camp-desc" placeholder="Korte beschrijving (optioneel)..." style="min-height:60px;"></textarea></div>';
+            wizHtml += '</div>';
+            wizHtml += '<div class="modal-actions" style="margin-top:1.25rem;">';
+            wizHtml += '<button class="btn btn-primary" data-modal-action="create-camp">Aanmaken</button>';
+            wizHtml += '<button class="btn btn-ghost" data-modal-action="cancel-camp">Annuleren</button>';
+            wizHtml += '</div>';
+            wizHtml += '</div></div>';
+            document.body.insertAdjacentHTML('beforeend', wizHtml);
+            if (typeof lockBodyScroll === 'function') lockBodyScroll();
+            var nameInput = document.getElementById('wiz-camp-name');
+            if (nameInput) nameInput.focus();
+            var wizModal = document.getElementById('campaign-wizard');
+            wizModal.addEventListener('click', function(we) {
+                var actionEl = we.target.closest('[data-modal-action]');
+                var action = actionEl ? actionEl.dataset.modalAction : null;
+                if (we.target === wizModal) action = 'cancel-camp';
+                if (!action) return;
+                if (action === 'create-camp') {
+                    var nameEl = document.getElementById('wiz-camp-name');
+                    var campName = nameEl ? nameEl.value.trim() : '';
+                    if (!campName) { nameEl.style.borderColor = 'var(--danger)'; return; }
+                    var campId = campName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+                    var camps = getCampaigns();
+                    var invCode = generateInviteCode();
+                    camps[campId] = { name: campName, dm: currentUserId(), created: Date.now(), members: [currentUserId()], party: {}, inviteCode: invCode };
+                    var descEl = document.getElementById('wiz-camp-desc');
+                    if (descEl && descEl.value.trim()) camps[campId].description = descEl.value.trim();
+                    saveCampaigns(camps);
+                    setActiveCampaign(campId);
+                    showToast('Campaign "' + campName + '" aangemaakt! Invite code: ' + invCode, 'success');
+                }
+                wizModal.remove();
+                if (typeof unlockBodyScroll === 'function') unlockBodyScroll();
                 renderApp();
-            }
+            });
             return;
         }
         if (target.matches('[data-action="activate-campaign"]')) {
@@ -6480,6 +6557,17 @@ function bindPageEvents(route) {
                 delete camps[cId];
                 saveCampaigns(camps);
                 if (getActiveCampaign() === cId) setActiveCampaign(Object.keys(camps)[0] || '');
+                renderApp();
+            }
+            return;
+        }
+
+        // --- Families: person toggle ---
+        if (target.matches('[data-action="toggle-family-person"]') || target.closest('[data-action="toggle-family-person"]')) {
+            var personCard = target.closest('[data-person-id]');
+            if (personCard) {
+                var pid = personCard.dataset.personId;
+                familiesExpandedId = familiesExpandedId === pid ? null : pid;
                 renderApp();
             }
             return;
@@ -7846,21 +7934,59 @@ function bindPageEvents(route) {
         // --- Dashboard: quests ---
         if (target.matches('[data-action="add-quest"]')) {
             var qForm = document.getElementById('quest-add-form');
-            if (qForm) qForm.style.display = qForm.style.display === 'none' ? 'block' : 'none';
+            if (qForm) {
+                qForm.style.display = qForm.style.display === 'none' ? 'block' : 'none';
+                var editIdx = document.getElementById('quest-edit-idx');
+                if (editIdx) editIdx.value = '';
+                var qtEl = document.getElementById('quest-title'); if (qtEl) qtEl.value = '';
+                var qdEl = document.getElementById('quest-desc'); if (qdEl) qdEl.value = '';
+                var qgEl = document.getElementById('quest-giver'); if (qgEl) qgEl.value = '';
+                var qrEl = document.getElementById('quest-reward'); if (qrEl) qrEl.value = '';
+                var qtagEl = document.getElementById('quest-tags'); if (qtagEl) qtagEl.value = '';
+            }
+            return;
+        }
+        if (target.matches('[data-action="edit-quest"]') || target.closest('[data-action="edit-quest"]')) {
+            var editBtn = target.matches('[data-action="edit-quest"]') ? target : target.closest('[data-action="edit-quest"]');
+            var qIdx = parseInt(editBtn.dataset.questIdx);
+            var qData = getQuestData();
+            var quest = qData.active[qIdx];
+            if (!quest) return;
+            var qForm = document.getElementById('quest-add-form');
+            if (qForm) {
+                qForm.style.display = 'block';
+                var qtEl = document.getElementById('quest-title'); if (qtEl) qtEl.value = quest.title || '';
+                var qdEl = document.getElementById('quest-desc'); if (qdEl) qdEl.value = quest.desc || '';
+                var qgEl = document.getElementById('quest-giver'); if (qgEl) qgEl.value = quest.giver || '';
+                var qrEl = document.getElementById('quest-reward'); if (qrEl) qrEl.value = quest.reward || '';
+                var qtagEl = document.getElementById('quest-tags'); if (qtagEl) qtagEl.value = quest.tags || '';
+                var editIdx = document.getElementById('quest-edit-idx'); if (editIdx) editIdx.value = qIdx;
+                qForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
             return;
         }
         if (target.matches('[data-action="save-quest"]')) {
             var qTitleEl = document.getElementById('quest-title');
             if (!qTitleEl || !qTitleEl.value.trim()) return;
             var qData = getQuestData();
-            qData.active.push({
+            var editIdx = document.getElementById('quest-edit-idx');
+            var questObj = {
                 title: qTitleEl.value.trim(),
                 desc: (document.getElementById('quest-desc') || {}).value || '',
                 giver: (document.getElementById('quest-giver') || {}).value || '',
                 reward: (document.getElementById('quest-reward') || {}).value || '',
                 tags: (document.getElementById('quest-tags') || {}).value || '',
                 id: 'q' + Date.now()
-            });
+            };
+            if (editIdx && editIdx.value !== '') {
+                var ei = parseInt(editIdx.value);
+                if (qData.active[ei]) {
+                    questObj.id = qData.active[ei].id || questObj.id;
+                    qData.active[ei] = questObj;
+                }
+            } else {
+                qData.active.push(questObj);
+            }
             localStorage.setItem('dw_quests', JSON.stringify(qData));
             if (typeof syncUpload === 'function') syncUpload('dw_quests');
             renderApp();
@@ -8261,7 +8387,8 @@ function bindPageEvents(route) {
 
                 var pinModal = document.getElementById('pin-modal');
                 pinModal.addEventListener('click', function(me) {
-                    var action = me.target.dataset.modalAction;
+                    var actionEl = me.target.closest('[data-modal-action]');
+                    var action = actionEl ? actionEl.dataset.modalAction : null;
                     if (me.target === pinModal) action = 'cancel-pin';
                     if (!action) return;
 
@@ -9794,6 +9921,8 @@ document.addEventListener('click', function(e) {
 // Section 33: Settings Page
 // ============================================================
 
+var settingsTab = 'account';
+
 function renderSettings() {
     var uid = currentUserId();
     var u = getUserData(uid);
@@ -9802,72 +9931,78 @@ function renderSettings() {
     var html = '<div class="settings-page">';
     html += '<h1 class="page-title">' + (t('nav.settings') || 'Settings') + '</h1>';
 
-    // === Account section ===
-    html += '<section class="settings-section">';
-    html += '<h2 class="settings-section-title">Account</h2>';
-    html += '<div class="settings-card">';
-
-    html += '<div class="settings-field">';
-    html += '<label class="settings-label">Gebruikersnaam</label>';
-    html += '<input type="text" class="settings-input" value="' + escapeAttr(uid) + '" disabled>';
-    html += '</div>';
-
-    html += '<div class="settings-field">';
-    html += '<label class="settings-label">Weergavenaam</label>';
-    html += '<input type="text" class="settings-input" id="settings-display-name" value="' + escapeAttr(u.name) + '" placeholder="Weergavenaam">';
-    html += '</div>';
-
-    html += '<div class="settings-field">';
-    html += '<label class="settings-label">Nieuw wachtwoord</label>';
-    html += '<input type="password" class="settings-input" id="settings-new-password" placeholder="Laat leeg om niet te wijzigen">';
-    html += '</div>';
-
-    html += '<div class="settings-field">';
-    html += '<label class="settings-label">Bevestig wachtwoord</label>';
-    html += '<input type="password" class="settings-input" id="settings-confirm-password" placeholder="Bevestig nieuw wachtwoord">';
-    html += '</div>';
-
-    html += '</div></section>';
-
-    // === Appearance section ===
-    html += '<section class="settings-section">';
-    html += '<h2 class="settings-section-title">' + (t('nav.theme') || 'Thema') + '</h2>';
-    html += '<div class="settings-card">';
-
-    html += '<div class="settings-field">';
-    html += '<label class="settings-label">Kleurenthema</label>';
-    html += '<div class="settings-theme-grid">';
-    for (var ti = 0; ti < COLOR_THEMES.length; ti++) {
-        var theme = COLOR_THEMES[ti];
-        var themeActive = getUserTheme() === theme.id;
-        html += '<button class="settings-theme-option' + (themeActive ? ' active' : '') + '" data-action="settings-select-theme" data-theme="' + theme.id + '">';
-        html += '<span class="settings-theme-swatch" style="background:' + theme.accent + ';"></span>';
-        html += '<span class="settings-theme-name">' + theme.name + '</span>';
-        html += '</button>';
+    // Tabs
+    var tabs = [
+        { id: 'account', label: 'Account', icon: '&#128100;' },
+        { id: 'appearance', label: t('nav.theme') || 'Thema', icon: '&#127912;' },
+        { id: 'developer', label: 'Developer', icon: '&#128736;' }
+    ];
+    html += '<div class="settings-tabs">';
+    for (var sti = 0; sti < tabs.length; sti++) {
+        var stab = tabs[sti];
+        html += '<button class="settings-tab' + (settingsTab === stab.id ? ' active' : '') + '" data-action="settings-switch-tab" data-tab="' + stab.id + '">' + stab.icon + ' ' + stab.label + '</button>';
     }
-    html += '</div></div>';
-
-    html += '<div class="settings-field">';
-    html += '<label class="settings-label">Taal</label>';
-    html += '<div class="settings-lang-options">';
-    html += '<button class="settings-lang-btn' + (getLang() === 'nl' ? ' active' : '') + '" data-action="settings-set-lang" data-lang="nl">Nederlands</button>';
-    html += '<button class="settings-lang-btn' + (getLang() === 'en' ? ' active' : '') + '" data-action="settings-set-lang" data-lang="en">English</button>';
-    html += '</div></div>';
-
-    html += '</div></section>';
-
-    // === Developer section ===
-    html += '<section class="settings-section">';
-    html += '<h2 class="settings-section-title">Developer</h2>';
-    html += '<div class="settings-card">';
-
-    html += '<div class="settings-field settings-toggle-field">';
-    html += '<div><label class="settings-label">Debug Mode</label>';
-    html += '<p class="settings-hint">Toont de bug reporter knop waarmee je problemen op de site kunt melden.</p></div>';
-    html += '<label class="toggle-switch"><input type="checkbox" id="settings-debug-mode"' + (isDebugMode() ? ' checked' : '') + ' data-action="settings-toggle-debug"><span class="toggle-slider"></span></label>';
     html += '</div>';
 
-    html += '</div></section>';
+    // === Account tab ===
+    if (settingsTab === 'account') {
+        html += '<section class="settings-section">';
+        html += '<div class="settings-card">';
+        html += '<div class="settings-field">';
+        html += '<label class="settings-label">Gebruikersnaam</label>';
+        html += '<input type="text" class="settings-input" value="' + escapeAttr(uid) + '" disabled>';
+        html += '</div>';
+        html += '<div class="settings-field">';
+        html += '<label class="settings-label">Weergavenaam</label>';
+        html += '<input type="text" class="settings-input" id="settings-display-name" value="' + escapeAttr(u.name) + '" placeholder="Weergavenaam">';
+        html += '</div>';
+        html += '<div class="settings-field">';
+        html += '<label class="settings-label">Nieuw wachtwoord</label>';
+        html += '<input type="password" class="settings-input" id="settings-new-password" placeholder="Laat leeg om niet te wijzigen">';
+        html += '</div>';
+        html += '<div class="settings-field">';
+        html += '<label class="settings-label">Bevestig wachtwoord</label>';
+        html += '<input type="password" class="settings-input" id="settings-confirm-password" placeholder="Bevestig nieuw wachtwoord">';
+        html += '</div>';
+        html += '</div></section>';
+    }
+
+    // === Appearance tab ===
+    if (settingsTab === 'appearance') {
+        html += '<section class="settings-section">';
+        html += '<div class="settings-card">';
+        html += '<div class="settings-field">';
+        html += '<label class="settings-label">Kleurenthema</label>';
+        html += '<div class="settings-theme-grid">';
+        for (var ti = 0; ti < COLOR_THEMES.length; ti++) {
+            var theme = COLOR_THEMES[ti];
+            var themeActive = getUserTheme() === theme.id;
+            html += '<button class="settings-theme-option' + (themeActive ? ' active' : '') + '" data-action="settings-select-theme" data-theme="' + theme.id + '">';
+            html += '<span class="settings-theme-swatch" style="background:' + theme.accent + ';"></span>';
+            html += '<span class="settings-theme-name">' + theme.name + '</span>';
+            html += '</button>';
+        }
+        html += '</div></div>';
+        html += '<div class="settings-field">';
+        html += '<label class="settings-label">Taal</label>';
+        html += '<div class="settings-lang-options">';
+        html += '<button class="settings-lang-btn' + (getLang() === 'nl' ? ' active' : '') + '" data-action="settings-set-lang" data-lang="nl">Nederlands</button>';
+        html += '<button class="settings-lang-btn' + (getLang() === 'en' ? ' active' : '') + '" data-action="settings-set-lang" data-lang="en">English</button>';
+        html += '</div></div>';
+        html += '</div></section>';
+    }
+
+    // === Developer tab ===
+    if (settingsTab === 'developer') {
+        html += '<section class="settings-section">';
+        html += '<div class="settings-card">';
+        html += '<div class="settings-field settings-toggle-field">';
+        html += '<div><label class="settings-label">Debug Mode</label>';
+        html += '<p class="settings-hint">Toont de bug reporter knop waarmee je problemen op de site kunt melden.</p></div>';
+        html += '<label class="toggle-switch"><input type="checkbox" id="settings-debug-mode"' + (isDebugMode() ? ' checked' : '') + ' data-action="settings-toggle-debug"><span class="toggle-slider"></span></label>';
+        html += '</div>';
+        html += '</div></section>';
+    }
 
     // === Save & messages ===
     html += '<p class="settings-error" id="settings-error" style="display:none;"></p>';

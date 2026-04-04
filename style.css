@@ -5578,6 +5578,49 @@ body.modal-open {
     stroke-opacity: 0.6;
 }
 
+/* Families person grid */
+.families-person-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+.families-person-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--person-color, var(--accent));
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.families-person-card:hover {
+    border-color: var(--person-color, var(--accent));
+    box-shadow: 0 0 12px rgba(var(--accent-rgb, 34,211,238), 0.15);
+    transform: translateY(-1px);
+}
+.families-person-card.expanded {
+    border-color: var(--person-color, var(--accent));
+    background: color-mix(in srgb, var(--person-color, var(--accent)) 6%, var(--bg-card));
+}
+.families-person-header { display: flex; flex-direction: column; gap: 0.2rem; }
+.families-person-name { font-weight: 600; color: var(--person-color, var(--accent)); font-size: 0.9rem; }
+.families-person-badge {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    opacity: 0.7;
+}
+.families-person-count { font-size: 0.75rem; color: var(--text-dim); }
+.families-tree-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    margin-top: 0.5rem;
+}
+
 /* Tier row */
 .ftree-tier {
     display: flex;
@@ -6084,6 +6127,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .quest-icon { font-size: 1.1rem; }
 .quest-info { flex: 1; }
 .quest-info strong { font-size: 0.9rem; }
+.quest-actions { display: flex; gap: 0.25rem; flex-shrink: 0; }
 .quest-completed-section { margin-top: 0.5rem; }
 
 /* ============================================================
@@ -6226,7 +6270,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     transition: width 0.4s ease;
 }
 .xp-label { font-size: 0.7rem; color: var(--text-dim); white-space: nowrap; }
-.xp-controls { display: flex; gap: 0.25rem; align-items: center; }
+.xp-controls { display: flex; gap: 0.5rem; align-items: center; }
+.xp-btn-minus { color: var(--accent) !important; font-weight: 700; }
+.xp-btn-plus { color: var(--accent) !important; font-weight: 700; }
 .xp-input {
     background: var(--bg-block);
     border: 1px solid var(--border);
@@ -7075,6 +7121,29 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     margin-bottom: 1.5rem;
     font-weight: 700;
 }
+.settings-tabs {
+    display: flex;
+    gap: 0.25rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0;
+}
+.settings-tab {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-dim);
+    font-family: inherit;
+    font-size: 0.85rem;
+    padding: 0.6rem 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.settings-tab:hover { color: var(--text); }
+.settings-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
 .settings-section {
     margin-bottom: 1.8rem;
 }
@@ -7201,10 +7270,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 /* ===== Bug Reporter ===== */
 .bug-fab {
     position: fixed;
-    bottom: 5.5rem;
-    right: 1.2rem;
-    width: 48px;
-    height: 48px;
+    bottom: 5rem;
+    right: 1.5rem;
+    width: 52px;
+    height: 52px;
     border-radius: 50%;
     background: #1a1a2e;
     border: 2px solid #f87171;
