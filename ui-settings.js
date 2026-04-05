@@ -17,9 +17,9 @@ function renderSettings() {
 
     // Tabs
     var tabs = [
-        { id: 'account', label: 'Account', icon: '&#128100;' },
+        { id: 'account', label: t('settings.tab.account'), icon: '&#128100;' },
         { id: 'appearance', label: t('nav.theme') || 'Thema', icon: '&#127912;' },
-        { id: 'developer', label: 'Developer', icon: '&#128736;' }
+        { id: 'developer', label: t('settings.tab.developer'), icon: '&#128736;' }
     ];
     html += '<div class="settings-tabs">';
     for (var sti = 0; sti < tabs.length; sti++) {
@@ -33,24 +33,24 @@ function renderSettings() {
         html += '<section class="settings-section">';
         html += '<div class="settings-card">';
         html += '<div class="settings-field">';
-        html += '<label class="settings-label">Gebruikersnaam</label>';
+        html += '<label class="settings-label">' + t('settings.username') + '</label>';
         html += '<input type="text" class="settings-input" value="' + escapeAttr(uid) + '" disabled>';
         html += '</div>';
         html += '<div class="settings-field">';
-        html += '<label class="settings-label">Weergavenaam</label>';
-        html += '<input type="text" class="settings-input" id="settings-display-name" value="' + escapeAttr(u.name) + '" placeholder="Weergavenaam">';
+        html += '<label class="settings-label">' + t('settings.displayname') + '</label>';
+        html += '<input type="text" class="settings-input" id="settings-display-name" value="' + escapeAttr(u.name) + '" placeholder="' + t('settings.displayname.plh') + '">';
         html += '</div>';
         html += '<div class="settings-field">';
-        html += '<label class="settings-label">Huidig wachtwoord</label>';
-        html += '<input type="password" class="settings-input" id="settings-current-password" placeholder="Vereist bij wachtwoord wijziging">';
+        html += '<label class="settings-label">' + t('settings.currentpass') + '</label>';
+        html += '<input type="password" class="settings-input" id="settings-current-password" placeholder="' + t('settings.currentpass.plh') + '">';
         html += '</div>';
         html += '<div class="settings-field">';
-        html += '<label class="settings-label">Nieuw wachtwoord</label>';
-        html += '<input type="password" class="settings-input" id="settings-new-password" placeholder="Laat leeg om niet te wijzigen">';
+        html += '<label class="settings-label">' + t('settings.newpass') + '</label>';
+        html += '<input type="password" class="settings-input" id="settings-new-password" placeholder="' + t('settings.newpass.plh') + '">';
         html += '</div>';
         html += '<div class="settings-field">';
-        html += '<label class="settings-label">Bevestig wachtwoord</label>';
-        html += '<input type="password" class="settings-input" id="settings-confirm-password" placeholder="Bevestig nieuw wachtwoord">';
+        html += '<label class="settings-label">' + t('settings.confirmpass') + '</label>';
+        html += '<input type="password" class="settings-input" id="settings-confirm-password" placeholder="' + t('settings.confirmpass.plh') + '">';
         html += '</div>';
         html += '</div></section>';
     }
@@ -60,7 +60,7 @@ function renderSettings() {
         html += '<section class="settings-section">';
         html += '<div class="settings-card">';
         html += '<div class="settings-field">';
-        html += '<label class="settings-label">Kleurenthema</label>';
+        html += '<label class="settings-label">' + t('settings.colorscheme') + '</label>';
         html += '<div class="settings-theme-grid">';
         for (var ti = 0; ti < COLOR_THEMES.length; ti++) {
             var theme = COLOR_THEMES[ti];
@@ -72,7 +72,7 @@ function renderSettings() {
         }
         html += '</div></div>';
         html += '<div class="settings-field">';
-        html += '<label class="settings-label">Taal</label>';
+        html += '<label class="settings-label">' + t('settings.language') + '</label>';
         html += '<div class="settings-lang-options">';
         html += '<button class="settings-lang-btn' + (getLang() === 'nl' ? ' active' : '') + '" data-action="settings-set-lang" data-lang="nl">Nederlands</button>';
         html += '<button class="settings-lang-btn' + (getLang() === 'en' ? ' active' : '') + '" data-action="settings-set-lang" data-lang="en">English</button>';
@@ -85,8 +85,8 @@ function renderSettings() {
         html += '<section class="settings-section">';
         html += '<div class="settings-card">';
         html += '<div class="settings-field settings-toggle-field">';
-        html += '<div><label class="settings-label">Debug Mode</label>';
-        html += '<p class="settings-hint">Toont de bug reporter knop waarmee je problemen op de site kunt melden.</p></div>';
+        html += '<div><label class="settings-label">' + t('settings.debug') + '</label>';
+        html += '<p class="settings-hint">' + t('settings.debug.hint') + '</p></div>';
         html += '<label class="toggle-switch"><input type="checkbox" id="settings-debug-mode"' + (isDebugMode() ? ' checked' : '') + ' data-action="settings-toggle-debug"><span class="toggle-slider"></span></label>';
         html += '</div>';
         html += '</div></section>';
@@ -95,7 +95,7 @@ function renderSettings() {
     // === Save & messages ===
     html += '<p class="settings-error" id="settings-error" style="display:none;"></p>';
     html += '<p class="settings-success" id="settings-success" style="display:none;"></p>';
-    html += '<button class="btn btn-primary settings-save" data-action="save-settings">Opslaan</button>';
+    html += '<button class="btn btn-primary settings-save" data-action="save-settings">' + t('generic.save') + '</button>';
 
     html += '</div>';
     return html;
@@ -122,21 +122,21 @@ function handleSaveSettings() {
     if (successEl) { successEl.style.display = 'none'; }
 
     if (nameEl && !newName) {
-        if (errorEl) { errorEl.textContent = 'Weergavenaam mag niet leeg zijn.'; errorEl.style.display = 'block'; }
+        if (errorEl) { errorEl.textContent = t('settings.error.emptyname'); errorEl.style.display = 'block'; }
         return;
     }
 
     if (newPass) {
         if (!currentPass) {
-            if (errorEl) { errorEl.textContent = 'Voer je huidige wachtwoord in om je wachtwoord te wijzigen.'; errorEl.style.display = 'block'; }
+            if (errorEl) { errorEl.textContent = t('settings.error.needcurrentpass'); errorEl.style.display = 'block'; }
             return;
         }
         if (u.password !== currentPass) {
-            if (errorEl) { errorEl.textContent = 'Huidig wachtwoord is onjuist.'; errorEl.style.display = 'block'; }
+            if (errorEl) { errorEl.textContent = t('settings.error.wrongpass'); errorEl.style.display = 'block'; }
             return;
         }
         if (newPass !== confirmPass) {
-            if (errorEl) { errorEl.textContent = 'Wachtwoorden komen niet overeen.'; errorEl.style.display = 'block'; }
+            if (errorEl) { errorEl.textContent = t('settings.error.passmismatch'); errorEl.style.display = 'block'; }
             return;
         }
     }
@@ -155,8 +155,8 @@ function handleSaveSettings() {
     if (typeof syncSaveUser === 'function') syncSaveUser(uid, usersCache[uid]);
     localStorage.setItem('dw_users', JSON.stringify(usersCache));
 
-    showToast('Instellingen opgeslagen!', 'success');
-    if (successEl) { successEl.textContent = 'Opgeslagen!'; successEl.style.display = 'block'; }
+    showToast(t('settings.saved'), 'success');
+    if (successEl) { successEl.textContent = t('generic.saved'); successEl.style.display = 'block'; }
     setTimeout(function() { renderApp(); }, 600);
 }
 
@@ -178,10 +178,33 @@ function setDebugMode(enabled) {
 }
 
 function getElementDescriptor(el) {
-    if (!el || el === document.body || el === document.documentElement) return 'page';
-    var parts = [];
+    if (!el || el === document.body || el === document.documentElement) return 'Page';
+
+    // Check for data-action (most specific for JS-rendered elements)
+    if (el.dataset && el.dataset.action) return el.dataset.action;
+
+    // Check closest meaningful section
+    var section = el.closest('[data-action]');
     var tag = el.tagName.toLowerCase();
+
+    // Named components
     if (el.id) return tag + '#' + el.id;
+
+    // Meaningful class names
+    var knownComponents = ['sheet-block', 'char-banner', 'char-portrait', 'tab-btn', 'spell-card',
+        'feature-card', 'ability-card', 'combat-stat', 'item-row', 'char-card', 'campaign-home-card',
+        'dash-stat-card', 'quest-card', 'timeline-event', 'note-card', 'navbar', 'dice-fab',
+        'settings-card', 'settings-tab', 'nav-link', 'modal', 'wizard', 'lore-page'];
+    for (var i = 0; i < knownComponents.length; i++) {
+        var comp = el.closest('.' + knownComponents[i]);
+        if (comp) {
+            var text = (el.textContent || '').trim().substring(0, 30);
+            return knownComponents[i] + (text ? ' "' + text + '"' : '');
+        }
+    }
+
+    // Fallback: class + text
+    var parts = [];
     if (el.className && typeof el.className === 'string') {
         var cls = el.className.split(/\s+/).filter(function(c) {
             return c && c.indexOf('bug-') !== 0;
@@ -191,10 +214,9 @@ function getElementDescriptor(el) {
     } else {
         parts.push(tag);
     }
-    // Add text snippet
-    var text = (el.textContent || '').trim().substring(0, 40);
-    if (text) parts.push('"' + text + (el.textContent.trim().length > 40 ? '...' : '') + '"');
-    return parts.join(' ');
+    var text2 = (el.textContent || '').trim().substring(0, 40);
+    if (text2) parts.push('"' + text2 + (el.textContent.trim().length > 40 ? '...' : '') + '"');
+    return parts.join(' ') || (section ? section.dataset.action : tag);
 }
 
 function getElementPath(el) {
@@ -228,12 +250,11 @@ function startBugSelector() {
     document.addEventListener('mousemove', bugSelectorMove, true);
     document.addEventListener('click', bugSelectorClick, true);
     document.addEventListener('keydown', bugSelectorEsc, true);
-    showToast('Klik op een element om een bug te rapporteren (Esc om te annuleren)', 'info');
+    showToast(t('bug.start.toast'), 'info');
 }
 
 function stopBugSelector() {
     bugReporterActive = false;
-    bugSelectedElement = null;
     document.body.classList.remove('bug-selecting');
     if (bugHighlightOverlay) { bugHighlightOverlay.remove(); bugHighlightOverlay = null; }
     document.removeEventListener('mousemove', bugSelectorMove, true);
@@ -282,16 +303,16 @@ function openBugReportModal() {
     var html = '<div class="bug-report-modal-wrap">';
     html += '<div class="modal-overlay" data-action="close-bug-modal">';
     html += '<div class="bug-report-modal">';
-    html += '<div class="modal-header"><h2>🪲 Bug Rapporteren</h2><button class="modal-close" data-action="close-bug-modal">&times;</button></div>';
+    html += '<div class="modal-header"><h2>🪲 ' + t('bug.title') + '</h2><button class="modal-close" data-action="close-bug-modal">&times;</button></div>';
     html += '<div class="modal-body">';
-    html += '<div class="bug-field"><label class="bug-label">Element</label>';
+    html += '<div class="bug-field"><label class="bug-label">' + t('bug.element') + '</label>';
     html += '<div class="bug-element-info"><code>' + escapeHtml(info.descriptor) + '</code></div>';
     html += '<div class="bug-element-path"><small>' + escapeHtml(info.path) + '</small></div></div>';
-    html += '<div class="bug-field"><label class="bug-label">Pagina</label>';
+    html += '<div class="bug-field"><label class="bug-label">' + t('bug.page') + '</label>';
     html += '<div class="bug-element-info"><code>' + escapeHtml(info.route) + '</code></div></div>';
-    html += '<div class="bug-field"><label class="bug-label">Beschrijving</label>';
-    html += '<textarea class="bug-textarea" id="bug-description" rows="4" placeholder="Wat ging er mis?"></textarea></div>';
-    html += '<button class="login-submit" data-action="submit-bug">Verzenden</button>';
+    html += '<div class="bug-field"><label class="bug-label">' + t('bug.description') + '</label>';
+    html += '<textarea class="bug-textarea" id="bug-description" rows="4" placeholder="' + t('bug.plh') + '"></textarea></div>';
+    html += '<button class="login-submit" data-action="submit-bug">' + t('bug.submit') + '</button>';
     html += '</div></div></div></div>';
 
     var wrap = document.createElement('div');
@@ -324,7 +345,7 @@ function closeBugReportModal() {
 function submitBugReport() {
     var desc = document.getElementById('bug-description');
     if (!desc || !desc.value.trim()) {
-        showToast('Beschrijving is verplicht', 'error');
+        showToast(t('bug.error.nodesc'), 'error');
         return;
     }
 
@@ -354,7 +375,7 @@ function submitBugReport() {
     if (typeof syncUploadBugs === 'function') syncUploadBugs(bugs);
 
     closeBugReportModal();
-    showToast('Bug #' + bug.id + ' gerapporteerd!', 'success');
+    showToast('Bug #' + bug.id + ' ' + t('bug.reported'), 'success');
 }
 
 function renderBugFab() {

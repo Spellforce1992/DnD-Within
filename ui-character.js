@@ -45,10 +45,10 @@ function renderCharacterSheet(charId) {
     } else {
         html += '<span class="portrait-placeholder">&#128100;</span>';
     }
-    html += '</div>';
     if (editable) {
         html += '<label class="image-upload-overlay" title="' + t('portrait.upload') + '"><span class="upload-icon">&#128247;</span><input type="file" accept="image/*" data-action="upload-portrait" style="display:none"></label>';
     }
+    html += '</div>';
     html += '</div>';
 
     // Header
@@ -291,7 +291,7 @@ function renderFeaturesSummary(config, state) {
     var classData = DATA[config.className];
     if (!classData) return '';
 
-    var html = '<div class="sheet-block">';
+    var html = '<div class="sheet-block features-summary">';
     html += '<h2>' + t('overview.classfeatures') + '</h2>';
 
     for (var lvl = 1; lvl <= state.level; lvl++) {

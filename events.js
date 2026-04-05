@@ -191,7 +191,8 @@ function bindPageEvents(route) {
             return;
         }
         if (target.matches('[data-action="settings-toggle-debug"]')) {
-            // Handled on save, but give instant visual feedback
+            setDebugMode(target.checked);
+            showToast(target.checked ? t('settings.debug.enabled') : t('settings.debug.disabled'), 'success');
             return;
         }
 
@@ -449,7 +450,7 @@ function bindPageEvents(route) {
                 if (!camps[activeCampId].party) camps[activeCampId].party = {};
                 camps[activeCampId].party[currentUserId()] = assignCharId;
                 saveCampaigns(camps);
-                showToast('Character toegevoegd aan de party!', 'success');
+                showToast(t('party.char.added'), 'success');
                 renderApp();
             }
             return;
@@ -473,7 +474,7 @@ function bindPageEvents(route) {
             if (linkInput) {
                 linkInput.select();
                 document.execCommand('copy');
-                showToast('Link gekopieerd!', 'success');
+                showToast(t('party.link.copied'), 'success');
             }
             return;
         }
@@ -481,7 +482,7 @@ function bindPageEvents(route) {
         // --- Party: remove member ---
         if (target.matches('[data-action="remove-member"]')) {
             var removeUid = target.dataset.userId;
-            if (!confirm('Weet je zeker dat je deze speler wilt verwijderen?')) return;
+            if (!confirm(t('party.remove.confirm'))) return;
             var camps = getCampaigns();
             var activeCampId = getActiveCampaign();
             if (camps[activeCampId]) {
@@ -502,7 +503,7 @@ function bindPageEvents(route) {
             var addUid = addInput.value.trim().toLowerCase();
             var addUser = getUserData(addUid);
             if (!addUser) {
-                showToast('Gebruiker "' + addUid + '" niet gevonden.', 'error');
+                showToast(t('party.user.notfound'), 'error');
                 return;
             }
             var camps = getCampaigns();
@@ -512,10 +513,10 @@ function bindPageEvents(route) {
                 if (camps[activeCampId].members.indexOf(addUid) === -1) {
                     camps[activeCampId].members.push(addUid);
                     saveCampaigns(camps);
-                    showToast(addUser.name + ' toegevoegd!', 'success');
+                    showToast(addUser.name + t('party.user.added'), 'success');
                     renderApp();
                 } else {
-                    showToast('Al lid van de campaign.', 'info');
+                    showToast(t('party.already.member'), 'info');
                 }
             }
             return;
@@ -525,16 +526,16 @@ function bindPageEvents(route) {
         if (target.matches('[data-action="create-campaign"]')) {
             var wizHtml = '<div class="modal-overlay" id="campaign-wizard">';
             wizHtml += '<div class="modal-box campaign-wizard" style="max-width:440px;">';
-            wizHtml += '<h3>&#127760; Nieuwe Campaign</h3>';
+            wizHtml += '<h3>&#127760; ' + t('home.newcampaign') + '</h3>';
             wizHtml += '<div style="display:flex;flex-direction:column;gap:1rem;margin-top:1rem;">';
-            wizHtml += '<div><label class="settings-label">Campaign naam *</label>';
-            wizHtml += '<input type="text" class="edit-input" id="wiz-camp-name" placeholder="bijv. The Serpent March" autofocus></div>';
-            wizHtml += '<div><label class="settings-label">Beschrijving</label>';
-            wizHtml += '<textarea class="edit-textarea auto-grow" id="wiz-camp-desc" placeholder="Korte beschrijving (optioneel)..." style="min-height:60px;"></textarea></div>';
+            wizHtml += '<div><label class="settings-label">' + t('campaign.name.label') + '</label>';
+            wizHtml += '<input type="text" class="edit-input" id="wiz-camp-name" placeholder="' + t('campaign.name.plh') + '" autofocus></div>';
+            wizHtml += '<div><label class="settings-label">' + t('campaign.desc.label') + '</label>';
+            wizHtml += '<textarea class="edit-textarea auto-grow" id="wiz-camp-desc" placeholder="' + t('campaign.desc.plh') + '" style="min-height:60px;"></textarea></div>';
             wizHtml += '</div>';
             wizHtml += '<div class="modal-actions" style="margin-top:1.25rem;">';
-            wizHtml += '<button class="btn btn-primary" data-modal-action="create-camp">Aanmaken</button>';
-            wizHtml += '<button class="btn btn-ghost" data-modal-action="cancel-camp">Annuleren</button>';
+            wizHtml += '<button class="btn btn-primary" data-modal-action="create-camp">' + t('campaign.create') + '</button>';
+            wizHtml += '<button class="btn btn-ghost" data-modal-action="cancel-camp">' + t('generic.cancel') + '</button>';
             wizHtml += '</div>';
             wizHtml += '</div></div>';
             document.body.insertAdjacentHTML('beforeend', wizHtml);
@@ -559,7 +560,7 @@ function bindPageEvents(route) {
                     if (descEl && descEl.value.trim()) camps[campId].description = descEl.value.trim();
                     saveCampaigns(camps);
                     setActiveCampaign(campId);
-                    showToast('Campaign "' + campName + '" aangemaakt! Invite code: ' + invCode, 'success');
+                    showToast(t('campaign.created') + ' Invite code: ' + invCode, 'success');
                 }
                 wizModal.remove();
                 if (typeof unlockBodyScroll === 'function') unlockBodyScroll();
@@ -587,7 +588,7 @@ function bindPageEvents(route) {
         }
         if (target.matches('[data-action="delete-campaign"]')) {
             var cId = target.dataset.campaignId;
-            if (confirm('Campaign "' + cId + '" verwijderen?')) {
+            if (confirm(t('campaign.delete.confirm'))) {
                 var camps = getCampaigns();
                 delete camps[cId];
                 saveCampaigns(camps);
@@ -1138,7 +1139,7 @@ function bindPageEvents(route) {
                     if (infoField === 'subclass') {
                         var emptyOpt = document.createElement('option');
                         emptyOpt.value = '';
-                        emptyOpt.textContent = '— Select —';
+                        emptyOpt.textContent = t('generic.select');
                         sel.appendChild(emptyOpt);
                     }
                     for (var oi = 0; oi < options.length; oi++) {
@@ -1951,7 +1952,7 @@ function bindPageEvents(route) {
                 localStorage.setItem(wKey, JSON.stringify(existing));
                 if (typeof syncUpload === 'function') syncUpload(wKey);
                 wText.value = '';
-                showToast('Whisper sent to ' + wTarget.options[wTarget.selectedIndex].text);
+                showToast(t('dm.whisper.sentto') + wTarget.options[wTarget.selectedIndex].text);
             }
             return;
         }

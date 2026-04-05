@@ -44,7 +44,7 @@ function renderNavbar(route) {
     // Campaign navigation links
     var campLinks = [
         { path: '/dashboard', label: t('nav.dashboard'), icon: svgI('<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>') },
-        { path: '/party', label: 'Party', icon: svgI('<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>') },
+        { path: '/party', label: t('nav.party'), icon: svgI('<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>') },
         { path: '/maps', label: t('nav.maps'), icon: svgI('<polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>') },
         { path: '/timeline', label: t('nav.timeline'), icon: svgI('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>') },
         { path: '/lore', label: t('nav.lore'), icon: svgI('<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>') },
@@ -67,7 +67,7 @@ function renderNavbar(route) {
 
     if (inCampaignView) {
         // Back to main menu
-        html += '<a class="nav-link nav-back" href="#/home"><span class="nav-icon">' + svgI('<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>') + '</span>Menu</a>';
+        html += '<a class="nav-link nav-back" href="#/home"><span class="nav-icon">' + svgI('<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>') + '</span>' + t('nav.menu') + '</a>';
         html += '<span class="nav-separator">|</span>';
         // Campaign links
         for (var i = 0; i < campLinks.length; i++) {
@@ -135,7 +135,7 @@ function renderNavbar(route) {
         }
     }
     html += '<button class="nav-lang-btn" data-action="toggle-lang" title="' + t('nav.language') + '">' + (getLang() === 'nl' ? 'NL' : 'EN') + '</button>';
-    html += '<span class="nav-avatar" data-action="open-profile" title="Profiel instellingen" style="cursor:pointer;">' + escapeHtml(user ? user.name.charAt(0) : '') + '</span>';
+    html += '<span class="nav-avatar" data-action="open-profile" title="' + t('nav.profile') + '" style="cursor:pointer;">' + escapeHtml(user ? user.name.charAt(0) : '') + '</span>';
     html += '<button class="nav-logout" data-action="logout">' + t('nav.logout') + '</button>';
     html += '</div>';
     html += '<button class="nav-toggle" data-action="toggle-nav">&#9776;</button>';
@@ -175,21 +175,21 @@ function renderHome() {
 
     // Welcome
     html += '<div class="welcome-banner">';
-    html += '<h1>Welkom, ' + escapeHtml(user.name) + '</h1>';
-    html += '<p class="text-dim">Kies een campaign of beheer je characters</p>';
+    html += '<h1>' + t('home.welcome') + escapeHtml(user.name) + '</h1>';
+    html += '<p class="text-dim">' + t('home.subtitle') + '</p>';
     html += '</div>';
 
     // My Campaigns
     html += '<div class="home-section">';
     html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">';
-    html += '<h2 class="section-title">Mijn Campaigns</h2>';
+    html += '<h2 class="section-title">' + t('home.mycampaigns') + '</h2>';
     if (isDM()) {
-        html += '<button class="btn btn-primary btn-sm" data-action="create-campaign">+ Nieuwe Campaign</button>';
+        html += '<button class="btn btn-primary btn-sm" data-action="create-campaign">' + t('home.newcampaign') + '</button>';
     }
     html += '</div>';
 
     if (userCampaigns.length === 0) {
-        html += '<p class="text-dim">Je bent nog niet lid van een campaign.</p>';
+        html += '<p class="text-dim">' + t('home.nocampaigns') + '</p>';
     }
 
     html += '<div class="campaign-grid">';
@@ -205,18 +205,22 @@ function renderHome() {
         html += '<div class="campaign-home-card' + (isActive ? ' active' : '') + '" data-action="enter-campaign" data-campaign-id="' + escapeAttr(cId) + '">';
         html += '<div class="campaign-home-header">';
         html += '<h3>' + escapeHtml(camp.name) + '</h3>';
-        if (isDMOfCamp) html += '<span class="campaign-dm-badge">DM</span>';
+        if (camp.dm) {
+            var dmData = getUserData(camp.dm);
+            var dmName = dmData ? dmData.name : camp.dm;
+            html += '<span class="campaign-dm-badge">DM: ' + escapeHtml(dmName) + '</span>';
+        }
         html += '</div>';
         html += '<div class="campaign-home-stats">';
-        html += '<span>' + memberCount + ' spelers</span>';
-        html += '<span>' + partyCount + ' in party</span>';
+        html += '<span>' + memberCount + t('home.players') + '</span>';
+        html += '<span>' + partyCount + t('home.inparty') + '</span>';
         html += '</div>';
-        if (isActive) html += '<span class="campaign-active-badge">Actief</span>';
+        if (isActive) html += '<span class="campaign-active-badge">' + t('home.active') + '</span>';
 
         // Show invite code for DM
         if (isDMOfCamp && camp.inviteCode) {
             html += '<div class="campaign-invite-info">';
-            html += '<span class="text-dim" style="font-size:0.7rem;">Invite code: <strong>' + escapeHtml(camp.inviteCode) + '</strong></span>';
+            html += '<span class="text-dim" style="font-size:0.7rem;">' + t('home.invitecode') + '<strong>' + escapeHtml(camp.inviteCode) + '</strong></span>';
             html += '</div>';
         }
 
@@ -227,8 +231,8 @@ function renderHome() {
     // Join campaign
     html += '<div class="join-campaign-section" style="margin-top:1rem;">';
     html += '<div style="display:flex;gap:0.5rem;align-items:center;">';
-    html += '<input type="text" class="edit-input" id="join-code-input" placeholder="Invite code invoeren..." style="flex:1;max-width:200px;">';
-    html += '<button class="btn btn-ghost btn-sm" data-action="join-campaign-code">Deelnemen</button>';
+    html += '<input type="text" class="edit-input" id="join-code-input" placeholder="' + t('home.invitecode.plh') + '" style="flex:1;max-width:200px;">';
+    html += '<button class="btn btn-ghost btn-sm" data-action="join-campaign-code">' + t('home.join') + '</button>';
     html += '</div>';
     html += '</div>';
 
@@ -238,8 +242,8 @@ function renderHome() {
     var myChars = getMyCharacterIds();
     html += '<div class="home-section">';
     html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">';
-    html += '<h2 class="section-title">Mijn Characters (' + myChars.length + ')</h2>';
-    html += '<a class="btn btn-ghost btn-sm" href="#/characters">Bekijk alle &rarr;</a>';
+    html += '<h2 class="section-title">' + t('home.mycharacters') + ' (' + myChars.length + ')</h2>';
+    html += '<a class="btn btn-ghost btn-sm" href="#/characters">' + t('home.viewall') + ' &rarr;</a>';
     html += '</div>';
     html += '<div class="character-cards">';
     for (var mi = 0; mi < myChars.length; mi++) {
@@ -253,8 +257,8 @@ function renderHome() {
     html += '<div class="char-card char-card-create" data-action="open-create-wizard">';
     html += '<div class="char-card-img"><div class="char-card-placeholder" style="font-size:2.5rem;">+</div></div>';
     html += '<div class="char-card-overlay">';
-    html += '<span class="char-card-name">Nieuw Character</span>';
-    html += '<span class="char-card-detail">Maak een nieuw character aan</span>';
+    html += '<span class="char-card-name">' + t('home.newcharacter') + '</span>';
+    html += '<span class="char-card-detail">' + t('home.newcharacter.hint') + '</span>';
     html += '</div>';
     html += '</div>';
     html += '</div>';
@@ -275,7 +279,7 @@ function handleJoinCampaign(inviteCode) {
         }
     }
     if (!found) {
-        return '<div class="page-placeholder"><h2>Ongeldige invite code</h2><p>Deze invite code bestaat niet. Vraag je DM om een nieuwe link.</p><a class="btn btn-primary" href="#/home">Terug naar Home</a></div>';
+        return '<div class="page-placeholder"><h2>' + t('join.invalid') + '</h2><p>' + t('join.invalid.hint') + '</p><a class="btn btn-primary" href="#/home">' + t('join.backhome') + '</a></div>';
     }
     var camp = campaigns[found];
     if (!camp.members) camp.members = [];
@@ -284,7 +288,7 @@ function handleJoinCampaign(inviteCode) {
         saveCampaigns(campaigns);
     }
     setActiveCampaign(found);
-    return '<div class="page-placeholder"><h2>Welkom bij ' + escapeHtml(camp.name) + '!</h2><p>Je bent toegevoegd aan de campaign. Kies een character voor de party.</p><a class="btn btn-primary" href="#/party">Ga naar Party</a></div>';
+    return '<div class="page-placeholder"><h2>' + t('join.welcome') + escapeHtml(camp.name) + '!</h2><p>' + t('join.added') + '</p><a class="btn btn-primary" href="#/party">' + t('join.toparty') + '</a></div>';
 }
 
 // ============================================================
@@ -296,7 +300,7 @@ function renderParty() {
     var campaigns = getCampaigns();
     var camp = campaigns[activeCamp];
     if (!camp) {
-        return '<div class="page-placeholder"><h2>Geen actieve campaign</h2><p>Ga naar <a href="#/home">Home</a> om een campaign te kiezen.</p></div>';
+        return '<div class="page-placeholder"><h2>' + t('party.nocampaign') + '</h2><p>' + t('party.nocampaign.hint') + '</p></div>';
     }
 
     var uid = currentUserId();
@@ -311,10 +315,10 @@ function renderParty() {
     if (isMember && !myPartyChar) {
         var myChars = getMyCharacterIds();
         html += '<div class="party-assign-prompt">';
-        html += '<h3>Kies een character voor deze campaign</h3>';
-        html += '<p class="text-dim">Selecteer welk character je wilt spelen in ' + escapeHtml(camp.name) + '.</p>';
+        html += '<h3>' + t('party.choosechar') + '</h3>';
+        html += '<p class="text-dim">' + t('party.choosechar.hint') + escapeHtml(camp.name) + '.</p>';
         if (myChars.length === 0) {
-            html += '<p>Je hebt nog geen characters. <a href="#/characters">Maak er eerst een aan</a>.</p>';
+            html += '<p>' + t('party.nocharacters') + ' <a href="#/characters">' + t('party.nocharacters.link') + '</a>.</p>';
         } else {
             html += '<div class="party-assign-grid">';
             for (var ai = 0; ai < myChars.length; ai++) {
@@ -338,8 +342,8 @@ function renderParty() {
         // Show change option
         html += '<div class="party-your-char">';
         var myCfg = loadCharConfig(myPartyChar);
-        html += '<span class="text-dim">Jouw character: <strong>' + escapeHtml(myCfg ? myCfg.name : myPartyChar) + '</strong></span>';
-        html += ' <button class="btn btn-ghost btn-sm" data-action="change-party-char">Wissel character</button>';
+        html += '<span class="text-dim">' + t('party.yourchar') + '<strong>' + escapeHtml(myCfg ? myCfg.name : myPartyChar) + '</strong></span>';
+        html += ' <button class="btn btn-ghost btn-sm" data-action="change-party-char">' + t('party.changechar') + '</button>';
         html += '</div>';
     }
 
@@ -356,7 +360,7 @@ function renderParty() {
     }
 
     if (partyCharIds.length === 0) {
-        html += '<p class="text-dim" style="padding:2rem;">Nog geen characters in de party.</p>';
+        html += '<p class="text-dim" style="padding:2rem;">' + t('party.empty') + '</p>';
     }
 
     html += '</div>';
@@ -364,23 +368,23 @@ function renderParty() {
     // DM: manage members
     if (isDM() && isCampaignDM()) {
         html += '<div class="dm-party-manage" style="margin-top:2rem;">';
-        html += '<h3>Campaign Beheer</h3>';
+        html += '<h3>' + t('party.manage') + '</h3>';
 
         // Invite link
         if (camp.inviteCode) {
             var inviteUrl = window.location.origin + window.location.pathname + '#/join/' + camp.inviteCode;
             html += '<div style="margin-bottom:1rem;">';
-            html += '<label class="login-label">Invite Link</label>';
+            html += '<label class="login-label">' + t('party.invitelink') + '</label>';
             html += '<div style="display:flex;gap:0.5rem;">';
             html += '<input type="text" class="edit-input" value="' + escapeAttr(inviteUrl) + '" readonly style="flex:1;" id="invite-link-input">';
-            html += '<button class="btn btn-ghost btn-sm" data-action="copy-invite-link">Kopieer</button>';
+            html += '<button class="btn btn-ghost btn-sm" data-action="copy-invite-link">' + t('party.copy') + '</button>';
             html += '</div>';
-            html += '<span class="text-dim" style="font-size:0.7rem;">Code: ' + escapeHtml(camp.inviteCode) + '</span>';
+            html += '<span class="text-dim" style="font-size:0.7rem;">' + t('party.code') + escapeHtml(camp.inviteCode) + '</span>';
             html += '</div>';
         }
 
         // Members list
-        html += '<h4>Leden (' + (camp.members ? camp.members.length : 0) + ')</h4>';
+        html += '<h4>' + t('party.members') + ' (' + (camp.members ? camp.members.length : 0) + ')</h4>';
         var members = camp.members || [];
         for (var mi = 0; mi < members.length; mi++) {
             var mUid = members[mi];
@@ -392,7 +396,7 @@ function renderParty() {
             if (mCharCfg) {
                 html += '<span class="text-dim"> — ' + escapeHtml(mCharCfg.name) + ' (' + classDisplayName(mCharCfg.className) + ')</span>';
             } else {
-                html += '<span class="text-dim"> — geen character gekozen</span>';
+                html += '<span class="text-dim">' + t('party.nochar') + '</span>';
             }
             if (mUid !== camp.dm) {
                 html += '<button class="btn btn-ghost btn-sm" data-action="remove-member" data-user-id="' + escapeAttr(mUid) + '" style="color:var(--danger);">&times;</button>';
@@ -402,8 +406,8 @@ function renderParty() {
 
         // Add member manually
         html += '<div style="margin-top:0.5rem;display:flex;gap:0.5rem;">';
-        html += '<input type="text" class="edit-input" id="add-member-input" placeholder="Gebruikersnaam..." style="flex:1;max-width:200px;">';
-        html += '<button class="btn btn-ghost btn-sm" data-action="add-member">Toevoegen</button>';
+        html += '<input type="text" class="edit-input" id="add-member-input" placeholder="' + t('party.username.plh') + '" style="flex:1;max-width:200px;">';
+        html += '<button class="btn btn-ghost btn-sm" data-action="add-member">' + t('party.addmember') + '</button>';
         html += '</div>';
 
         html += '</div>';
@@ -475,7 +479,7 @@ function renderDashboard() {
     // Party gold (sum of all character gold)
     html += '<div class="dash-stat-card party-gold-card">';
     html += '<span class="dash-stat-value" style="color:var(--gold);">' + partyGold + '</span>';
-    html += '<span class="dash-stat-label">Party Gold</span>';
+    html += '<span class="dash-stat-label">' + t('dash.partygold') + '</span>';
     html += '</div>';
     html += '<div class="dash-stat-card"><span class="dash-stat-value">' + groupLevel + '</span><span class="dash-stat-label">' + t('dash.level') + '</span></div>';
     html += '</div>';
@@ -521,7 +525,7 @@ function renderDashboard() {
     var myWhispers = JSON.parse(localStorage.getItem(whisperKey) || '[]');
     if (myWhispers.length > 0 && !isDM()) {
         html += '<div class="dash-whispers">';
-        html += '<h2 class="section-title">&#128172; Messages from the DM</h2>';
+        html += '<h2 class="section-title">&#128172; ' + t('dash.dmwhispers') + '</h2>';
         for (var wi = 0; wi < myWhispers.length; wi++) {
             html += '<div class="whisper-card">';
             html += '<p>' + escapeHtml(myWhispers[wi].text) + '</p>';
@@ -536,32 +540,32 @@ function renderDashboard() {
     var questData = getQuestData();
     html += '<div class="dash-quests">';
     html += '<div class="dash-quests-header">';
-    html += '<h2 class="section-title">Active Quests</h2>';
+    html += '<h2 class="section-title">' + t('dash.quests') + '</h2>';
     if (isDM()) {
-        html += '<button class="btn btn-ghost btn-sm" data-action="add-quest">+ Add Quest</button>';
+        html += '<button class="btn btn-ghost btn-sm" data-action="add-quest">' + t('dash.addquest') + '</button>';
     }
     html += '</div>';
 
     // Quest add form (hidden by default)
     if (isDM()) {
         html += '<div class="quest-add-form" id="quest-add-form" style="display:none;">';
-        html += '<input type="text" class="edit-input" id="quest-title" placeholder="Quest title *">';
-        html += '<textarea class="edit-textarea auto-grow" id="quest-desc" placeholder="Description..." style="min-height:40px;" oninput="if(typeof autoGrowTextarea===\'function\')autoGrowTextarea(this)"></textarea>';
+        html += '<input type="text" class="edit-input" id="quest-title" placeholder="' + t('quest.title.plh') + '">';
+        html += '<textarea class="edit-textarea auto-grow" id="quest-desc" placeholder="' + t('quest.desc.plh') + '" style="min-height:40px;" oninput="if(typeof autoGrowTextarea===\'function\')autoGrowTextarea(this)"></textarea>';
         html += '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;">';
-        html += '<input type="text" class="edit-input" id="quest-giver" placeholder="Quest giver" style="flex:1;">';
-        html += '<input type="text" class="edit-input" id="quest-reward" placeholder="Reward" style="flex:1;">';
-        html += '<input type="text" class="edit-input" id="quest-tags" placeholder="Tags (comma sep.)" style="flex:1;">';
+        html += '<input type="text" class="edit-input" id="quest-giver" placeholder="' + t('quest.giver.plh') + '" style="flex:1;">';
+        html += '<input type="text" class="edit-input" id="quest-reward" placeholder="' + t('quest.reward.plh') + '" style="flex:1;">';
+        html += '<input type="text" class="edit-input" id="quest-tags" placeholder="' + t('quest.tags.plh') + '" style="flex:1;">';
         html += '</div>';
         html += '<div class="edit-actions">';
-        html += '<button class="edit-save" data-action="save-quest">Save Quest</button>';
-        html += '<button class="edit-cancel" data-action="cancel-quest">Cancel</button>';
+        html += '<button class="edit-save" data-action="save-quest">' + t('quest.save') + '</button>';
+        html += '<button class="edit-cancel" data-action="cancel-quest">' + t('generic.cancel') + '</button>';
         html += '</div>';
         html += '<input type="hidden" id="quest-edit-idx" value="">';
         html += '</div>';
     }
 
     if (questData.active.length === 0 && questData.completed.length === 0) {
-        html += '<p class="text-dim">No quests yet.</p>';
+        html += '<p class="text-dim">' + t('quest.empty') + '</p>';
     }
     for (var qi = 0; qi < questData.active.length; qi++) {
         var quest = questData.active[qi];
@@ -570,8 +574,8 @@ function renderDashboard() {
         html += '<div class="quest-info">';
         html += '<strong>' + escapeHtml(quest.title) + '</strong>';
         if (quest.desc) html += '<p class="text-dim" style="margin:0;font-size:0.8rem;">' + escapeHtml(quest.desc) + '</p>';
-        if (quest.giver) html += '<span class="quest-meta">From: ' + escapeHtml(quest.giver) + '</span>';
-        if (quest.reward) html += '<span class="quest-meta">Reward: ' + escapeHtml(quest.reward) + '</span>';
+        if (quest.giver) html += '<span class="quest-meta">' + t('quest.from') + escapeHtml(quest.giver) + '</span>';
+        if (quest.reward) html += '<span class="quest-meta">' + t('quest.reward.label') + escapeHtml(quest.reward) + '</span>';
         if (quest.tags) {
             var tagArr = quest.tags.split(',').map(function(t) { return t.trim(); }).filter(Boolean);
             if (tagArr.length > 0) {
@@ -593,7 +597,7 @@ function renderDashboard() {
         html += '</div>';
     }
     if (questData.completed.length > 0) {
-        html += '<details class="quest-completed-section"><summary class="text-dim" style="cursor:pointer;font-size:0.85rem;">Completed (' + questData.completed.length + ')</summary>';
+        html += '<details class="quest-completed-section"><summary class="text-dim" style="cursor:pointer;font-size:0.85rem;">' + t('quest.completed') + ' (' + questData.completed.length + ')</summary>';
         for (var qc = 0; qc < questData.completed.length; qc++) {
             html += '<div class="quest-item quest-done"><span class="quest-icon">&#10003;</span><span style="text-decoration:line-through;color:var(--text-dim);">' + escapeHtml(questData.completed[qc].title) + '</span></div>';
         }
@@ -644,9 +648,9 @@ function renderDMPage(subpage) {
     // Tab bar
     var tabs = [
         { id: 'initiative', label: t('dm.initiative'), icon: '&#9876;' },
-        { id: 'npcs', label: 'NPCs', icon: '&#127917;' },
-        { id: 'families', label: 'Families', icon: '&#128106;' },
-        { id: 'campaigns', label: 'Campaigns', icon: '&#127760;' }
+        { id: 'npcs', label: t('dm.npcs'), icon: '&#127917;' },
+        { id: 'families', label: t('dm.families'), icon: '&#128106;' },
+        { id: 'campaigns', label: t('dm.campaigns'), icon: '&#127760;' }
     ];
     html += '<div class="dm-tabs">';
     for (var ti = 0; ti < tabs.length; ti++) {
@@ -1051,7 +1055,7 @@ function renderDMCampaigns() {
     var html = '<div class="dm-tool-card">';
     html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">';
     html += '<h3>Campaigns (' + campIds.length + ')</h3>';
-    html += '<button class="btn btn-primary btn-sm" data-action="create-campaign">+ Nieuwe Campaign</button>';
+    html += '<button class="btn btn-primary btn-sm" data-action="create-campaign">' + t('home.newcampaign') + '</button>';
     html += '</div>';
 
     for (var ci = 0; ci < campIds.length; ci++) {
@@ -1065,14 +1069,14 @@ function renderDMCampaigns() {
         html += '<div style="display:flex;justify-content:space-between;align-items:center;">';
         html += '<div>';
         html += '<strong style="color:var(--text-bright);">' + escapeHtml(camp.name) + '</strong>';
-        if (isActive) html += ' <span style="font-size:0.65rem;color:var(--accent);">ACTIEF</span>';
-        html += '<br><span style="font-size:0.75rem;color:var(--text-dim);">' + memberCount + ' leden, ' + partyCount + ' in party</span>';
-        if (camp.inviteCode) html += '<br><span style="font-size:0.7rem;color:var(--text-dim);">Invite: <strong>' + escapeHtml(camp.inviteCode) + '</strong></span>';
+        if (isActive) html += ' <span style="font-size:0.65rem;color:var(--accent);">' + t('home.active') + '</span>';
+        html += '<br><span style="font-size:0.75rem;color:var(--text-dim);">' + memberCount + t('dm.families.members') + partyCount + t('home.inparty') + '</span>';
+        if (camp.inviteCode) html += '<br><span style="font-size:0.7rem;color:var(--text-dim);">' + t('home.invitecode') + '<strong>' + escapeHtml(camp.inviteCode) + '</strong></span>';
         html += '</div>';
         html += '<div style="display:flex;gap:0.4rem;">';
-        if (!isActive) html += '<button class="btn btn-ghost btn-sm" data-action="activate-campaign" data-campaign-id="' + escapeAttr(cId) + '">Activeer</button>';
-        html += '<button class="btn btn-ghost btn-sm" data-action="rename-campaign" data-campaign-id="' + escapeAttr(cId) + '">Hernoem</button>';
-        if (campIds.length > 1 && partyCount === 0) html += '<button class="btn btn-ghost btn-sm" data-action="delete-campaign" data-campaign-id="' + escapeAttr(cId) + '" style="color:var(--danger);">Verwijder</button>';
+        if (!isActive) html += '<button class="btn btn-ghost btn-sm" data-action="activate-campaign" data-campaign-id="' + escapeAttr(cId) + '">' + t('dm.camp.activate') + '</button>';
+        html += '<button class="btn btn-ghost btn-sm" data-action="rename-campaign" data-campaign-id="' + escapeAttr(cId) + '">' + t('dm.camp.rename') + '</button>';
+        if (campIds.length > 1 && partyCount === 0) html += '<button class="btn btn-ghost btn-sm" data-action="delete-campaign" data-campaign-id="' + escapeAttr(cId) + '" style="color:var(--danger);">' + t('dm.camp.delete') + '</button>';
         html += '</div></div>';
 
         // Party members
@@ -1183,7 +1187,7 @@ function renderCharacterList() {
     var myChars = getMyCharacterIds();
 
     var html = '<div class="dashboard">';
-    html += '<h2 class="section-title">Mijn Characters</h2>';
+    html += '<h2 class="section-title">' + t('home.mycharacters') + '</h2>';
     html += '<p class="text-dim">Je persoonlijke characters. Wijs ze toe aan een campaign via de Party pagina.</p>';
     html += '<div class="character-cards">';
 
@@ -1213,8 +1217,8 @@ function renderCharacterList() {
     html += '<div class="char-card char-card-create" data-action="open-create-wizard">';
     html += '<div class="char-card-img"><div class="char-card-placeholder" style="font-size:2.5rem;">+</div></div>';
     html += '<div class="char-card-overlay">';
-    html += '<span class="char-card-name">Nieuw Character</span>';
-    html += '<span class="char-card-detail">Maak een nieuw character aan</span>';
+    html += '<span class="char-card-name">' + t('home.newcharacter') + '</span>';
+    html += '<span class="char-card-detail">' + t('home.newcharacter.hint') + '</span>';
     html += '</div>';
     html += '</div>';
 

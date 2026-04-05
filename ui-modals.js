@@ -193,13 +193,13 @@ function renderWizardModal() {
 
     // Header with progress
     html += '<div class="wizard-header">';
-    html += '<h2 class="wizard-title">Nieuw Character</h2>';
+    html += '<h2 class="wizard-title">' + t('wizard.title') + '</h2>';
     html += '<button class="modal-close" data-action="close-wizard">&times;</button>';
     html += '</div>';
 
     // Step indicator
     html += '<div class="wizard-steps">';
-    var stepLabels = ['Basis', 'Achtergrond', 'Details', 'Vaardigheden', 'Verhaal', 'Overzicht'];
+    var stepLabels = [t('wizard.step.basics'), t('wizard.step.background'), t('wizard.step.details'), t('wizard.step.skills'), t('wizard.step.story'), t('wizard.step.summary')];
     for (var si = 1; si <= totalSteps; si++) {
         var stepClass = 'wizard-step-dot';
         if (si < step) stepClass += ' completed';
@@ -224,14 +224,14 @@ function renderWizardModal() {
     // Navigation buttons
     html += '<div class="wizard-nav">';
     if (step > 1) {
-        html += '<button class="btn btn-ghost" data-action="wizard-prev">&larr; Vorige</button>';
+        html += '<button class="btn btn-ghost" data-action="wizard-prev">&larr; ' + t('wizard.prev') + '</button>';
     } else {
         html += '<div></div>';
     }
     if (step < totalSteps) {
-        html += '<button class="btn btn-primary" data-action="wizard-next">Volgende &rarr;</button>';
+        html += '<button class="btn btn-primary" data-action="wizard-next">' + t('wizard.next') + ' &rarr;</button>';
     } else {
-        html += '<button class="btn btn-primary" data-action="wizard-create">Character Aanmaken</button>';
+        html += '<button class="btn btn-primary" data-action="wizard-create">' + t('wizard.create') + '</button>';
     }
     html += '</div>';
 
@@ -241,20 +241,20 @@ function renderWizardModal() {
 }
 
 function renderWizardStep1() {
-    var html = '<h3 class="wizard-step-title">Basisgegevens</h3>';
+    var html = '<h3 class="wizard-step-title">' + t('wizard.step.basics') + '</h3>';
 
     // Character name
     html += '<div class="wizard-field">';
-    html += '<label class="wizard-label">Character Naam *</label>';
-    html += '<input type="text" class="wizard-input" id="wizard-name" value="' + escapeAttr(wizardState.name) + '" placeholder="Voer een naam in...">';
+    html += '<label class="wizard-label">' + t('wizard.name.label') + '</label>';
+    html += '<input type="text" class="wizard-input" id="wizard-name" value="' + escapeAttr(wizardState.name) + '" placeholder="' + t('wizard.name.plh') + '">';
     html += '</div>';
 
     // Race
     var races = getWizardRaces();
     html += '<div class="wizard-field">';
-    html += '<label class="wizard-label">Ras / Species *</label>';
+    html += '<label class="wizard-label">' + t('wizard.race.label') + '</label>';
     html += '<select class="wizard-select" id="wizard-race" data-action="wizard-race-change">';
-    html += '<option value="">-- Kies een ras --</option>';
+    html += '<option value="">' + t('wizard.race.default') + '</option>';
     for (var i = 0; i < races.length; i++) {
         var sel = wizardState.race === races[i] ? ' selected' : '';
         html += '<option value="' + races[i] + '"' + sel + '>' + raceDisplayName(races[i]) + '</option>';
@@ -280,9 +280,9 @@ function renderWizardStep1() {
     // Class
     var classes = getWizardClasses();
     html += '<div class="wizard-field">';
-    html += '<label class="wizard-label">Klasse *</label>';
+    html += '<label class="wizard-label">' + t('wizard.class.label') + '</label>';
     html += '<select class="wizard-select" id="wizard-class" data-action="wizard-class-change">';
-    html += '<option value="">-- Kies een klasse --</option>';
+    html += '<option value="">' + t('wizard.class.default') + '</option>';
     for (var i = 0; i < classes.length; i++) {
         var sel = wizardState.className === classes[i] ? ' selected' : '';
         html += '<option value="' + classes[i] + '"' + sel + '>' + classDisplayName(classes[i]) + '</option>';
@@ -309,14 +309,14 @@ function renderWizardStep1() {
 }
 
 function renderWizardStep2() {
-    var html = '<h3 class="wizard-step-title">Achtergrond & Ability Scores</h3>';
+    var html = '<h3 class="wizard-step-title">' + t('wizard.step.background') + '</h3>';
 
     // Background
     var bgs = getWizardBackgrounds();
     html += '<div class="wizard-field">';
-    html += '<label class="wizard-label">Achtergrond *</label>';
+    html += '<label class="wizard-label">' + t('wizard.bg.label') + '</label>';
     html += '<select class="wizard-select" id="wizard-background" data-action="wizard-bg-change">';
-    html += '<option value="">-- Kies een achtergrond --</option>';
+    html += '<option value="">' + t('wizard.bg.default') + '</option>';
     for (var i = 0; i < bgs.length; i++) {
         var bgData = DATA.backgrounds[bgs[i]];
         var sel = wizardState.background === bgs[i] ? ' selected' : '';
@@ -377,7 +377,7 @@ function renderWizardStep2() {
 }
 
 function renderWizardStep3() {
-    var html = '<h3 class="wizard-step-title">Subclass & Details</h3>';
+    var html = '<h3 class="wizard-step-title">' + t('wizard.step.details') + '</h3>';
 
     // Subclass
     if (wizardState.className) {
@@ -386,7 +386,7 @@ function renderWizardStep3() {
             html += '<div class="wizard-field">';
             html += '<label class="wizard-label">Subclass</label>';
             html += '<select class="wizard-select" id="wizard-subclass">';
-            html += '<option value="">-- Kies een subclass --</option>';
+            html += '<option value="">' + t('wizard.subclass.default') + '</option>';
             for (var i = 0; i < subclasses.length; i++) {
                 var subData = DATA[wizardState.className].subclasses[subclasses[i]];
                 var sel = wizardState.subclass === subclasses[i] ? ' selected' : '';
@@ -411,13 +411,13 @@ function renderWizardStep3() {
 
     // Age
     html += '<div class="wizard-field">';
-    html += '<label class="wizard-label">Leeftijd (optioneel)</label>';
-    html += '<input type="number" class="wizard-input wizard-input-sm" id="wizard-age" value="' + (wizardState.age || '') + '" min="1" max="999" placeholder="Leeftijd">';
+    html += '<label class="wizard-label">' + t('wizard.age.label') + '</label>';
+    html += '<input type="number" class="wizard-input wizard-input-sm" id="wizard-age" value="' + (wizardState.age || '') + '" min="1" max="999" placeholder="' + t('wizard.age.label') + '">';
     html += '</div>';
 
     // Accent Color
     html += '<div class="wizard-field">';
-    html += '<label class="wizard-label">Accent Kleur</label>';
+    html += '<label class="wizard-label">' + t('wizard.accentcolor') + '</label>';
     html += '<div class="wizard-colors">';
     for (var ci = 0; ci < COLOR_THEMES.length; ci++) {
         var theme = COLOR_THEMES[ci];
@@ -431,10 +431,10 @@ function renderWizardStep3() {
 }
 
 function renderWizardStep4() {
-    var html = '<h3 class="wizard-step-title">Vaardigheden & Proficiencies</h3>';
+    var html = '<h3 class="wizard-step-title">' + t('wizard.step.skills') + '</h3>';
 
     if (!wizardState.className || !DATA[wizardState.className]) {
-        html += '<p class="wizard-detail">Kies eerst een klasse in Stap 1.</p>';
+        html += '<p class="wizard-detail">' + t('wizard.skills.noclass') + '</p>';
         return html;
     }
 
@@ -488,11 +488,11 @@ function renderWizardStep4() {
 }
 
 function renderWizardStep5() {
-    var html = '<h3 class="wizard-step-title">Verhaal & Uiterlijk</h3>';
+    var html = '<h3 class="wizard-step-title">' + t('wizard.step.story') + '</h3>';
 
     html += '<div class="wizard-field">';
-    html += '<label class="wizard-label">Uiterlijk</label>';
-    html += '<textarea class="wizard-textarea" id="wizard-appearance" placeholder="Beschrijf het uiterlijk van je character...">' + escapeHtml(wizardState.appearance) + '</textarea>';
+    html += '<label class="wizard-label">' + t('wizard.appearance.label') + '</label>';
+    html += '<textarea class="wizard-textarea" id="wizard-appearance" placeholder="' + t('wizard.appearance.plh') + '">' + escapeHtml(wizardState.appearance) + '</textarea>';
     html += '</div>';
 
     html += '<div class="wizard-field">';
@@ -516,30 +516,30 @@ function renderWizardStep5() {
     html += '</div>';
 
     html += '<div class="wizard-field">';
-    html += '<label class="wizard-label">Backstory</label>';
-    html += '<textarea class="wizard-textarea wizard-textarea-lg" id="wizard-backstory" placeholder="Het verhaal van je character...">' + escapeHtml(wizardState.backstory) + '</textarea>';
+    html += '<label class="wizard-label">' + t('wizard.backstory.label') + '</label>';
+    html += '<textarea class="wizard-textarea wizard-textarea-lg" id="wizard-backstory" placeholder="' + t('wizard.backstory.plh') + '">' + escapeHtml(wizardState.backstory) + '</textarea>';
     html += '</div>';
 
     return html;
 }
 
 function renderWizardStep6() {
-    var html = '<h3 class="wizard-step-title">Overzicht</h3>';
+    var html = '<h3 class="wizard-step-title">' + t('wizard.step.summary') + '</h3>';
 
     html += '<div class="wizard-summary">';
 
     // Name & basics
     html += '<div class="wizard-summary-section">';
     html += '<h4>Basisgegevens</h4>';
-    html += '<p><strong>Naam:</strong> ' + escapeHtml(wizardState.name || '(niet ingevuld)') + '</p>';
-    html += '<p><strong>Ras:</strong> ' + (wizardState.race ? raceDisplayName(wizardState.race) : '(niet gekozen)') + '</p>';
-    html += '<p><strong>Klasse:</strong> ' + (wizardState.className ? classDisplayName(wizardState.className) : '(niet gekozen)') + '</p>';
+    html += '<p><strong>' + t('wizard.summary.name') + '</strong> ' + escapeHtml(wizardState.name || t('wizard.empty')) + '</p>';
+    html += '<p><strong>' + t('wizard.summary.race') + '</strong> ' + (wizardState.race ? raceDisplayName(wizardState.race) : t('wizard.notchosen')) + '</p>';
+    html += '<p><strong>' + t('wizard.summary.class') + '</strong> ' + (wizardState.className ? classDisplayName(wizardState.className) : t('wizard.notchosen')) + '</p>';
     html += '</div>';
 
     // Background
     html += '<div class="wizard-summary-section">';
     html += '<h4>Achtergrond</h4>';
-    var bgName = wizardState.background && DATA.backgrounds[wizardState.background] ? DATA.backgrounds[wizardState.background].name : '(niet gekozen)';
+    var bgName = wizardState.background && DATA.backgrounds[wizardState.background] ? DATA.backgrounds[wizardState.background].name : t('wizard.notchosen');
     html += '<p><strong>Achtergrond:</strong> ' + bgName + '</p>';
 
     // Ability scores with bonuses
@@ -658,7 +658,7 @@ function generateCharId(name) {
 
 function createCharacterFromWizard() {
     if (!wizardState.name || !wizardState.race || !wizardState.className) {
-        showToast('Vul naam, ras en klasse in (Stap 1).', 'error');
+        showToast(t('wizard.error.step1'), 'error');
         return false;
     }
 
@@ -734,7 +734,7 @@ function createCharacterFromWizard() {
     if (typeof syncSaveUser === 'function') syncSaveUser(uid, usersCache[uid]);
     localStorage.setItem('dw_users', JSON.stringify(usersCache));
 
-    showToast('Character "' + wizardState.name + '" aangemaakt!', 'success');
+    showToast(t('wizard.success'), 'success');
     return charId;
 }
 

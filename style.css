@@ -622,6 +622,7 @@ a { color: inherit; text-decoration: none; }
     overflow: hidden;
     background: var(--bg-block);
     margin-top: 1rem;
+    z-index: 1;
 }
 
 .char-banner img {
@@ -702,7 +703,8 @@ a { color: inherit; text-decoration: none; }
     cursor: pointer;
 }
 
-.char-portrait-wrap:hover .image-upload-overlay { opacity: 1; }
+.char-portrait-wrap:hover .image-upload-overlay,
+.char-portrait:hover .image-upload-overlay { opacity: 1; }
 
 .upload-icon {
     font-size: 1.5rem;
@@ -842,7 +844,7 @@ a { color: inherit; text-decoration: none; }
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.75rem;
+    gap: 0.4rem;
     margin-top: 0.5rem;
 }
 
@@ -1303,12 +1305,21 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* ===== FEATURES ===== */
+.features-summary {
+    columns: 2;
+    column-gap: 0.75rem;
+}
+.features-summary > h2,
+.features-summary > h3 {
+    column-span: all;
+}
 .feature-card {
     background: var(--bg-block);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
-    padding: 0.75rem 1rem;
-    margin-bottom: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 0.4rem;
+    break-inside: avoid;
 }
 
 .feature-card h4 {
@@ -3357,6 +3368,7 @@ footer {
     .ability-scores { grid-template-columns: repeat(2, 1fr); }
     .combat-stats { grid-template-columns: repeat(2, 1fr); }
     .spell-grid { grid-template-columns: 1fr; }
+    .features-summary { columns: 1; }
     .tab-btn { padding: 0.4rem 0.6rem; font-size: 0.75rem; }
     .char-banner { height: 100px; }
     .char-portrait { width: 64px; height: 64px; }
@@ -3805,10 +3817,10 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--a
 
 /* ===== SESSION CARD CONTROLS ===== */
 .session-card { position: relative; }
-.session-controls { position: absolute; bottom: 0.4rem; left: 50%; transform: translateX(-50%); display: flex; gap: 0.25rem; opacity: 0; transition: opacity 0.2s; }
+.session-controls { position: absolute; bottom: 0.4rem; left: 50%; transform: translateX(-50%); display: flex; gap: 0.75rem; opacity: 0; transition: opacity 0.2s; }
 .session-card:hover .session-controls { opacity: 1; }
-.session-btn { width: 24px; height: 24px; border-radius: 50%; background: var(--bg-dark); border: 1px solid var(--border); color: var(--text-dim); cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-.session-btn:hover { border-color: var(--accent); color: var(--accent); }
+.session-btn { width: 24px; height: 24px; border-radius: 50%; background: var(--bg-dark); border: 1px solid var(--accent); color: var(--accent); cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.session-btn:hover { border-color: var(--accent); color: var(--bg-dark); background: var(--accent); }
 
 /* ===== TEXT HELPERS ===== */
 .text-dim { color: var(--text-dim); }
@@ -5877,20 +5889,26 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     height: 52px;
     border-radius: 50%;
     background: var(--bg-elevated);
-    border: 2px solid var(--border);
+    border: 2px solid var(--accent);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.6rem;
     cursor: pointer;
     z-index: 90;
-    transition: all 0.2s;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    transition: all 0.3s;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 8px var(--accent-glow);
+    animation: dice-fab-pulse 3s ease-in-out infinite;
+}
+@keyframes dice-fab-pulse {
+    0%, 100% { box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 8px var(--accent-glow); }
+    50% { box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 16px var(--accent-glow); }
 }
 .dice-fab:hover {
     border-color: var(--accent);
     transform: scale(1.1);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 12px var(--accent-glow);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 20px var(--accent-glow);
+    animation: none;
 }
 .dice-panel {
     position: fixed;
@@ -7276,7 +7294,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 /* ===== Bug Reporter ===== */
 .bug-fab {
     position: fixed;
-    bottom: 5rem;
+    bottom: 6rem;
     right: 1.5rem;
     width: 52px;
     height: 52px;
