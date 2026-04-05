@@ -1,5 +1,173 @@
 # Session Log — D&D Within
 
+### Recap — 2026-04-04 (sessie 11 + 12)
+
+**What was done:**
+
+*Sessie 11 (nacht 01:xx):*
+- Spells gededupliceerd: 307 unieke spells in spellPool, klasse-lijsten als string refs
+- Level 6-9 spells toegevoegd voor wizard, bard, cleric, druid, warlock
+- Weapon mastery badges op inventory wapens met custom tooltip popup
+- Family tree uitgebreid naar 5 tiers met SVG lijnen, partners, grootouders
+- Family trees toegevoegd aan NPC cards in DM panel
+- Subclass selectie gefixt voor characters voorbij level 3
+- Duplicate feat selectie voorkomen in beide feat pickers
+- Initiative drag-drop gefixt: document-level events + 20px padding op drop zone
+- Wizard Next/Close gefixt (stopPropagation verwijderd), concentration dropdown fix, page fade fix
+- NPC zoekbalk toegevoegd met realtime filtering
+- Families tab in DM panel: overzicht van alle family trees
+- Multi-campaign systeem: campaign selector in navbar, DM campaigns tab (create/rename/delete/view)
+- Characters auto-assigned aan actieve campaign bij aanmaak, lijst gefilterd op campaign
+- Default "Valoria" campaign voor backwards compatibility, Firebase sync
+- -XP knop toegevoegd om experience te verwijderen
+- Legacy DM dice roller verwijderd (floating dice werkt al)
+
+*Sessie 12 (middag 14:xx-15:xx):*
+- Navbar gesplitst: hoofdmenu (Campaigns + Characters) vs. campaign view (Dashboard/Party/etc)
+- Route / gaat nu naar Home i.p.v. Dashboard
+- Campaign view heeft back button + campaign nav links
+- Service worker auto-reload op nieuwe deploy, cache versie naar v9
+- Login credentials bijgewerkt naar spelersnamen
+- Settings pagina (#/settings): account, thema, taal, debug mode
+- Bug reporter systeem: FAB knop, element selector, report modal, Firebase sync (`/dw/bugs`)
+- /bugfix CLI command voor bug management
+
+**Files modified:**
+- `app.js` — initiative, spells, family tree, weapon mastery, multi-campaign, navbar split, settings, bug reporter (~1800+ regels veranderd)
+- `data.js` — spells deduplicatie + level 6-9 uitbreiding
+- `style.css` — weapon mastery tooltips, families tab, campaign UI, navbar split, settings page, bug reporter
+- `sync.js` — campaign sync, bug reporter Firebase ops
+- `sw.js` — cache v9, auto-reload
+- `i18n.js` — settings keys
+- `index.html` — cache bump
+
+**Current state:**
+- Multi-campaign systeem actief, "Valoria" als default
+- Navbar context-aware: hoofdmenu vs. campaign view
+- Settings en bug reporter live
+- Geen open bugs in Firebase (null response)
+- Firebase test rules verlopen 2026-04-28 — moet gefixt worden
+
+**Next steps:**
+- Firebase security rules fixen vóór 2026-04-28
+- 5.5e audit items doorlopen (feats, Divine Smite, subclass levels)
+- Browser testing van multi-campaign flow + settings page
+- Party page: character toewijzing aan campaign via party object
+- Invite systeem testen (#/join/CODE)
+
+---
+
+### Recap — 2026-04-05 (sessie 13 — context load)
+
+**What was done:**
+- Sessie gestart, context geladen
+- Geen code wijzigingen doorgevoerd
+
+**Files modified:**
+- Geen
+
+**Current state:**
+- Laatste commits: collapsible NPC cards + bug reporter fix
+- Uncommitted: nieuwe afbeeldingen (Willowdale, family trees, portraits, placeholders), `_test.mjs`
+- Firebase test rules verlopen 2026-04-28 — **nog te fixen**
+
+**Open bugs:**
+- Geen open bugs in Firebase
+
+**Next steps:**
+- Firebase security rules fixen vóór 2026-04-28
+- 5.5e audit items doorlopen (feats, Divine Smite, subclass levels)
+- Uncommitted images opruimen of committen
+
+---
+
+### Recap — 2026-04-03 (sessie 10)
+
+**What was done:**
+- Alle character info bewerkbaar gemaakt voor spelers (info-grid: race, class, subclass, background, alignment, age)
+- Inline dropdowns/inputs met directe Firebase sync via saveCharConfigField
+- Weapons CRUD: add/delete weapons in combat tab
+- Character-user linking gefixt: DEFAULT_USERS had geen characters array, fallback in userOwnsCharacter
+- seedUsers() patcht bestaande Firebase users die characters array missen
+- Appearance sectie dynamisch: onbeperkt entries toevoegen/verwijderen
+- hasSpellcasting uitgebreid met bard en cleric
+- Initiative tracker: drag-and-drop i.p.v. prompt() popups, volgorde door slepen
+- Reset knop: entries terug naar eigen box, NPCs behouden
+- DM Sync tab verwijderd, dice roller verplaatst naar initiative page
+- Portrait border gebruikt nu character accent kleur
+
+**Files modified:**
+- app.js — info-grid edit, weapons CRUD, initiative drag-drop, DM page cleanup
+- style.css — info-edit-btn, weapon-add-form, drag-drop indicators, portrait border
+- sync.js — seedUsers patches existing users missing characters array
+
+**Current state:**
+- Character editing werkt volledig voor eigen characters (Ren→Ren, Saya→Saya)
+- Initiative tracker is drag-based, geen popups
+- DM tools: alleen Initiative + NPCs tabs
+
+**Next steps:**
+- Browser testen van alle nieuwe edit functionaliteit
+- Whispers systeem implementeren (to-do)
+- Image quality/compressie (to-do)
+- Spell lists level 6-9 voor overige classes
+- Weapon Mastery UI
+
+---
+
+### Recap — 2026-03-31 (sessie 9)
+
+**What was done:**
+- Browser test items 1-18 doorlopen, 5 bugs + 8 verbeteringen geïdentificeerd
+- B1: Concentration toggle fix (select change event i.p.v. click)
+- B2: i18n key `combat.preparedspells` toegevoegd
+- B3: Quest complete/delete buttons fix (target.closest)
+- B4: Condition description tooltips bij hover
+- B5: Combat tab prepared spell tooltips
+- V2: Geen fade animatie meer bij tab switches op dezelfde pagina
+- V3: Portrait border gebruikt nu accent kleur
+- V5/V6: Dice roller re-roll met zelfde stenen, remove ≠ auto-roll
+- V7: Weapon rolls tonen NAT 20/NAT 1 i.p.v. CRIT/MISS (DM bepaalt)
+- V8: Combat log entries verwijderbaar + clear log knop
+- V10: Quest tags worden nu getoond als pill badges
+- V11: Party gold = som van character gold, secret stash per character
+- Quest crash fix: Firebase array→object conversie brak renderDashboard
+- Nieuwe /dm route: DM page met tabs (Initiative, NPCs, Whispers, Sync)
+- DM tools verplaatst uit dashboard naar eigen pagina met navbar link
+- Starting equipment toegevoegd voor alle 6 lege characters
+- Character cards tonen nu HP mini-bars
+- Scroll-to-top bij page navigatie
+- 5.5e data updates (races, class features) in data.js en engine.js
+- Family tree herschreven: 3-tier visueel (Parents → Siblings → Children)
+- Family members linkbaar aan bestaande characters/NPCs
+- Source picker bij toevoegen: custom, character, of NPC selectie
+- Auto-tier detectie uit relation tekst (backwards compatible)
+- Ren & Saya SEED_DATA geupdate met tier + linkedChar velden
+
+**Files modified:**
+- app.js — DM page, bug fixes, verbeteringen, character gear, family tree (~2000 lines changed)
+- style.css — DM tabs, HP bars, combat log delete, quest tags, family tree CSS (~750 lines)
+- effects.js — Dice re-roll systeem
+- i18n.js — preparedspells key
+- data.js — 5.5e race/class updates, starting equipment (~1900 lines)
+- engine.js — Minor 5.5e fixes
+
+**Current state:**
+- Site functioneel op GitHub Pages (3 commits gepusht)
+- 18 van 34 test items getest, meeste bugs gefixt
+- DM heeft eigen pagina met alle tools
+- Family tree is 3-tier visueel met NPC/character linking
+- Adblock kan site blokkeren (ontdekt tijdens testing)
+
+**Next steps:**
+- Hertest dashboard na quest crash fix
+- Test items 19-34 doorlopen
+- Family tree visueel testen + eventueel finetunen
+- 5.5e audit items 1-10 (feats, Divine Smite, subclass levels, spells)
+- Firebase security rules (verlopen 2026-04-28)
+
+---
+
 ### Recap — 2026-03-30 (sessie 8)
 
 **What was done:**
