@@ -7180,7 +7180,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     font-weight: 600;
 }
 .settings-card {
-    background: var(--surface);
+    background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 1.2rem;
@@ -7340,7 +7340,7 @@ body.bug-selecting .bug-fab { cursor: pointer !important; }
 /* Bug report modal */
 .bug-report-modal-wrap { position: fixed; inset: 0; z-index: 10002; }
 .bug-report-modal {
-    background: var(--surface);
+    background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 12px;
     max-width: 460px;
