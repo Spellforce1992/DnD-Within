@@ -2333,6 +2333,10 @@ function checkPrerequisite(feat, abilities, config) {
         if (prereq.wis && abilities.wis < prereq.wis) return false;
         if (prereq.con && abilities.con < prereq.con) return false;
         if (prereq.intOrWis && abilities.int < prereq.intOrWis && abilities.wis < prereq.intOrWis) return false;
+        if (prereq.strOrDex && abilities.str < prereq.strOrDex && abilities.dex < prereq.strOrDex) return false;
+        if (prereq.strOrCha && abilities.str < prereq.strOrCha && abilities.cha < prereq.strOrCha) return false;
+        if (prereq.dexOrCha && abilities.dex < prereq.dexOrCha && abilities.cha < prereq.dexOrCha) return false;
+        if (prereq.intWisOrCha && abilities.int < prereq.intWisOrCha && abilities.wis < prereq.intWisOrCha && abilities.cha < prereq.intWisOrCha) return false;
         if (prereq.spellcasting) {
             if (!hasSpellcasting(config.className)) return false;
         }

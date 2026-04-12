@@ -73,6 +73,32 @@ const DATA = {
         ]
     },
 
+    // ===== HIGH ELF RACE (2024) =====
+    highElf: {
+        speed: 30,
+        darkvision: 60,
+        features: [
+            { name: "Darkvision", desc: "Je kunt in dim light zien als bright light tot 60ft, en in duisternis als dim light." },
+            { name: "Fey Ancestry", desc: "Advantage op saving throws tegen de charmed condition. Je bent immuun voor magische slaap." },
+            { name: "Keen Senses", desc: "Proficiency in de Perception skill." },
+            { name: "Trance", desc: "Je hoeft niet te slapen. In plaats daarvan mediteer je 4 uur per long rest." },
+            { name: "Elf Lineage: High Elf", desc: "Leer 1 wizard cantrip (INT). Level 3: Detect Magic (1x/long rest gratis). Level 5: Misty Step (1x/long rest gratis). Bij long rest: wissel cantrip optioneel." }
+        ]
+    },
+
+    // ===== DROW RACE (2024) =====
+    drow: {
+        speed: 30,
+        darkvision: 120,
+        features: [
+            { name: "Superior Darkvision", desc: "Je kunt in dim light zien als bright light tot 120ft, en in duisternis als dim light." },
+            { name: "Fey Ancestry", desc: "Advantage op saving throws tegen de charmed condition. Je bent immuun voor magische slaap." },
+            { name: "Keen Senses", desc: "Proficiency in de Perception skill." },
+            { name: "Trance", desc: "Je hoeft niet te slapen. In plaats daarvan mediteer je 4 uur per long rest." },
+            { name: "Elf Lineage: Drow", desc: "Leer Dancing Lights cantrip (CHA). Level 3: Faerie Fire (1x/long rest gratis). Level 5: Darkness (1x/long rest gratis)." }
+        ]
+    },
+
     // ===== DWARF RACE (2024) =====
     dwarf: {
         speed: 30,
@@ -455,6 +481,29 @@ const DATA = {
                 }
             }
         }
+    },
+
+    // ===== THIRD-CASTER SPELL SLOTS (Eldritch Knight / Arcane Trickster) =====
+    // Start op level 3 (subclass gain). Max 4th level slots op lvl 19.
+    thirdCasterSlots: {
+        3:  [2,0,0,0],
+        4:  [3,0,0,0],
+        5:  [3,0,0,0],
+        6:  [3,0,0,0],
+        7:  [4,2,0,0],
+        8:  [4,2,0,0],
+        9:  [4,2,0,0],
+        10: [4,3,0,0],
+        11: [4,3,0,0],
+        12: [4,3,0,0],
+        13: [4,3,2,0],
+        14: [4,3,2,0],
+        15: [4,3,2,0],
+        16: [4,3,3,0],
+        17: [4,3,3,0],
+        18: [4,3,3,0],
+        19: [4,3,3,1],
+        20: [4,3,3,1]
     },
 
     // ===== HALF-CASTER SPELL SLOTS =====
@@ -2001,7 +2050,10 @@ const DATA = {
         { name: "Crafter", category: "origin", desc: "Proficiency met 3 artisan tools naar keuze. 20% korting op nonmagical items. Je kunt eenvoudige items overnight craften (touw, toortsen, etc.).", prereq: null },
         { name: "Healer", category: "origin", desc: "Met een Healer's Kit als action: herstel 1d6 + 4 + target's aantal Hit Dice aan HP bij een creature (1x per short/long rest per creature). Stabiliseer een creature op 0 HP als bonus action.", prereq: null },
         { name: "Lucky", category: "origin", desc: "Je hebt Luck Points gelijk aan je proficiency bonus, hersteld na long rest. Besteed 1 punt om een extra d20 te rollen na het zien van je rol en kies welke telt. Ook te gebruiken op een attack roll tegen jou.", prereq: null },
-        { name: "Magic Initiate", category: "origin", desc: "Kies Cleric, Druid, of Wizard spell list. Leer 2 cantrips en 1 first-level spell. Cast de spell 1x gratis/long rest of met spell slots. Je mag deze feat vaker kiezen (andere list).", prereq: null },
+        { name: "Magic Initiate", category: "origin", desc: "Kies Cleric, Druid, of Wizard spell list. Leer 2 cantrips en 1 first-level spell. Cast de spell 1x gratis/long rest of met spell slots. Je mag deze feat vaker kiezen (andere list).", prereq: null, repeatable: true },
+        { name: "Magic Initiate (Cleric)", category: "origin", desc: "Leer 2 cleric cantrips en 1 first-level cleric spell. Cast de spell 1x gratis/long rest of met spell slots. WIS is je spellcasting ability voor deze spells.", prereq: null, spellList: "cleric" },
+        { name: "Magic Initiate (Druid)", category: "origin", desc: "Leer 2 druid cantrips en 1 first-level druid spell. Cast de spell 1x gratis/long rest of met spell slots. WIS is je spellcasting ability voor deze spells.", prereq: null, spellList: "druid" },
+        { name: "Magic Initiate (Wizard)", category: "origin", desc: "Leer 2 wizard cantrips en 1 first-level wizard spell. Cast de spell 1x gratis/long rest of met spell slots. INT is je spellcasting ability voor deze spells.", prereq: null, spellList: "wizard" },
         { name: "Musician", category: "origin", desc: "Proficiency met 3 muziekinstrumenten naar keuze. Na een short/long rest: speel een lied en geef Heroic Inspiration aan allies gelijk aan je proficiency bonus.", prereq: null },
         { name: "Savage Attacker", category: "origin", desc: "Eén keer per beurt als je melee weapon damage rolt, rol de damage dice opnieuw en gebruik het hoogste resultaat.", prereq: null },
         { name: "Skilled", category: "origin", desc: "Proficiency in 3 skills of tools naar keuze. Je mag deze feat vaker kiezen (andere skills/tools).", prereq: null },
@@ -2045,7 +2097,19 @@ const DATA = {
         { name: "Boon of Speed", category: "epic", desc: "+1 DEX (max 30). +30ft speed. Opportunity attacks hebben disadvantage tegen jou.", prereq: null },
         { name: "Boon of Spell Recall", category: "epic", desc: "+1 INT, WIS of CHA (max 30). Cast een spell van 5th level of lager zonder spell slot. 1x per long rest.", prereq: null },
         { name: "Boon of the Night Spirit", category: "epic", desc: "+1 DEX, WIS of CHA (max 30). Merge met schaduwen: onzichtbaar in dim light/darkness. Resistance tegen alle damage behalve force/psychic/radiant.", prereq: null },
-        { name: "Boon of Truesight", category: "epic", desc: "+1 INT, WIS of CHA (max 30). Truesight 60ft.", prereq: null }
+        { name: "Boon of Truesight", category: "epic", desc: "+1 INT, WIS of CHA (max 30). Truesight 60ft.", prereq: null },
+
+        // --- FIGHTING STYLE FEATS (class feature, kies via Fighter/Paladin/Ranger) ---
+        { name: "Archery", category: "fighting", desc: "+2 attack bonus op ranged weapon attacks.", prereq: null },
+        { name: "Blind Fighting", category: "fighting", desc: "Blindsight 10ft. Je kunt unseen creatures in die range zien.", prereq: null },
+        { name: "Defense", category: "fighting", desc: "+1 AC terwijl je armor draagt.", prereq: null },
+        { name: "Dueling", category: "fighting", desc: "+2 damage bij melee weapon met één hand en geen ander wapen.", prereq: null },
+        { name: "Great Weapon Fighting", category: "fighting", desc: "Herrol 1'en en 2'en op damage dice van two-handed melee weapons. Gebruik tweede resultaat.", prereq: null },
+        { name: "Interception", category: "fighting", desc: "Reaction: verminder damage tegen ally binnen 5ft met 1d10 + prof bonus (vereist shield of martial weapon).", prereq: null },
+        { name: "Protection", category: "fighting", desc: "Reaction: disadvantage op attack tegen ally binnen 5ft als je een shield draagt.", prereq: null },
+        { name: "Thrown Weapon Fighting", category: "fighting", desc: "Trek thrown weapon als onderdeel van attack. +2 damage met thrown weapons.", prereq: null },
+        { name: "Two-Weapon Fighting", category: "fighting", desc: "Voeg ability modifier toe aan damage van off-hand weapon attack.", prereq: null },
+        { name: "Unarmed Fighting", category: "fighting", desc: "Unarmed strikes doen 1d6 bludgeoning (1d8 als beide handen vrij). Bij grapple: 1d4 damage per beurt.", prereq: null }
     ],
 
     // ===== ALL 18 SKILLS =====
@@ -2648,7 +2712,7 @@ const DATA = {
 DATA.spellPool = {
     // ===== CANTRIPS (level 0) =====
     "Acid Splash": { level: 0, time: "1 action", range: "60ft", comp: "V, S", dur: "Instant", desc: "Gooi een bubbel zuur naar 1-2 creatures binnen 5ft van elkaar. DEX save of 1d6 acid damage. Schaalt op 5e/11e/17e level." },
-    "Blade Ward": { level: 0, time: "1 action", range: "Self", comp: "V, S", dur: "Concentration, 1 min", desc: "Concentration, 1 minuut. Een creature dat jou raakt met een melee attack trekt 1d4 af van de attack roll. Schaalt op 5e/11e/17e level." },
+    "Blade Ward": { level: 0, time: "1 reaction", range: "Self", comp: "V, S", dur: "Instant", desc: "2024: Reaction wanneer een attacker binnen 5ft jou aanvalt. De attacker heeft disadvantage op die attack roll. Geen concentration." },
     "Booming Blade": { level: 0, time: "1 action", range: "Self (5ft)", comp: "S, M (een wapen)", dur: "1 ronde", desc: "Melee weapon attack. Bij hit: als target beweegt, 1d8 thunder damage. Schaalt." },
     "Chill Touch": { level: 0, time: "1 action", range: "120ft", comp: "V, S", dur: "1 ronde", desc: "Ghostly skeletal hand raakt een creature. 1d8 necrotic damage, target kan geen HP herstellen tot je volgende beurt. Undead krijgen disadvantage op attacks." },
     "Dancing Lights": { level: 0, time: "1 action", range: "120ft", comp: "V, S, M (een beetje fosforus of wychwood, of een glowworm)", dur: "Concentration, 1 min", desc: "Creëer tot 4 fakkelvormige lichtjes binnen 120ft. Verplaats ze als bonus action. Concentration, 1 minuut." },
@@ -2677,7 +2741,7 @@ DATA.spellPool = {
     "Thaumaturgy": { level: 0, time: "1 action", range: "30ft", comp: "V", dur: "Tot 1 min", desc: "Kleine goddelijke effecten: stem versterken, vlammen flikkeren, deuren opengooien, etc." },
     "Thorn Whip": { level: 0, time: "1 action", range: "30ft", comp: "V, S, M (doornenstengel)", dur: "Instant", desc: "Melee spell attack, 1d6 piercing. Trek target 10ft naar je toe als het Large of kleiner is. Schaalt." },
     "Toll the Dead": { level: 0, time: "1 action", range: "60ft", comp: "V, S", dur: "Instant", desc: "WIS save of 1d8 necrotic damage (1d12 als target HP mist). Schaalt." },
-    "True Strike": { level: 0, time: "1 action", range: "Self", comp: "S, M (een wapen ter waarde van 1sp+)", dur: "Instant", desc: "Maak een melee weapon attack met je spellcasting ability modifier i.p.v. STR/DEX. Bij een hit: 1d6 radiant damage (in plaats van normale weapon damage). Schaalt op 5e/11e/17e level." },
+    "True Strike": { level: 0, time: "1 action", range: "Self", comp: "V, M (een wapen met Finesse of Ranged property ter waarde van 1sp+)", dur: "Instant", desc: "2024: Maak één attack met het wapen en gebruik je spellcasting ability i.p.v. STR/DEX voor attack en damage. Op hit: +1d6 radiant damage extra (schaalt 2d6 op lvl 5, 3d6 op 11, 4d6 op 17). Werkt met melee OR ranged weapon attacks." },
     "Vicious Mockery": { level: 0, time: "1 action", range: "60ft", comp: "V", dur: "Instant", desc: "WIS save of 1d4 psychic damage en disadvantage op volgende attack roll. Schaalt." },
     "Word of Radiance": { level: 0, time: "1 action", range: "Self (5ft)", comp: "V, M", dur: "Instant", desc: "Elk creature binnen 5ft: CON save of 1d6 radiant damage. Schaalt." },
 
@@ -2700,7 +2764,7 @@ DATA.spellPool = {
     "Detect Evil and Good": { level: 1, time: "1 action", range: "Self", comp: "V, S", dur: "Concentration, 10 min", desc: "Detecteer aberrations, celestials, elementals, fey, fiends en undead binnen 30ft." },
     "Detect Magic": { level: 1, time: "1 action", range: "Self", comp: "V, S", dur: "Concentration, 10 min", desc: "Ritual. Concentration, 10 min. Voel de aanwezigheid van magie binnen 30ft. Zie de school of magic door dunne barrières heen." },
     "Disguise Self": { level: 1, time: "1 action", range: "Self", comp: "V, S", dur: "1 uur", desc: "Verander je uiterlijk (kleding, armor, wapens, lengte ±1ft). Investigation check om door de illusie te kijken. Duurt 1 uur." },
-    "Divine Smite": { level: 1, time: "Onderdeel van aanval", range: "Self", comp: "V", dur: "Instant", desc: "Bij melee hit: besteed slot voor 2d8 radiant. +1d8 per hogere slot, +1d8 vs undead/fiends. Max 5d8." },
+    "Divine Smite": { level: 1, time: "1 bonus action", range: "Self", comp: "V", dur: "Concentration, tot einde turn", desc: "2024: Cast als bonus action na een melee weapon/Unarmed hit in dezelfde turn. Extra 2d8 radiant damage (+1d8 vs Undead/Fiends). Schaalt +1d8 per hoger slot. Vereist concentration tot einde van je turn — kan niet stacken met andere smite-spells." },
     "Ensnaring Strike": { level: 1, time: "1 bonus action", range: "Self", comp: "V", dur: "Concentration, 1 min", desc: "Volgende hit: STR save of restrained door wijnranken. 1d6 piercing per beurt. Schaalt +1d6." },
     "Entangle": { level: 1, time: "1 action", range: "90ft", comp: "V, S", dur: "Concentration, 1 min", desc: "20ft vierkant. STR save of restrained door wijnranken. Moeilijk terrein." },
     "Expeditious Retreat": { level: 1, time: "1 bonus action", range: "Self", comp: "V, S", dur: "Concentration, 10 min", desc: "Concentration, 10 min. Bonus action Dash elke beurt." },
@@ -2716,7 +2780,7 @@ DATA.spellPool = {
     "Hellish Rebuke": { level: 1, time: "1 reaction", range: "60ft", comp: "V, S", dur: "Instant", desc: "Reaction bij damage. DEX save of 2d10 fire (half bij save). Schaalt +1d10." },
     "Heroism": { level: 1, time: "1 action", range: "Touch", comp: "V, S", dur: "Concentration, 1 min", desc: "Target is immuun voor frightened en krijgt temp HP gelijk aan je spellcasting modifier elke beurt." },
     "Hex": { level: 1, time: "1 bonus action", range: "90ft", comp: "V, S, M (newt-oog)", dur: "Concentration, 1 uur", desc: "Bonus action. +1d6 necrotic per hit. Kies ability: target heeft disadvantage op checks daarmee." },
-    "Hunter's Mark": { level: 1, time: "1 bonus action", range: "90ft", comp: "V", dur: "Concentration, 1 uur", desc: "Bonus action. Markeer target: +1d6 damage per hit. Advantage op Perception/Survival om het te vinden." },
+    "Hunter's Mark": { level: 1, time: "1 bonus action", range: "90ft", comp: "V", dur: "Concentration, 1 uur", desc: "2024: Bonus action. Markeer 1 creature: +1d6 damage bij jouw weapon hits. Verplaats als bonus action naar nieuw target bij downing. Concentration (Rangers lvl 13: verbruikt geen concentratie meer; lvl 21 niet meer relevant)." },
     "Ice Knife": { level: 1, time: "1 action", range: "60ft", comp: "S, M (ijs)", dur: "Instant", desc: "Ranged spell attack, 1d10 piercing. Explodeert: DEX save of 2d6 cold in 5ft. Schaalt +1d6." },
     "Identify": { level: 1, time: "1 minute", range: "Touch", comp: "V, S, M (parel van 100gp)", dur: "Instant", desc: "Ritual. Leer de eigenschappen van een magisch item of actieve spells op een creature." },
     "Inflict Wounds": { level: 1, time: "1 action", range: "Touch", comp: "V, S", dur: "Instant", desc: "Melee spell attack, 3d10 necrotic damage. Schaalt +1d10 per slot." },
@@ -2972,13 +3036,30 @@ DATA.spellPool = {
     "Wish": { level: 9, time: "1 action", range: "Self", comp: "V", dur: "Instant", desc: "De machtigste spell. Dupliceer elke spell van 8th level of lager, of creëer een ander effect naar DM's oordeel. Risicovol bij creatief gebruik." },
     "Lightning Arrow": { level: 3, time: "1 bonus action", range: "Self", comp: "V, S", dur: "Concentration, 1 min", desc: "Volgende ranged weapon attack: 4d8 lightning damage (half bij DEX save). Creatures binnen 10ft van het doelwit nemen 2d8 lightning. Schaalt +1d8." },
     "Transport via Plants": { level: 6, time: "1 action", range: "10ft", comp: "V, S", dur: "1 ronde", desc: "Creëer een magische verbinding tussen twee plantaardige objecten op hetzelfde plane. Jij en willige creatures kunnen in één object stappen en uit het andere verschijnen." },
+
+    // ===== CORE SPELLS ADDED (5.5e completeness patch) =====
+    "Grease": { level: 1, time: "1 action", range: "60ft", comp: "V, S, M (een beetje varkensvet)", dur: "1 min", desc: "10ft vierkant: difficult terrain. Creatures in area: DEX save of prone. Nieuwe creatures die binnenlopen: DEX save." },
+    "Longstrider": { level: 1, time: "1 action", range: "Touch", comp: "V, S, M (een snufje aarde)", dur: "1 uur", desc: "Target krijgt +10ft speed voor 1 uur. Schaalt +1 target per hogere slot." },
+    "Unseen Servant": { level: 1, time: "1 action", range: "60ft", comp: "V, S, M (een stukje touw en een stukje hout)", dur: "1 uur", desc: "Ritual. Onzichtbare geest (AC 10, 1 HP, STR 2) voert eenvoudige taken uit: schoonmaken, dragen, deuren openen. 60ft range, 1 uur." },
+    "Augury": { level: 2, time: "1 minute", range: "Self", comp: "V, S, M (speciaal gemarkeerde stokjes of botten ter waarde van 25gp)", dur: "Instant", desc: "Ritual. Vraag de DM om een voorspelling (weal/woe/both/nothing) over een handeling binnen de volgende 30 minuten. Cumulatief gebruik binnen 24h vermindert accuratesse." },
+    "Gentle Repose": { level: 2, time: "1 action", range: "Touch", comp: "V, S, M (een snufje zout en één koperen munt op elk oog)", dur: "10 dagen", desc: "Ritual. Een lijk verliest geen kwaliteit en telt niet als het verstrijken van tijd voor de raise-dead timer. 10 dagen." },
+    "Locate Object": { level: 2, time: "1 action", range: "Self", comp: "V, S, M (een gegaffeld twijgje)", dur: "Concentration, 10 min", desc: "Voel de richting van een bekend object binnen 1000ft. Lood/obstakels blokkeren." },
+    "Warding Bond": { level: 2, time: "1 action", range: "Touch", comp: "V, S, M (twee platina ringen ter waarde van 50gp elk)", dur: "1 uur", desc: "Verbind je met target. +1 AC en saves, resistance tegen alle damage. Jij neemt dezelfde damage. 60ft range limiet." },
+    "Create or Destroy Water": { level: 1, time: "1 action", range: "30ft", comp: "V, S, M (een druppel water of een snufje zand)", dur: "Instant", desc: "Creëer 10 gallon schoon water of vernietig evenveel water. Of laat regen/mist in een 30ft kubus vallen. Schaalt +10 gallon." },
+    "Purify Food and Drink": { level: 1, time: "1 action", range: "10ft", comp: "V, S", dur: "Instant", desc: "Ritual. Maak niet-magische eten en drinken binnen 5ft bol gezuiverd van gif en ziekte." },
+    "Dissonant Whispers": { level: 1, time: "1 action", range: "60ft", comp: "V", dur: "Instant", desc: "WIS save of 3d6 psychic damage en target gebruikt reaction om weg te vluchten. Half damage bij save, geen flee. Schaalt +1d6." },
+    "Aura of Purity": { level: 4, time: "1 action", range: "Self (30ft aura)", comp: "V", dur: "Concentration, 10 min", desc: "30ft aura. Allies hebben resistance tegen poison, advantage op saves tegen conditions en kunnen niet ziek worden." },
+    "Summon Celestial": { level: 5, time: "1 action", range: "90ft", comp: "V, S, M (reliekwieën ter waarde van 500gp)", dur: "Concentration, 1 uur", desc: "Roep een Celestial Spirit op (Defender of Avenger). Volgt bevelen. Stats schalen met spell slot level." },
+    "Summon Beast": { level: 2, time: "1 action", range: "90ft", comp: "V, S, M (een feyconnection ter waarde van 200gp)", dur: "Concentration, 1 uur", desc: "Roep een Bestial Spirit op (Air/Land/Water). Volgt bevelen. Stats schalen met spell slot level." },
+    "Find Steed": { level: 2, time: "10 minutes", range: "30ft", comp: "V, S", dur: "Instant", desc: "Roep een trouw paardachtig wezen op (warhorse, pony, camel, elk, mastiff). Telepathische band. Deelt spells op touch." },
+    "Daylight": { level: 3, time: "1 action", range: "60ft", comp: "V, S", dur: "1 uur", desc: "60ft bol van bright light (plus 60ft dim light) rond een object/punt. Verdrijft magische duisternis van lvl 3 of lager." }
 };
 
 // ===== SPELLS (class lists with name strings) =====
 DATA.spells = {
     sorcerer: {
         0: ["Acid Splash","Blade Ward","Chill Touch","Dancing Lights","Fire Bolt","Friends","Light","Mage Hand","Mending","Message","Mind Sliver","Minor Illusion","Poison Spray","Prestidigitation","Ray of Frost","Shocking Grasp","Sorcerous Burst","True Strike","Elementalism"],
-        1: ["Absorb Elements","Burning Hands","Chaos Bolt","Charm Person","Chromatic Orb","Color Spray","Comprehend Languages","Detect Magic","Disguise Self","Expeditious Retreat","False Life","Feather Fall","Fog Cloud","Jump","Mage Armor","Magic Missile","Ray of Sickness","Shield","Silent Image","Sleep","Thunderwave","Witch Bolt"],
+        1: ["Absorb Elements","Burning Hands","Chaos Bolt","Charm Person","Chromatic Orb","Color Spray","Comprehend Languages","Detect Magic","Disguise Self","Expeditious Retreat","False Life","Feather Fall","Fog Cloud","Grease","Ice Knife","Jump","Mage Armor","Magic Missile","Ray of Sickness","Shield","Silent Image","Sleep","Tasha's Hideous Laughter","Thunderwave","Witch Bolt"],
         2: ["Alter Self","Blindness/Deafness","Blur","Cloud of Daggers","Crown of Madness","Darkness","Darkvision","Detect Thoughts","Enhance Ability","Enlarge/Reduce","Gust of Wind","Hold Person","Invisibility","Knock","Levitate","Mirror Image","Misty Step","Phantasmal Force","Scorching Ray","See Invisibility","Shatter","Spider Climb","Suggestion","Web"],
         3: ["Blink","Clairvoyance","Counterspell","Daylight","Dispel Magic","Fear","Fireball","Fly","Gaseous Form","Haste","Hypnotic Pattern","Lightning Bolt","Major Image","Protection from Energy","Sleet Storm","Slow","Stinking Cloud","Tongues","Water Breathing","Water Walk"],
         4: ["Banishment","Blight","Confusion","Dimension Door","Dominate Beast","Greater Invisibility","Ice Storm","Polymorph","Stoneskin","Wall of Fire"],
@@ -2991,7 +3072,7 @@ DATA.spells = {
 
     wizard: {
         0: ["Blade Ward","Booming Blade","Chill Touch","Dancing Lights","Fire Bolt","Friends","Light","Mage Hand","Mending","Message","Mind Sliver","Minor Illusion","Prestidigitation","Ray of Frost","Shocking Grasp","Toll the Dead","True Strike"],
-        1: ["Absorb Elements","Burning Hands","Charm Person","Chromatic Orb","Color Spray","Comprehend Languages","Detect Magic","Disguise Self","False Life","Feather Fall","Find Familiar","Fog Cloud","Identify","Mage Armor","Magic Missile","Shield","Silent Image","Silvery Barbs","Sleep","Tasha's Hideous Laughter","Thunderwave"],
+        1: ["Absorb Elements","Burning Hands","Charm Person","Chromatic Orb","Color Spray","Comprehend Languages","Detect Magic","Disguise Self","False Life","Feather Fall","Find Familiar","Fog Cloud","Grease","Ice Knife","Identify","Longstrider","Mage Armor","Magic Missile","Shield","Silent Image","Silvery Barbs","Sleep","Tasha's Hideous Laughter","Thunderwave","Unseen Servant"],
         2: ["Alter Self","Blindness/Deafness","Blur","Cloud of Daggers","Crown of Madness","Darkness","Darkvision","Detect Thoughts","Enlarge/Reduce","Flaming Sphere","Gust of Wind","Hold Person","Invisibility","Knock","Levitate","Mirror Image","Misty Step","Phantasmal Force","Scorching Ray","See Invisibility","Shatter","Spider Climb","Suggestion","Web"],
         3: ["Animate Dead","Blink","Clairvoyance","Counterspell","Daylight","Dispel Magic","Fear","Fireball","Fly","Gaseous Form","Haste","Hypnotic Pattern","Lightning Bolt","Major Image","Protection from Energy","Sending","Sleet Storm","Slow","Stinking Cloud","Tongues"],
         4: ["Arcane Eye","Banishment","Confusion","Dimension Door","Dominate Beast","Greater Invisibility","Ice Storm","Polymorph","Stoneskin","Wall of Fire"],
@@ -3004,7 +3085,7 @@ DATA.spells = {
 
     bard: {
         0: ["Friends","Light","Mage Hand","Mending","Message","Minor Illusion","Prestidigitation","Vicious Mockery"],
-        1: ["Bane","Charm Person","Cure Wounds","Detect Magic","Disguise Self","Faerie Fire","Feather Fall","Healing Word","Heroism","Silent Image","Sleep","Speak with Animals","Thunderwave"],
+        1: ["Bane","Charm Person","Color Spray","Command","Cure Wounds","Detect Magic","Disguise Self","Dissonant Whispers","Faerie Fire","Feather Fall","Healing Word","Heroism","Identify","Longstrider","Silent Image","Silvery Barbs","Sleep","Speak with Animals","Tasha's Hideous Laughter","Thunderwave","Unseen Servant"],
         2: ["Calm Emotions","Enhance Ability","Heat Metal","Hold Person","Invisibility","Knock","Lesser Restoration","See Invisibility","Shatter","Silence","Suggestion"],
         3: ["Bestow Curse","Dispel Magic","Fear","Hypnotic Pattern","Major Image","Sending","Speak with Dead","Tongues"],
         4: ["Dimension Door","Freedom of Movement","Greater Invisibility","Polymorph"],
@@ -3017,11 +3098,11 @@ DATA.spells = {
 
     cleric: {
         0: ["Guidance","Light","Mending","Sacred Flame","Spare the Dying","Thaumaturgy","Toll the Dead","Word of Radiance"],
-        1: ["Bane","Bless","Command","Cure Wounds","Detect Magic","Guiding Bolt","Healing Word","Inflict Wounds","Protection from Evil and Good","Sanctuary","Shield of Faith"],
-        2: ["Aid","Calm Emotions","Hold Person","Lesser Restoration","Prayer of Healing","Silence","Spiritual Weapon","Zone of Truth"],
+        1: ["Bane","Bless","Command","Create or Destroy Water","Cure Wounds","Detect Evil and Good","Detect Magic","Guiding Bolt","Healing Word","Inflict Wounds","Protection from Evil and Good","Purify Food and Drink","Sanctuary","Shield of Faith"],
+        2: ["Aid","Augury","Calm Emotions","Enhance Ability","Gentle Repose","Hold Person","Lesser Restoration","Locate Object","Prayer of Healing","Silence","Spiritual Weapon","Warding Bond","Zone of Truth"],
         3: ["Beacon of Hope","Bestow Curse","Daylight","Dispel Magic","Mass Healing Word","Revivify","Sending","Spirit Guardians","Tongues"],
         4: ["Banishment","Death Ward","Freedom of Movement","Guardian of Faith"],
-        5: ["Commune","Contagion","Greater Restoration","Holy Weapon","Mass Cure Wounds","Raise Dead"],
+        5: ["Commune","Contagion","Greater Restoration","Holy Weapon","Mass Cure Wounds","Raise Dead","Summon Celestial"],
         6: ["Blade Barrier","Create Undead","Find the Path","Forbiddance","Harm","Heal","Heroes' Feast","Planar Ally","True Seeing","Word of Recall"],
         7: ["Conjure Celestial","Divine Word","Etherealness","Fire Storm","Plane Shift","Regenerate","Resurrection","Symbol","Temple of the Gods"],
         8: ["Antimagic Field","Control Weather","Earthquake","Holy Aura","Sunburst"],
@@ -3030,8 +3111,8 @@ DATA.spells = {
 
     druid: {
         0: ["Druidcraft","Elementalism","Guidance","Mending","Poison Spray","Produce Flame","Resistance","Shillelagh","Thorn Whip"],
-        1: ["Absorb Elements","Animal Friendship","Cure Wounds","Detect Magic","Entangle","Faerie Fire","Fog Cloud","Goodberry","Ice Knife","Speak with Animals","Thunderwave","Healing Word"],
-        2: ["Barkskin","Flame Blade","Flaming Sphere","Gust of Wind","Heat Metal","Hold Person","Lesser Restoration","Moonbeam","Pass Without Trace","Spike Growth"],
+        1: ["Absorb Elements","Animal Friendship","Charm Person","Create or Destroy Water","Cure Wounds","Detect Magic","Entangle","Faerie Fire","Fog Cloud","Goodberry","Healing Word","Ice Knife","Jump","Longstrider","Protection from Evil and Good","Purify Food and Drink","Speak with Animals","Thunderwave"],
+        2: ["Barkskin","Enhance Ability","Flame Blade","Flaming Sphere","Gust of Wind","Heat Metal","Hold Person","Lesser Restoration","Locate Object","Moonbeam","Pass Without Trace","Spike Growth","Summon Beast"],
         3: ["Call Lightning","Conjure Animals","Dispel Magic","Plant Growth","Sleet Storm","Water Breathing","Water Walk","Wind Wall"],
         4: ["Conjure Woodland Beings","Giant Insect","Ice Storm","Polymorph","Wall of Fire"],
         5: ["Conjure Elemental","Greater Restoration","Mass Cure Wounds","Wall of Stone"],
@@ -3042,23 +3123,23 @@ DATA.spells = {
     },
 
     ranger: {
-        1: ["Absorb Elements","Animal Friendship","Cure Wounds","Detect Magic","Ensnaring Strike","Fog Cloud","Goodberry","Hail of Thorns","Hunter's Mark","Speak with Animals"],
-        2: ["Aid","Darkvision","Lesser Restoration","Misty Step","Pass Without Trace","Silence","Spike Growth"],
-        3: ["Conjure Animals","Conjure Barrage","Lightning Arrow","Plant Growth","Revivify"],
-        4: ["Freedom of Movement","Guardian of Nature","Stoneskin"],
+        1: ["Absorb Elements","Animal Friendship","Cure Wounds","Detect Magic","Ensnaring Strike","Fog Cloud","Goodberry","Hail of Thorns","Hunter's Mark","Longstrider","Speak with Animals"],
+        2: ["Aid","Darkvision","Enhance Ability","Lesser Restoration","Locate Object","Magic Weapon","Misty Step","Pass Without Trace","Silence","Spike Growth","Summon Beast"],
+        3: ["Conjure Animals","Conjure Barrage","Daylight","Lightning Arrow","Plant Growth","Revivify","Summon Fey"],
+        4: ["Freedom of Movement","Guardian of Nature","Stoneskin","Summon Beast"],
         5: ["Conjure Volley","Steel Wind Strike","Swift Quiver"]
     },
 
     paladin: {
-        1: ["Bless","Command","Compelled Duel","Cure Wounds","Detect Evil and Good","Detect Magic","Divine Smite","Protection from Evil and Good","Shield of Faith","Thunderous Smite","Wrathful Smite"],
-        2: ["Aid","Branding Smite","Find Steed","Lesser Restoration","Magic Weapon","Protection from Poison","Zone of Truth"],
-        3: ["Aura of Vitality","Blinding Smite","Crusader's Mantle","Dispel Magic","Revivify","Spirit Shroud"],
-        4: ["Aura of Life","Banishment","Death Ward","Find Greater Steed","Staggering Smite"],
-        5: ["Banishing Smite","Destructive Wave","Holy Weapon","Raise Dead"]
+        1: ["Bless","Command","Compelled Duel","Cure Wounds","Detect Evil and Good","Detect Magic","Divine Smite","Protection from Evil and Good","Purify Food and Drink","Shield of Faith","Thunderous Smite","Wrathful Smite"],
+        2: ["Aid","Branding Smite","Find Steed","Gentle Repose","Lesser Restoration","Locate Object","Magic Weapon","Protection from Poison","Warding Bond","Zone of Truth"],
+        3: ["Aura of Vitality","Blinding Smite","Crusader's Mantle","Daylight","Dispel Magic","Revivify","Spirit Shroud"],
+        4: ["Aura of Life","Aura of Purity","Banishment","Death Ward","Find Greater Steed","Staggering Smite"],
+        5: ["Banishing Smite","Destructive Wave","Holy Weapon","Raise Dead","Summon Celestial"]
     },
 
     warlock: {
-        0: ["Booming Blade","Chill Touch","Eldritch Blast","Friends","Mage Hand","Mind Sliver","Minor Illusion","Prestidigitation","Toll the Dead"],
+        0: ["Booming Blade","Chill Touch","Eldritch Blast","Friends","Mage Hand","Mind Sliver","Minor Illusion","Poison Spray","Prestidigitation","Toll the Dead","True Strike"],
         1: ["Arms of Hadar","Armor of Agathys","Charm Person","Expeditious Retreat","Hellish Rebuke","Hex","Protection from Evil and Good","Witch Bolt"],
         2: ["Crown of Madness","Darkness","Hold Person","Invisibility","Mirror Image","Misty Step","Shatter","Spider Climb","Suggestion"],
         3: ["Counterspell","Dispel Magic","Fear","Fly","Hunger of Hadar","Hypnotic Pattern","Summon Fey","Thunder Step"],
