@@ -1570,6 +1570,12 @@ function bindPageEvents(route) {
                 }
             }
 
+            // Suppress click if long-press tooltip fired
+            if (window.__spellLongPressFired) {
+                window.__spellLongPressFired = false;
+                if (target.closest('.spell-toggle')) return;
+            }
+
             // Spell toggle (not if clicking star)
             if ((target.matches('.spell-toggle') || target.closest('.spell-toggle')) &&
                 !target.matches('[data-spell-star]') && !target.closest('[data-spell-star]')) {
@@ -3150,12 +3156,22 @@ function patchTooltipEvents() {
             }
         }
 
-        // Spell tooltip (tap) — do NOT preventDefault so click still toggles spell on mobile
+        // Spell tooltip on long-press; short tap toggles spell (click fires normally)
         var spellBtn = target.closest('.spell-toggle');
-        if (spellBtn && !target.matches('[data-spell-star]') && !target.closest('[data-spell-star]')) {
+        if (spellBtn) {
             var spName = spellBtn.dataset.spell;
             if (spName) {
-                showSpellTooltip(spName, spellBtn);
+                window.__spellLongPressTimer = setTimeout(function() {
+                    window.__spellLongPressFired = true;
+                    showSpellTooltip(spName, spellBtn);
+                }, 500);
+                var cancel = function() {
+                    clearTimeout(window.__spellLongPressTimer);
+                    spellBtn.removeEventListener('touchend', cancel);
+                    spellBtn.removeEventListener('touchmove', cancel);
+                };
+                spellBtn.addEventListener('touchend', cancel);
+                spellBtn.addEventListener('touchmove', cancel);
             }
         }
 
