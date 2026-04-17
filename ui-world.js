@@ -135,9 +135,11 @@ function renderMaps() {
             } else {
                 html += '<div class="pin-dot"></div>';
             }
-            html += '<span class="pin-label">' + escapeHtml(pin.label);
-            if (isLink) html += ' <span class="pin-link-icon">&#8594;</span>';
-            html += '</span>';
+            if (pin.label) {
+                html += '<span class="pin-label">' + escapeHtml(pin.label);
+                if (isLink) html += ' <span class="pin-link-icon">&#8594;</span>';
+                html += '</span>';
+            }
             if (isDM()) {
                 html += '<button class="pin-delete" data-action="delete-pin" data-pin-idx="' + pi + '">&times;</button>';
             }

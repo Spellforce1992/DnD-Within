@@ -2532,7 +2532,7 @@ function bindPageEvents(route) {
                         var labelEl = document.getElementById('pin-label-input');
                         var linkEl = document.getElementById('pin-link-select');
                         var label = labelEl ? labelEl.value.trim() : '';
-                        if (!label) { labelEl.style.borderColor = 'var(--danger)'; return; }
+                        // Empty label allowed: dot-only pin for locations already named on the map
 
                         var targetMapId = linkEl ? linkEl.value : null;
                         var mData2 = getMapsData();
