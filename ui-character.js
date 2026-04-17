@@ -2489,6 +2489,7 @@ function checkPrerequisite(feat, abilities, config) {
 // ============================================================
 
 function toggleCantrip(charId, config, state, spellName) {
+    if (!Array.isArray(state.cantrips)) state.cantrips = state.cantrips ? Object.values(state.cantrips) : [];
     var idx = state.cantrips.indexOf(spellName);
     if (idx >= 0) {
         state.cantrips.splice(idx, 1);
@@ -2505,6 +2506,7 @@ function toggleCantrip(charId, config, state, spellName) {
 }
 
 function togglePrepared(charId, config, state, spellName) {
+    if (!Array.isArray(state.prepared)) state.prepared = state.prepared ? Object.values(state.prepared) : [];
     var idx = state.prepared.indexOf(spellName);
     if (idx >= 0) {
         state.prepared.splice(idx, 1);
