@@ -3150,14 +3150,12 @@ function patchTooltipEvents() {
             }
         }
 
-        // Spell tooltip (tap)
+        // Spell tooltip (tap) — do NOT preventDefault so click still toggles spell on mobile
         var spellBtn = target.closest('.spell-toggle');
         if (spellBtn && !target.matches('[data-spell-star]') && !target.closest('[data-spell-star]')) {
             var spName = spellBtn.dataset.spell;
             if (spName) {
-                e.preventDefault();
                 showSpellTooltip(spName, spellBtn);
-                return;
             }
         }
 
