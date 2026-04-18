@@ -939,6 +939,15 @@ function bindPageEvents(route) {
             if (typeof QuickNotes !== 'undefined') QuickNotes.save();
             return;
         }
+        if (target.matches('[data-action="qnote-add-tag"]')) {
+            if (typeof QuickNotes !== 'undefined') QuickNotes.addTag();
+            return;
+        }
+        if (target.matches('[data-action="qnote-remove-tag"]') || target.closest('[data-action="qnote-remove-tag"]')) {
+            var remBtn = target.matches('[data-action="qnote-remove-tag"]') ? target : target.closest('[data-action="qnote-remove-tag"]');
+            if (typeof QuickNotes !== 'undefined') QuickNotes.removeTag(parseInt(remBtn.dataset.tagIdx));
+            return;
+        }
 
         // Dice hand: add die
         if (target.matches('[data-action="dice-add"]')) {

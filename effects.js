@@ -26,7 +26,7 @@ function autoGrowTextarea(textarea) {
 // === Quick Notes Panel ===
 // Small floating panel (mirror of DiceHand) — lets user drop a quick note from any page
 var QuickNotes = {
-    draft: { title: '', content: '', category: 'other' },
+    draft: { title: '', content: '', category: 'other', tags: [], tagCat: 'other' },
     justSaved: false,
 
     render: function() {
@@ -61,6 +61,31 @@ var QuickNotes = {
             html += '<button type="button" class="qnotes-cat' + active + '" data-action="qnote-cat" data-cat="' + c.id + '" style="--cat-color:' + c.color + '" title="' + c.name + '">' + c.icon + '</button>';
         }
         html += '</div>';
+
+        // Tags with categories
+        html += '<div class="qnotes-tags-section">';
+        html += '<div class="qnotes-tags-list">';
+        for (var ti = 0; ti < this.draft.tags.length; ti++) {
+            var tagObj = this.draft.tags[ti];
+            var tagCat = null;
+            for (var tci = 0; tci < cats.length; tci++) { if (cats[tci].id === tagObj.category) { tagCat = cats[tci]; break; } }
+            if (!tagCat) tagCat = cats[cats.length - 1];
+            var safeText = tagObj.text.replace(/</g, '&lt;');
+            html += '<span class="qnotes-tag-chip" style="--cat-color:' + tagCat.color + '">' + tagCat.icon + ' ' + safeText + '<button type="button" class="qnotes-tag-remove" data-action="qnote-remove-tag" data-tag-idx="' + ti + '" title="Verwijderen">&times;</button></span>';
+        }
+        html += '</div>';
+        html += '<div class="qnotes-tag-add">';
+        html += '<select class="qnotes-input qnotes-tag-cat" id="qnote-tag-cat">';
+        for (var tci2 = 0; tci2 < cats.length; tci2++) {
+            var sel = (this.draft.tagCat === cats[tci2].id) ? ' selected' : '';
+            html += '<option value="' + cats[tci2].id + '"' + sel + '>' + cats[tci2].icon + ' ' + cats[tci2].name + '</option>';
+        }
+        html += '</select>';
+        html += '<input type="text" class="qnotes-input qnotes-tag-text" id="qnote-tag-text" placeholder="Tag...">';
+        html += '<button type="button" class="btn btn-ghost btn-sm qnotes-tag-add-btn" data-action="qnote-add-tag">+</button>';
+        html += '</div>';
+        html += '</div>';
+
         html += '<div class="qnotes-actions">';
         html += '<button class="btn btn-primary btn-sm qnotes-save" data-action="qnote-save">Opslaan</button>';
         html += '<a class="btn btn-ghost btn-sm" href="#/notes">Alle notities</a>';
@@ -94,8 +119,16 @@ var QuickNotes = {
         var self = this;
         var titleEl = document.getElementById('qnote-title');
         var contentEl = document.getElementById('qnote-content');
+        var tagCatEl = document.getElementById('qnote-tag-cat');
+        var tagTextEl = document.getElementById('qnote-tag-text');
         if (titleEl) titleEl.addEventListener('input', function() { self.draft.title = this.value; });
         if (contentEl) contentEl.addEventListener('input', function() { self.draft.content = this.value; });
+        if (tagCatEl) tagCatEl.addEventListener('change', function() { self.draft.tagCat = this.value; });
+        if (tagTextEl) {
+            tagTextEl.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') { e.preventDefault(); self.addTag(); }
+            });
+        }
 
         if (this.justSaved) {
             this.justSaved = false;
@@ -109,6 +142,27 @@ var QuickNotes = {
     setCategory: function(cat) {
         this.draft.category = cat;
         this.render();
+    },
+
+    addTag: function() {
+        var tagTextEl = document.getElementById('qnote-tag-text');
+        var tagCatEl = document.getElementById('qnote-tag-cat');
+        if (!tagTextEl) return;
+        var txt = tagTextEl.value.trim();
+        if (!txt) return;
+        var cat = tagCatEl ? tagCatEl.value : (this.draft.tagCat || 'other');
+        this.draft.tags.push({ text: txt, category: cat });
+        this.draft.tagCat = cat;
+        this.render();
+        var newInput = document.getElementById('qnote-tag-text');
+        if (newInput) newInput.focus();
+    },
+
+    removeTag: function(idx) {
+        if (idx >= 0 && idx < this.draft.tags.length) {
+            this.draft.tags.splice(idx, 1);
+            this.render();
+        }
     },
 
     save: function() {
@@ -126,7 +180,7 @@ var QuickNotes = {
             id: 'n' + now,
             title: title,
             content: content,
-            tags: [],
+            tags: this.draft.tags.slice(),
             tagCategory: this.draft.category || 'other',
             layout: 'text-only',
             image: null,
@@ -140,7 +194,7 @@ var QuickNotes = {
         data.notes.push(note);
         saveNotesData(data);
 
-        this.draft = { title: '', content: '', category: this.draft.category };
+        this.draft = { title: '', content: '', category: this.draft.category, tags: [], tagCat: this.draft.tagCat || 'other' };
         this.justSaved = true;
         this.render();
     }

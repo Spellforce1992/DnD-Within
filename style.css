@@ -7650,6 +7650,54 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     white-space: nowrap;
 }
 
+/* Quick Notes — tags with categories */
+.qnotes-tags-section { display: flex; flex-direction: column; gap: 0.35rem; }
+.qnotes-tags-list { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.qnotes-tag-chip {
+    --cat-color: #8a8a9a;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.15rem 0.4rem;
+    border: 1px solid var(--cat-color);
+    border-radius: 100px;
+    font-size: 0.7rem;
+    background: color-mix(in srgb, var(--cat-color) 15%, var(--bg-block));
+    color: var(--text-main);
+}
+.qnotes-tag-remove {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 0.95rem;
+    line-height: 1;
+    padding: 0 0.15rem;
+}
+.qnotes-tag-remove:hover { color: var(--danger, #f87171); }
+.qnotes-tag-add {
+    display: flex;
+    gap: 0.3rem;
+    align-items: stretch;
+}
+.qnotes-tag-cat {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 56px;
+    max-width: 90px;
+    font-size: 0.75rem;
+    padding: 0.3rem 0.4rem;
+}
+.qnotes-tag-text {
+    flex: 1;
+    font-size: 0.8rem;
+}
+.qnotes-tag-add-btn {
+    flex: 0 0 auto;
+    padding: 0.3rem 0.6rem;
+    font-weight: 700;
+}
+
 /* ===== Bug Reporter ===== */
 .bug-fab {
     position: fixed;
