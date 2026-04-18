@@ -2566,6 +2566,7 @@ function bindPageEvents(route) {
                         var mDim2 = mData2.dimensions[activeDimension];
                         for (var cmi2 = 0; cmi2 < mDim2.maps.length; cmi2++) {
                             if (mDim2.maps[cmi2].id === activeMapId) {
+                                if (!Array.isArray(mDim2.maps[cmi2].pins)) mDim2.maps[cmi2].pins = mDim2.maps[cmi2].pins ? Object.values(mDim2.maps[cmi2].pins) : [];
                                 mDim2.maps[cmi2].pins.push({
                                     id: 'pin' + Date.now(),
                                     x: pinX,
