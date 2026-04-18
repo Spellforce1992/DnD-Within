@@ -709,7 +709,12 @@ function renderNotes() {
     // Filter and search
     var filtered = notes;
     if (notesFilter !== 'all') {
-        filtered = filtered.filter(function(n) { return n.tagCategory === notesFilter; });
+        var nf = notesFilter.toLowerCase();
+        filtered = filtered.filter(function(n) {
+            if (n.tagCategory === notesFilter) return true;
+            if (n.tags && n.tags.some(function(t){ return t.toLowerCase() === nf; })) return true;
+            return false;
+        });
     }
     if (notesSearch) {
         var q = notesSearch.toLowerCase();
