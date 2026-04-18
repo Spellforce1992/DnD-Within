@@ -827,6 +827,8 @@ function initInitiativeDragDrop() {
     function doDrop(y) {
         if (!_initDrag) return;
         var initData = JSON.parse(localStorage.getItem('dw_initiative') || '{"entries":[],"currentTurn":0,"round":1,"npcs":[]}');
+        if (!Array.isArray(initData.entries)) initData.entries = initData.entries ? Object.values(initData.entries) : [];
+        if (!Array.isArray(initData.npcs)) initData.npcs = initData.npcs ? Object.values(initData.npcs) : [];
         var insertIdx = getInsertIdx(y);
 
         if (_initDrag.type === 'player') {
@@ -1020,6 +1022,28 @@ function renderDMFamilies() {
 
     if (people.length === 0) {
         html += '<p class="text-dim">Nog geen family trees aangemaakt.</p>';
+    }
+
+    // Auto-group by last name (everything after the last space in the name)
+    var byLastName = {};
+    people.forEach(function(p) {
+        var parts = (p.name || '').trim().split(/\s+/);
+        if (parts.length < 2) return;
+        var last = parts[parts.length - 1];
+        if (!byLastName[last]) byLastName[last] = [];
+        byLastName[last].push(p);
+    });
+    var surnames = Object.keys(byLastName).filter(function(sn){ return byLastName[sn].length > 1; }).sort();
+    if (surnames.length) {
+        html += '<div class="families-surnames" style="margin:1rem 0;padding:0.75rem;background:var(--bg-block);border-radius:var(--radius);">';
+        html += '<h4 style="margin:0 0 0.5rem;">By surname</h4>';
+        for (var si = 0; si < surnames.length; si++) {
+            var sn = surnames[si];
+            html += '<div style="margin-bottom:0.35rem;"><strong>' + escapeHtml(sn) + '</strong>: ';
+            html += byLastName[sn].map(function(p){ return '<span style="color:' + p.color + ';">' + escapeHtml(p.name) + '</span>'; }).join(', ');
+            html += '</div>';
+        }
+        html += '</div>';
     }
 
     // Person grid
