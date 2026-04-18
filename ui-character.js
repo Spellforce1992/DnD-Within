@@ -118,6 +118,9 @@ function renderCharacterSheet(charId) {
         html += '<button class="header-btn" data-action="export-char">&#128190; ' + t('char.save') + '</button>';
         html += '<label class="header-btn">&#128194; ' + t('char.load') + '<input type="file" accept=".json" data-action="import-char" style="display:none"></label>';
         html += '<button class="header-btn header-btn-danger" data-action="reset-char">&#128260; ' + t('char.reset') + '</button>';
+        if (isDM() || (currentUser() && currentUser().role === 'admin')) {
+            html += '<button class="header-btn header-btn-danger" data-action="delete-char">&#128465; Delete character</button>';
+        }
         html += '</div>';
         html += '</div>';
     }

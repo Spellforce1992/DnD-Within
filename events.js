@@ -1502,6 +1502,15 @@ function bindPageEvents(route) {
                 return;
             }
 
+            // Delete character
+            if (target.matches('[data-action="delete-char"]') || target.closest('[data-action="delete-char"]')) {
+                if (confirm('Are you sure you want to delete this character? This cannot be undone.')) {
+                    fetch('https://dnd-within-firebase-default-rtdb.firebaseio.com/dw/characters/' + charId + '.json', { method: 'DELETE' })
+                        .then(function() { location.hash = '#/home'; location.reload(); });
+                }
+                return;
+            }
+
             // Reset
             if (target.matches('[data-action="reset-char"]') || target.closest('[data-action="reset-char"]')) {
                 showResetModal(charId, config, state);
