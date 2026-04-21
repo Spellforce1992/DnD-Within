@@ -18,7 +18,14 @@ Interactive D&D 5.5e character sheet en campaign management SPA voor 8 spelers.
 ## Firebase
 - Project: `dnd-within-firebase`
 - Realtime Database met REST API
-- Test security rules — **verlopen 2026-04-28, moet voor die tijd gefixt worden!**
+- Security rules — ✅ verlengd tot 2027-04-28 (deployed 2026-04-16, commit `883e952`)
+
+## Bug Tracker
+- In-app reporter (debug-mode FAB) schrijft naar **centrale Nexus hub**: `/shared/bugs` op `nexus-12fc7-default-rtdb.europe-west1.firebasedatabase.app`
+- Project-key in hub: `dnd-within`
+- Read/fix flow: gebruik `/bugfix dnd-within` slash-command
+- Legacy endpoint `dnd-within-firebase/dw/bugs` is read-only archive (74 historische fixed bugs); geen writes meer
+- Zie `~/Documents/Claude/Modules/bugreport/README.md` voor schema + integratie
 
 ## Party
 8 characters: Ren, Saya + 6 anderen — elk met unieke class/race/subclass
@@ -31,5 +38,5 @@ Interactive D&D 5.5e character sheet en campaign management SPA voor 8 spelers.
 - Multi-language (NL/EN), Admin mode (admin/admin)
 
 ## Deploy
-GitHub Pages: `Spellforce1992/DnD-Within`
+GitHub Pages: `JoshuaNierop/DnD-Within`
 - `git push origin main` → auto-deploy

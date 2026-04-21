@@ -474,32 +474,44 @@ function isUserOnline(userId) {
 }
 
 // ===== Bug Report Sync =====
+// Central hub: all bug/feature reports go to Nexus Firebase /shared/bugs.
+// Reader: /bugfix skill (~/.claude/commands/bugfix.md). Project filter: 'dnd-within'.
 
+var BUG_HUB_URL = 'https://nexus-12fc7-default-rtdb.europe-west1.firebasedatabase.app/shared/bugs.json';
+var BUG_PROJECT_ID = 'dnd-within';
+
+function submitBugToHub(bug) {
+    // Maps DW bug shape to hub schema.
+    var payload = {
+        project: BUG_PROJECT_ID,
+        type: bug.type || 'bug',
+        element: bug.element || '',
+        elementPath: bug.elementPath || '',
+        route: bug.route || '',
+        description: String(bug.description || '').slice(0, 1999),
+        reporter: bug.reporter || 'anonymous',
+        timestamp: bug.timestamp || Date.now(),
+        createdAt: new Date().toISOString(),
+        status: 'open'
+    };
+    return fetch(BUG_HUB_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    }).then(function(res) {
+        if (!res.ok) throw new Error('Bug hub submit failed: ' + res.status);
+        return res.json();
+    });
+}
+
+// Legacy shims — kept so older call sites compile but are no-ops.
+// The hub is authoritative; localStorage is only a write-through copy for the new flow.
 function syncUploadBugs(bugs) {
-    if (!syncReady || !syncDb) return;
-    syncDb.ref('dw/bugs').set(bugs);
+    // New single-report flow goes via submitBugToHub() directly from ui-settings.
+    // Bulk upload of localStorage array is obsolete.
 }
-
-function syncDownloadBugs(callback) {
-    if (!syncDb) { if (callback) callback([]); return; }
-    syncDb.ref('dw/bugs').once('value', function(snapshot) {
-        var data = snapshot.val();
-        var bugs = Array.isArray(data) ? data.filter(Boolean) : [];
-        localStorage.setItem('dw_bugs', JSON.stringify(bugs));
-        if (callback) callback(bugs);
-    }, function() {
-        if (callback) callback([]);
-    });
-}
-
-function syncListenBugs() {
-    if (!syncDb) return;
-    syncDb.ref('dw/bugs').on('value', function(snapshot) {
-        var data = snapshot.val();
-        var bugs = Array.isArray(data) ? data.filter(Boolean) : [];
-        localStorage.setItem('dw_bugs', JSON.stringify(bugs));
-    });
-}
+function syncDownloadBugs(callback) { if (callback) callback([]); }
+function syncListenBugs() { /* no-op: /bugfix reads hub directly */ }
 
 // ===== User Sync =====
 
