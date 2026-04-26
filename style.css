@@ -3458,6 +3458,11 @@ footer {
     min-height: 100vh;
     animation: fadeUp 0.3s ease-out;
 }
+@media (min-width: 901px) {
+    .main-content {
+        padding-inline: clamp(1.5rem, 3vw, 3rem);
+    }
+}
 
 /* ===== GOLD ROW (Inventory) ===== */
 .gold-row {
