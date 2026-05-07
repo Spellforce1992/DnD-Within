@@ -1610,7 +1610,7 @@ function renderFamilyNode(fm, editable, contextId) {
     html += '</div>';
     html += linkEnd;
     if (editable) {
-        html += '<button class="ftree-remove" data-action="remove-family" data-idx="' + fm._idx + '">&times;</button>';
+        html += '<button class="ftree-remove" data-action="remove-family" data-idx="' + fm._idx + '" data-context-id="' + escapeAttr(contextId || '') + '">&times;</button>';
     }
     html += '</div>';
     return html;

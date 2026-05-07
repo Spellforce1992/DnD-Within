@@ -405,21 +405,46 @@ function bindPageEvents(route) {
             return;
         }
         if (isDM() && target.matches('[data-action="remove-family"]')) {
-            var npcCard = target.closest('.npc-card');
-            if (!npcCard) return;
-            var npcIdx = -1;
-            var npcCards = document.querySelectorAll('.npc-card');
-            for (var nc = 0; nc < npcCards.length; nc++) {
-                if (npcCards[nc] === npcCard) { npcIdx = nc; break; }
-            }
-            if (npcIdx < 0) return;
             var famIdx = parseInt(target.dataset.idx);
             if (isNaN(famIdx)) return;
-            var npcData = getNPCData();
-            var fam = (npcData.npcs[npcIdx].family || []).slice();
-            fam.splice(famIdx, 1);
-            npcData.npcs[npcIdx].family = fam;
-            saveNPCData(npcData);
+            var ctxId = target.dataset.contextId || '';
+            // NPC context: contextId === "npc:<idx>"
+            if (ctxId.indexOf('npc:') === 0) {
+                var npcIdx = parseInt(ctxId.slice(4));
+                if (isNaN(npcIdx)) return;
+                var npcData = getNPCData();
+                if (!npcData.npcs[npcIdx]) return;
+                var fam = (npcData.npcs[npcIdx].family || []).slice();
+                fam.splice(famIdx, 1);
+                npcData.npcs[npcIdx].family = fam;
+                saveNPCData(npcData);
+                renderApp();
+                return;
+            }
+            // Character context: contextId is the charId (covers DM families panel)
+            if (ctxId) {
+                var cfg = loadCharConfig(ctxId);
+                if (!cfg) return;
+                var cFam = (cfg.family || []).slice();
+                cFam.splice(famIdx, 1);
+                saveCharConfigField(ctxId, 'family', cFam);
+                renderApp();
+                return;
+            }
+            // Legacy fallback: derive npcIdx from .npc-card position
+            var npcCard = target.closest('.npc-card');
+            if (!npcCard) return;
+            var fbIdx = -1;
+            var npcCards = document.querySelectorAll('.npc-card');
+            for (var nc = 0; nc < npcCards.length; nc++) {
+                if (npcCards[nc] === npcCard) { fbIdx = nc; break; }
+            }
+            if (fbIdx < 0) return;
+            var fbData = getNPCData();
+            var fbFam = (fbData.npcs[fbIdx].family || []).slice();
+            fbFam.splice(famIdx, 1);
+            fbData.npcs[fbIdx].family = fbFam;
+            saveNPCData(fbData);
             renderApp();
             return;
         }
