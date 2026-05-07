@@ -76,6 +76,42 @@ function bindPageEvents(route) {
     app.onclick = function(e) {
         var target = e.target;
 
+        // --- Dashboard actions (intercept early; works on any page) ---
+        var actionEl = target.closest && target.closest('[data-action]');
+        if (actionEl) {
+            var action = actionEl.dataset.action;
+            // Dashboard-specific actions handled in dashboard-edit.js
+            if ((action && action.indexOf('dashboard-') === 0) || action === 'widget-toggle-star' || action === 'widget-remove' || action === 'dash-sidebar-cat' || action === 'dash-sidebar-close') {
+                if (typeof dashboardHandleAction === 'function' && dashboardHandleAction(action, actionEl, e)) return;
+            }
+            if (action === 'open-tab-manage' && charId) {
+                if (typeof showTabManageModal === 'function') showTabManageModal(charId);
+                return;
+            }
+            if (action === 'convert-to-dashboard' && charId) {
+                var tid = actionEl.dataset.tabId;
+                if (tid && typeof loadTabLayout === 'function' && typeof saveTabLayout === 'function') {
+                    var def = dashboardDefaultLayoutForTab(tid);
+                    ensureWidgetIds(def.desktop);
+                    saveTabLayout(charId, tid, def);
+                    if (typeof renderApp === 'function') renderApp();
+                }
+                return;
+            }
+            if (action === 'goto-spells-tab' && charId) {
+                activeTab = 'spells';
+                history.replaceState(null, '', '#/characters/' + charId + '/spells');
+                renderApp();
+                return;
+            }
+            if (action === 'goto-inventory-tab' && charId) {
+                activeTab = 'inventory';
+                history.replaceState(null, '', '#/characters/' + charId + '/inventory');
+                renderApp();
+                return;
+            }
+        }
+
         // --- Login page ---
         if (route.path === '/login' || !currentUser()) {
             // Login submit

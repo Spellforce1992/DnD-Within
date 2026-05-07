@@ -1,5 +1,24 @@
 # D&D Within — To Do
 
+## Dashboard / Widget System (2026-05-07 — fase 1 gestart)
+
+- [x] P1 — Data layer: `dashboard-data.js` (per-character tabs config + per-bp layouts + reflow + templates)
+- [x] P1 — Widget registry: `widgets.js` (12 starter widgets — hp/core-stats/abilities/saves/skills/slots/prepared/weapons/quote/text/image/inventory + family-diagram + xp + class-resources)
+- [x] P1 — Dashboard renderer + grid CSS: `dashboard.js` + `dashboard.css` (12/8/4 cols, breakpoint toolbar, grid toggle)
+- [x] P1 — Edit-mode: `dashboard-edit.js` (sidebar palette met categorieën, drag-from-palette, in-grid drag, corner resize, save per breakpoint, clear bp, save-as-template)
+- [x] P1 — Tab-management modal (add/hide/rename/reorder/delete custom tabs) + nieuwe defaults: Overview, Stats, Social, Exploring, Combat, Spells, Story, Family, Inventory
+- [x] P1 — Convert-to-dashboard knop voor legacy tabs (Overview/Stats/Combat/Spells/Story/Inventory)
+- [x] P1 — Auto-reflow algoritme (starred-first + bottom-left-fill, geen lege vlakken)
+- [ ] P2 — Size picker in palette (preview formaat kiezen vóór drop, binnen min/max range — nu pakt-ie defaultSize)
+- [ ] P2 — Touch drag verfijnen voor mobiel (pointer events werken al; testen op echt device)
+- [ ] P2 — Widget configuratie-UI (text widget title/body editen, image upload binnen widget zelf)
+- [ ] P2 — Templates: gebruiker kan opgeslagen template kopiëren naar andere character via Tab manage modal
+- [ ] P2 — Family-diagram widget hooken aan de bestaande family system zodra een character een family heeft
+- [ ] P3 — Compact-knop (rearrange to remove gaps) in toolbar
+- [ ] P3 — Undo/redo binnen edit mode
+- [ ] P3 — Meer widgets: combat-log, death-saves, exhaustion, inspiration, metamagic, sneak-attack, ability-radar
+- [ ] P3 — Default layouts voor Overview/Combat opnieuw bekijken (nu nog naïef — willen meer dichtgeplaatste defaults)
+
 ## Bug Tracker — Migrated to Central Hub (2026-04-22)
 
 - [x] P1 — In-app reporter schrijft nu naar Nexus `/shared/bugs` ipv `dw/bugs` (`sync.js` + `ui-settings.js`)

@@ -70,6 +70,9 @@ var TRANSLATIONS = {
         'tab.spells': 'Spells',
         'tab.story': 'Verhaal',
         'tab.inventory': 'Inventaris',
+        'tab.social': 'Sociaal',
+        'tab.exploring': 'Verkenning',
+        'tab.family': 'Familie',
 
         // Character Header
         'char.editname': 'Naam bewerken',
@@ -649,6 +652,9 @@ var TRANSLATIONS = {
         'tab.spells': 'Spells',
         'tab.story': 'Story',
         'tab.inventory': 'Inventory',
+        'tab.social': 'Social',
+        'tab.exploring': 'Exploring',
+        'tab.family': 'Family',
 
         // Character Header
         'char.editname': 'Edit name',

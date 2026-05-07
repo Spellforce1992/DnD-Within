@@ -1,5 +1,5 @@
 // Cache version — bump this on every deploy to force update
-var CACHE_VERSION = 11;
+var CACHE_VERSION = 12;
 var CACHE_NAME = 'dnd-within-v' + CACHE_VERSION;
 var ASSETS = [
     './',
@@ -18,6 +18,11 @@ var ASSETS = [
     './sync.js',
     './effects.js',
     './style.css',
+    './dashboard.css',
+    './dashboard-data.js',
+    './widgets.js',
+    './dashboard.js',
+    './dashboard-edit.js',
     './script.js'
 ];
 

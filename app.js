@@ -55,8 +55,16 @@ function renderApp() {
         } else if (route.parts[0] === 'characters' && route.parts[1]) {
             // Deep link: #/characters/ren/combat sets activeTab
             if (route.parts[2]) {
-                var validTabs = ['overview', 'stats', 'combat', 'spells', 'story', 'inventory'];
-                if (validTabs.indexOf(route.parts[2]) >= 0) activeTab = route.parts[2];
+                // Built-in + new system tabs (custom tabs accepted via dashboard config check)
+                var systemTabs = ['overview', 'stats', 'combat', 'spells', 'story', 'inventory', 'social', 'exploring', 'family'];
+                var requested = route.parts[2];
+                if (systemTabs.indexOf(requested) >= 0) {
+                    activeTab = requested;
+                } else if (typeof loadDashboardConfig === 'function') {
+                    var dc = loadDashboardConfig(route.parts[1]);
+                    var tabIds = dc.tabs.map(function(t) { return t.id; });
+                    if (tabIds.indexOf(requested) >= 0) activeTab = requested;
+                }
             }
             html += renderCharacterSheet(route.parts[1]);
         } else if (route.parts[0] === 'dm' && isDM()) {
@@ -149,6 +157,8 @@ function postRenderEffects(route) {
     }
     // Initiative drag-and-drop
     initInitiativeDragDrop();
+    // Dashboard edit-mode pointer handlers (re-bound after every render)
+    if (typeof dashboardPostRender === 'function') dashboardPostRender();
     // Family diagram SVG lines — find all rendered diagrams and draw lines
     var diags = document.querySelectorAll('.famdiag-wrap[data-family-id]');
     for (var di = 0; di < diags.length; di++) {
@@ -174,4 +184,22 @@ document.addEventListener('DOMContentLoaded', function() {
     if (typeof initFirebaseSync === 'function') initFirebaseSync();
     initRouter();
     patchTooltipEvents();
+
+    // Dashboard: re-render on viewport breakpoint change so auto-reflow updates.
+    var lastBP = (typeof dashboardCurrentBreakpoint === 'function') ? dashboardCurrentBreakpoint() : null;
+    var resizeTimeout = null;
+    window.addEventListener('resize', function() {
+        if (resizeTimeout) clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(function() {
+            if (typeof dashboardCurrentBreakpoint !== 'function') return;
+            var nowBP = dashboardCurrentBreakpoint();
+            // Only re-render if we're not in edit mode (which uses preview bp) and bp changed.
+            if (!isDashboardEditMode || !isDashboardEditMode()) {
+                if (nowBP !== lastBP) {
+                    lastBP = nowBP;
+                    if (typeof renderApp === 'function') renderApp();
+                }
+            }
+        }, 150);
+    });
 });
