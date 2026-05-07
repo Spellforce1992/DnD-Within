@@ -793,20 +793,24 @@ function refreshWizard() {
         var newSteps = tmp.querySelector('.wizard-steps');
         var newFooter = tmp.querySelector('.wizard-footer');
 
-        // Update step indicator
+        // Replace footer + steps immediately so prev/next listeners point at fresh
+        // nodes — without this, repeated clicks during the 120ms crossfade still
+        // hit the old listener and advance multiple steps at once.
+        var footerEl = el.querySelector('.wizard-footer');
+        if (footerEl && newFooter) footerEl.innerHTML = newFooter.innerHTML;
         var stepsEl = el.querySelector('.wizard-steps');
         if (stepsEl && newSteps) stepsEl.innerHTML = newSteps.innerHTML;
+        bindWizardEvents();
 
-        // Crossfade content
+        // Crossfade content + sidebar (visual polish only, no buttons here)
         contentEl.classList.add('wizard-fade-out');
         setTimeout(function() {
             if (newContent) contentEl.innerHTML = newContent.innerHTML;
             if (newSidebar) sidebarEl.innerHTML = newSidebar.innerHTML;
-            var footerEl = el.querySelector('.wizard-footer');
-            if (footerEl && newFooter) footerEl.innerHTML = newFooter.innerHTML;
             contentEl.classList.remove('wizard-fade-out');
             contentEl.classList.add('wizard-fade-in');
             setTimeout(function() { contentEl.classList.remove('wizard-fade-in'); }, 200);
+            // Re-bind for any newly-rendered selects/checkboxes inside content
             bindWizardEvents();
         }, 120);
     } else {
