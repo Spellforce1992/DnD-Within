@@ -961,6 +961,7 @@ a { color: inherit; text-decoration: none; }
     padding: 1.5rem;
     animation: fadeUp 0.5s ease-out both;
 }
+.sheet-block-wide { grid-column: 1 / -1; }
 
 .sheet-block:nth-child(1) { animation-delay: 0.05s; }
 .sheet-block:nth-child(2) { animation-delay: 0.1s; }

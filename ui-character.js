@@ -1277,7 +1277,7 @@ function renderTabStory(charId, config, state) {
 
     // Backstory
     if (config.backstory || editable) {
-        html += '<div class="sheet-block">';
+        html += '<div class="sheet-block sheet-block-wide">';
         html += '<h2>' + t('story.backstory') + '</h2>';
         if (editable) {
             html += '<div class="editable-field" data-edit-field="backstory" data-char-id="' + charId + '">';
