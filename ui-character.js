@@ -650,7 +650,7 @@ function renderTabCombat(charId, config, state) {
         html += '<span class="hp-temp">+' + tempHP + ' temp</span>';
     }
     html += '</div>';
-    html += '<div class="hp-bar"><div class="hp-bar-fill" style="width:' + hpPct + '%;background:' + hpColor + '"></div></div>';
+    html += '<div class="hp-bar" style="--hp-bar-h:' + hpPct + '%"><div class="hp-bar-fill" style="width:' + hpPct + '%;background:' + hpColor + '"></div></div>';
     if (editable) {
         html += '<div class="hp-controls">';
         html += '<input type="number" class="hp-input" id="damage-input" min="0" placeholder="0">';

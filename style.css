@@ -4031,6 +4031,59 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--a
     margin-bottom: 1rem;
 }
 
+/* Compact two-column combat layout on wide screens:
+   HP-tracker becomes a narrow left rail with vertical bar + stacked controls,
+   all other tab-combat children flow into the right column. */
+@media (min-width: 900px) {
+    .tab-combat {
+        display: grid;
+        grid-template-columns: 240px 1fr;
+        gap: 1rem;
+        align-items: start;
+    }
+    .tab-combat > * { grid-column: 2; min-width: 0; }
+    .tab-combat > .hp-tracker {
+        grid-column: 1;
+        grid-row: 1;
+        position: sticky;
+        top: 80px;
+        margin-bottom: 0;
+        padding: 1rem;
+    }
+    .tab-combat > .hp-tracker .hp-display {
+        margin-bottom: 0.5rem;
+    }
+    .tab-combat > .hp-tracker .hp-current { font-size: 2rem; }
+    .tab-combat > .hp-tracker .hp-bar {
+        height: 180px;
+        width: 14px;
+        margin: 0.5rem auto 0.75rem;
+        position: relative;
+        background: var(--bg-block);
+    }
+    .tab-combat > .hp-tracker .hp-bar-fill {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100% !important;
+        height: var(--hp-bar-h, 100%);
+        transition: height 0.5s ease, background 0.3s;
+    }
+    .tab-combat > .hp-tracker .hp-controls {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.4rem;
+    }
+    .tab-combat > .hp-tracker .hp-input { width: 100%; }
+    .tab-combat > .hp-tracker .hp-btn { width: 100%; }
+    .tab-combat > .inspiration-toggle {
+        max-width: 280px;
+        padding: 0.45rem 0.7rem;
+        margin-bottom: 0.5rem;
+    }
+}
+
 .hp-display {
     display: flex;
     align-items: baseline;
