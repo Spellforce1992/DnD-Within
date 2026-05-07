@@ -638,6 +638,16 @@ function renderTabCombat(charId, config, state) {
     if (raceData && raceData.speed) speed = raceData.speed + 'ft';
     var editable = canEdit(charId);
 
+    // === Core Stats Grid (top of combat tab — AC / Speed / Init / Prof / Hit Dice) ===
+    var hitDiceRemaining = state.level - (state.hitDiceUsed || 0);
+    html += '<div class="combat-stats">';
+    html += '<div class="combat-stat"><span class="stat-value">' + ac + '</span><span class="stat-label">AC</span></div>';
+    html += '<div class="combat-stat"><span class="stat-value">' + speed + '</span><span class="stat-label">' + t('combat.speed') + '</span></div>';
+    html += '<div class="combat-stat"><span class="stat-value">' + formatMod(dexMod) + '</span><span class="stat-label">Initiative</span></div>';
+    html += '<div class="combat-stat"><span class="stat-value">+' + profBonus + '</span><span class="stat-label">Prof.</span></div>';
+    html += '<div class="combat-stat"><span class="stat-value">' + hitDiceRemaining + hitDie + '</span><span class="stat-label">Hit Dice</span></div>';
+    html += '</div>';
+
     // === HP Tracker ===
     var hpPct = maxHP > 0 ? Math.max(0, Math.min(100, Math.round((currentHP / maxHP) * 100))) : 0;
     var hpColor = hpPct > 50 ? 'var(--success)' : (hpPct > 25 ? 'var(--warning)' : 'var(--danger)');
@@ -730,15 +740,7 @@ function renderTabCombat(charId, config, state) {
     // === Class Resource Trackers ===
     html += renderClassResourcesHTML(config, state, editable);
 
-    // === Core Stats Grid ===
-    html += '<div class="combat-stats">';
-    html += '<div class="combat-stat"><span class="stat-value">' + ac + '</span><span class="stat-label">AC</span></div>';
-    html += '<div class="combat-stat"><span class="stat-value">' + speed + '</span><span class="stat-label">' + t('combat.speed') + '</span></div>';
-    html += '<div class="combat-stat"><span class="stat-value">' + formatMod(dexMod) + '</span><span class="stat-label">Initiative</span></div>';
-    html += '<div class="combat-stat"><span class="stat-value">+' + profBonus + '</span><span class="stat-label">Prof.</span></div>';
-    var hitDiceRemaining = state.level - (state.hitDiceUsed || 0);
-    html += '<div class="combat-stat"><span class="stat-value">' + hitDiceRemaining + hitDie + '</span><span class="stat-label">Hit Dice</span></div>';
-    html += '</div>';
+    // (Core Stats Grid moved to top of combat tab — see above)
 
     // === Weapons ===
     html += '<div class="sheet-block">';
@@ -1352,12 +1354,12 @@ function renderTabStory(charId, config, state) {
     var primaryFamilyForChar = (typeof findPrimaryFamilyByLink === 'function') ? findPrimaryFamilyByLink(charId, null) : null;
     var hasFamilyDiagram = primaryFamilyForChar && primaryFamilyForChar.family;
     if (hasFamilyDiagram) {
-        html += '<div class="sheet-block">';
+        html += '<div class="sheet-block sheet-block-wide">';
         html += '<h2>Family & Connections</h2>';
         html += renderFamilyDiagram(primaryFamilyForChar.family.id, false);
         html += '</div>';
     } else if (editable) {
-        html += '<div class="sheet-block">';
+        html += '<div class="sheet-block sheet-block-wide">';
         html += '<h2>Family & Connections</h2>';
         html += '<p class="text-dim">Geen familie gekoppeld. Voeg deze character toe via de DM Family Trees pagina.</p>';
         html += '</div>';

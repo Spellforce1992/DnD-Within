@@ -4042,9 +4042,13 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--a
         align-items: start;
     }
     .tab-combat > * { grid-column: 2; min-width: 0; }
+    .tab-combat > .combat-stats {
+        grid-column: 1 / -1;
+        margin-bottom: 0.5rem;
+    }
     .tab-combat > .hp-tracker {
         grid-column: 1;
-        grid-row: 1;
+        grid-row: 2;
         position: sticky;
         top: 80px;
         margin-bottom: 0;
