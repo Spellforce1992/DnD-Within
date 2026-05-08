@@ -320,6 +320,16 @@ html[data-font-size="large"] { font-size: 18px; }
     padding: 0.6rem 0.75rem;
     overflow: auto;
     min-height: 0;
+    /* Uniform widget font: every value, label, button, list item inside a
+       widget body shares the same size so the dashboard reads as one
+       coherent surface (#lqSMbCN2). Per-widget rules below are normalised
+       through this variable and `font-size: inherit` overrides. */
+    font-size: var(--widget-font-size, 0.95rem);
+    line-height: 1.35;
+}
+.widget-body, .widget-body * { font-size: inherit; }
+.widget-body button, .widget-body input, .widget-body select, .widget-body textarea {
+    font-size: inherit;
 }
 
 .widget-empty {
