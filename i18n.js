@@ -345,7 +345,7 @@ var TRANSLATIONS = {
         'page.notfound.desc': 'De pagina die je zoekt bestaat niet.',
         'notes.notfound': 'Notitie niet gevonden',
         'char.newcharacter': 'Nieuw Karakter',
-        'maps.worldmap': 'Wereldkaart',
+        'maps.worldmap': 'Valoria',
         'banner.upload': 'Banner uploaden',
         'portrait.upload': 'Portret uploaden',
 
@@ -927,7 +927,7 @@ var TRANSLATIONS = {
         'page.notfound.desc': 'The page you are looking for does not exist.',
         'notes.notfound': 'Note not found',
         'char.newcharacter': 'New Character',
-        'maps.worldmap': 'World Map',
+        'maps.worldmap': 'Valoria',
         'banner.upload': 'Upload banner',
         'portrait.upload': 'Upload portrait',
 

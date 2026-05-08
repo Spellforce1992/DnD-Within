@@ -2667,6 +2667,35 @@ a { color: inherit; text-decoration: none; }
 .map-card-name { font-weight: 600; color: var(--text-bright); font-size: 0.95rem; }
 .map-card-badge { font-size: 0.65rem; color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em; }
 .map-card-pins { font-size: 0.75rem; color: var(--text-dim); }
+
+/* Maps grid: per main map een rij met de main + sub-maps daarnaast (sub = half size) */
+.maps-row {
+    display: flex;
+    align-items: stretch;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+.maps-row > .map-card { flex: 0 0 280px; }
+.maps-row-subs {
+    flex: 1 1 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.6rem;
+    align-content: start;
+}
+.maps-row-subs .map-card {
+    width: 100%;
+    aspect-ratio: 1.4;
+}
+.map-card-sub .map-card-img,
+.map-card-sub .map-card-placeholder { font-size: 1.5rem; }
+.map-card-sub .map-card-name { font-size: 0.85rem; }
+.maps-row-orphans .maps-row-subs { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+.maps-row-add { margin-top: 0.5rem; }
+@media (max-width: 700px) {
+    .maps-row { flex-direction: column; }
+    .maps-row > .map-card { flex: 0 0 auto; }
+}
 .map-card-delete { position: absolute; top: 0.5rem; right: 0.5rem; width: 24px; height: 24px; border-radius: 50%; background: rgba(0,0,0,0.6); border: none; color: var(--text-dim); cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; }
 .map-card:hover .map-card-delete { opacity: 1; }
 .map-card-delete:hover { color: var(--danger); }

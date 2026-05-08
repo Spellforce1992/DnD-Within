@@ -17,12 +17,23 @@ function getMapsData() {
     if (saved) {
         try {
             var parsed = JSON.parse(saved);
-            // Migration: 'Valoria' was de wereld-naam, niet de dimensie. Default = Material Plane.
+            // Migration 1: 'Valoria' was de dimensie-naam, hoort wereld-naam te zijn. Dim → Material Plane.
+            // Migration 2: De root-map heet nu Valoria (was 'World Map' / 'Wereldkaart').
             if (parsed && Array.isArray(parsed.dimensions)) {
                 for (var i = 0; i < parsed.dimensions.length; i++) {
-                    if (parsed.dimensions[i] && parsed.dimensions[i].name === 'Valoria') {
-                        parsed.dimensions[i].name = 'Material Plane';
-                        if (parsed.dimensions[i].id === 'valoria') parsed.dimensions[i].id = 'material-plane';
+                    var pdim = parsed.dimensions[i];
+                    if (!pdim) continue;
+                    if (pdim.name === 'Valoria') {
+                        pdim.name = 'Material Plane';
+                        if (pdim.id === 'valoria') pdim.id = 'material-plane';
+                    }
+                    if (Array.isArray(pdim.maps)) {
+                        for (var j = 0; j < pdim.maps.length; j++) {
+                            var pm = pdim.maps[j];
+                            if (pm && pm.isRoot && (pm.name === 'World Map' || pm.name === 'Wereldkaart')) {
+                                pm.name = 'Valoria';
+                            }
+                        }
                     }
                 }
             }
@@ -197,24 +208,31 @@ function renderMaps() {
         }
 
     } else {
-        // MAP GRID MODE — grouped by category
+        // MAP GRID MODE — gegroepeerd in rijen: per main map een rij met sub-maps half-size
         var maps = dim.maps || [];
-        var categories = {};
-        var uncategorized = [];
+
+        // Bepaal main maps (geen parentMapId, of die de oude isRoot-flag hebben).
+        // Sub maps zitten in dezelfde rij als hun parent.
+        var byParent = {};
+        var mainMaps = [];
         for (var gi = 0; gi < maps.length; gi++) {
             var gm = maps[gi];
-            var cat = gm.category || '';
-            if (cat) {
-                if (!categories[cat]) categories[cat] = [];
-                categories[cat].push(gm);
+            if (gm.parentMapId) {
+                if (!byParent[gm.parentMapId]) byParent[gm.parentMapId] = [];
+                byParent[gm.parentMapId].push(gm);
             } else {
-                uncategorized.push(gm);
+                mainMaps.push(gm);
             }
         }
-        var catNames = Object.keys(categories).sort();
+        // Orphaned subs (parent niet gevonden) → toon als main onder een 'Andere' rij
+        var orphans = [];
+        for (var pid in byParent) {
+            var found = mainMaps.some(function(m) { return m.id === pid; });
+            if (!found) orphans = orphans.concat(byParent[pid]);
+        }
 
-        function renderMapCard(gm) {
-            var cardHtml = '<div class="map-card" data-action="open-map" data-map-id="' + gm.id + '">';
+        function renderMapCard(gm, isSub) {
+            var cardHtml = '<div class="map-card' + (isSub ? ' map-card-sub' : '') + '" data-action="open-map" data-map-id="' + gm.id + '">';
             if (gm.image) {
                 cardHtml += '<img class="map-card-img" src="' + gm.image + '" alt="">';
             } else {
@@ -226,44 +244,46 @@ function renderMaps() {
             cardHtml += '</div>';
             if (isDM()) {
                 cardHtml += '<button class="map-card-delete" data-action="delete-map" data-map-id="' + gm.id + '">&times;</button>';
-                cardHtml += '<button class="map-card-cat-btn" data-action="set-map-category" data-map-id="' + gm.id + '" title="Category">&#128193;</button>';
             }
             cardHtml += '</div>';
             return cardHtml;
         }
 
-        // Render categorized maps
-        for (var ci = 0; ci < catNames.length; ci++) {
-            html += '<div class="maps-category">';
-            html += '<h3 class="maps-category-title">' + escapeHtml(catNames[ci]) + '</h3>';
-            html += '<div class="maps-grid">';
-            var catMaps = categories[catNames[ci]];
-            for (var mi = 0; mi < catMaps.length; mi++) {
-                html += renderMapCard(catMaps[mi]);
+        // Render: één rij per main map (main + zijn subs)
+        for (var mi = 0; mi < mainMaps.length; mi++) {
+            var main = mainMaps[mi];
+            var subs = byParent[main.id] || [];
+            html += '<div class="maps-row">';
+            html += renderMapCard(main, false);
+            if (subs.length) {
+                html += '<div class="maps-row-subs">';
+                for (var si = 0; si < subs.length; si++) {
+                    html += renderMapCard(subs[si], true);
+                }
+                html += '</div>';
             }
-            html += '</div></div>';
+            html += '</div>';
         }
 
-        // Uncategorized maps
-        if (uncategorized.length > 0 || catNames.length === 0) {
-            if (catNames.length > 0) {
-                html += '<div class="maps-category">';
-                html += '<h3 class="maps-category-title">Other</h3>';
+        // Orphans rij
+        if (orphans.length) {
+            html += '<div class="maps-row maps-row-orphans">';
+            html += '<div class="maps-row-subs">';
+            for (var oi = 0; oi < orphans.length; oi++) {
+                html += renderMapCard(orphans[oi], true);
             }
-            html += '<div class="maps-grid">';
-            for (var ui = 0; ui < uncategorized.length; ui++) {
-                html += renderMapCard(uncategorized[ui]);
-            }
+            html += '</div>';
+            html += '</div>';
         }
 
         if (isDM()) {
+            html += '<div class="maps-row maps-row-add">';
             html += '<div class="map-card map-card-add" data-action="add-map">';
             html += '<span class="map-card-add-icon">+</span>';
             html += '<span class="map-card-name">' + t('maps.newmap') + '</span>';
             html += '</div>';
+            html += '</div>';
         }
-
-        html += '</div>'; // maps-grid
     }
 
     html += '</div>'; // maps-page
