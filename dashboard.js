@@ -198,6 +198,9 @@ function dashboardInitGridstack() {
         resizable: { handles: 'se, sw, e, s, w' },
         disableOneColumnMode: true,
         acceptWidgets: dashboardEditMode,
+        // Touch / mobile resize: force jQuery-UI touch shim and always show
+        // the resize handles so a finger-tap actually grabs them.
+        alwaysShowResizeHandle: 'mobile',
     }, gridEl);
 
     // Add widgets.

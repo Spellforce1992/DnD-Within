@@ -262,6 +262,25 @@ html[data-font-size="large"] { font-size: 18px; }
     display: none !important;
 }
 
+/* Touch devices: enlarge resize handles so a finger can grab them. */
+@media (hover: none) and (pointer: coarse) {
+    .dashboard.is-editing .grid-stack-item > .ui-resizable-se {
+        width: 28px;
+        height: 28px;
+    }
+    .dashboard.is-editing .grid-stack-item > .ui-resizable-sw {
+        width: 28px;
+        height: 28px;
+    }
+    .dashboard.is-editing .grid-stack-item > .ui-resizable-s {
+        height: 14px;
+    }
+    .dashboard.is-editing .grid-stack-item > .ui-resizable-e,
+    .dashboard.is-editing .grid-stack-item > .ui-resizable-w {
+        width: 14px;
+    }
+}
+
 .widget-header {
     display: flex;
     align-items: center;
