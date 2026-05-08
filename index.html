@@ -6,7 +6,6 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <title>D&D Within — Valoria</title>
-    <link rel="manifest" href="manifest.json">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎲</text></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -30,17 +29,17 @@
     <script src="i18n.js?v=16"></script>
     <script src="https://cdn.jsdelivr.net/npm/gridstack@10/dist/gridstack-all.js"></script>
     <script>
-    if('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').then(function(reg) {
-            reg.addEventListener('updatefound', function() {
-                var newSW = reg.installing;
-                newSW.addEventListener('statechange', function() {
-                    if (newSW.state === 'activated') location.reload();
-                });
-            });
-            // Check for updates on every page load
-            reg.update();
+    // Site is online-only — actively unregister any previously-installed service worker
+    // and clear its caches so users who had the PWA installed don't keep getting stale assets.
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(regs) {
+            regs.forEach(function(r) { r.unregister(); });
         });
+        if (window.caches && caches.keys) {
+            caches.keys().then(function(keys) {
+                keys.forEach(function(k) { caches.delete(k); });
+            });
+        }
     }
     </script>
     <script src="effects.js?v=16"></script>

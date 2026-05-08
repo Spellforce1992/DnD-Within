@@ -50,6 +50,9 @@ self.addEventListener('activate', function(e) {
 });
 
 self.addEventListener('fetch', function(e) {
+    // Skip non-http(s) schemes (chrome-extension://, data:, blob:, etc.) — Cache API rejects these.
+    if (!/^https?:/.test(e.request.url)) return;
+
     // Network first for Firebase and external resources
     if (e.request.url.indexOf('firebaseio.com') >= 0 ||
         e.request.url.indexOf('gstatic.com') >= 0 ||
@@ -58,17 +61,22 @@ self.addEventListener('fetch', function(e) {
         return;
     }
 
+    // Only cache same-origin GET requests — cross-origin (gridstack CDN) and POST/etc would fail.
+    if (e.request.method !== 'GET' || new URL(e.request.url).origin !== self.location.origin) {
+        return;
+    }
+
     // Network-first for own assets (with cache fallback for offline)
     e.respondWith(
         fetch(e.request).then(function(response) {
-            // Update cache with fresh version
+            // Only cache successful basic responses
+            if (!response || response.status !== 200 || response.type !== 'basic') return response;
             var clone = response.clone();
             caches.open(CACHE_NAME).then(function(cache) {
-                cache.put(e.request, clone);
-            });
+                try { cache.put(e.request, clone); } catch (err) {}
+            }).catch(function() {});
             return response;
         }).catch(function() {
-            // Offline: serve from cache
             return caches.match(e.request);
         })
     );
