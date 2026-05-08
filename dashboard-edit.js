@@ -318,7 +318,15 @@ function dashboardHandleAction(action, target, event) {
         return true;
     }
     if (action === 'dash-sidebar-cat') {
-        dashboardSidebarActiveCat = target.dataset.cat;
+        var sb = target.closest('.dash-edit-sidebar');
+        var clickedCat = target.dataset.cat;
+        // Click toggle: zelfde categorie = sluit/open content; andere = open content + switch
+        if (sb && dashboardSidebarActiveCat === clickedCat && sb.classList.contains('cat-open')) {
+            sb.classList.remove('cat-open');
+            return true;
+        }
+        if (sb) sb.classList.add('cat-open');
+        dashboardSidebarActiveCat = clickedCat;
         if (typeof renderApp === 'function') renderApp();
         return true;
     }

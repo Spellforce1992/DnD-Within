@@ -114,8 +114,9 @@ html[data-font-size="large"] { font-size: 18px; }
     min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
-    /* Ruimte links + rechts zodat de floating toolbar niet over de grid komt */
-    padding: 0 3rem 0 0.5rem;
+    /* Ruimte links + rechts: rechts genoeg voor floating dashboard-toolbar (32px)
+       én de FAB-keten (notes/chat/dice/bug, ~52px + 24px right offset = 76px). */
+    padding: 0 5.5rem 0 0.5rem;
 }
 .tab-content > .dashboard .grid-stack { min-height: 100%; width: 100%; }
 .dash-toolbar-group { display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap; }
@@ -333,17 +334,36 @@ html[data-font-size="large"] { font-size: 18px; }
     position: fixed;
     top: 56px; /* onder fixed topbar (navbar = 56px hoog) */
     left: 0;
-    width: 320px;
     max-width: 90vw;
     height: calc(100vh - 56px);
     background: var(--bg, #0f0f12);
     border-right: 1px solid var(--border, rgba(255,255,255,0.1));
     display: flex;
-    flex-direction: row-reverse; /* widget-cards naast cat-icons; cats blijven aan dashboard-zijde */
-    z-index: 90; /* lager dan navbar (z:100) zodat hij niet erover gaat */
+    flex-direction: row; /* cats links, content rechts (was row-reverse) */
+    z-index: 90;
     transform: translateX(-100%);
     transition: transform 0.2s ease-out;
     box-shadow: 8px 0 30px rgba(0,0,0,0.4);
+}
+/* Auto-hide widget-content: standaard alleen cats zichtbaar (56px breed).
+   Desktop: hover op sidebar opent content. Mobile/tablet: click op cat toggelt .cat-open. */
+.dash-edit-sidebar .dash-sidebar-content {
+    width: 264px;
+    transition: width 0.2s ease-out, opacity 0.2s ease-out;
+    overflow: hidden;
+}
+.dash-edit-sidebar:not(.cat-open):not(:hover) .dash-sidebar-content {
+    width: 0;
+    opacity: 0;
+    padding-left: 0;
+    padding-right: 0;
+    pointer-events: none;
+}
+@media (hover: none) {
+    /* Touch devices: hover-state stays toggled, click-only via .cat-open */
+    .dash-edit-sidebar:not(.cat-open) .dash-sidebar-content {
+        width: 0; opacity: 0; padding-left: 0; padding-right: 0; pointer-events: none;
+    }
 }
 .dash-edit-sidebar.open { transform: translateX(0); }
 
