@@ -44,6 +44,8 @@ function renderApp() {
 
         if (route.path === '/' || route.path === '/home') {
             html += renderHome();
+        } else if (route.path === '/widget-demo') {
+            html += (typeof renderWidgetDemo === 'function') ? renderWidgetDemo() : '<p>Widget demo niet geladen.</p>';
         } else if (route.path === '/dashboard') {
             html += renderDashboard();
         } else if (route.path === '/party') {

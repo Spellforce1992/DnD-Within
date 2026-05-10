@@ -16,11 +16,18 @@ var DASHBOARD_DEFAULT_TABS = [
     { id: 'inventory', label: 'Inventory', icon: '⛂', system: true,  legacy: true  }
 ];
 
+// URL of the standalone Widget Editor — externe app waar custom widgets
+// gebouwd worden uit blocks. Override met window.WIDGET_EDITOR_URL als je
+// een productie-deploy hebt (bv https://widget-editor.dnd-within.app/).
+var WIDGET_EDITOR_URL = (typeof window !== 'undefined' && window.WIDGET_EDITOR_URL) || 'http://localhost:8766/';
+
 // Breakpoint definitions. Width thresholds in CSS pixels.
+// cellMode 'fixed-px' = cellHeight uit dashboardCellHeightPx() (gekoppeld aan font-size).
+//          'auto-square' = GridStack 'auto' (cell square, schaalt met stage-width).
 var DASHBOARD_BREAKPOINTS = {
-    desktop: { cols: 12, minWidth: 1025, label: 'Desktop' },
-    tablet:  { cols: 8,  minWidth: 641,  label: 'Tablet'  },
-    mobile:  { cols: 4,  minWidth: 0,    label: 'Mobile'  }
+    desktop: { cols: 12, minWidth: 1025, label: 'Desktop', cellMode: 'fixed-px'   },
+    tablet:  { cols: 8,  minWidth: 641,  label: 'Tablet',  cellMode: 'fixed-px'   },
+    mobile:  { cols: 6,  minWidth: 0,    label: 'Mobile',  cellMode: 'auto-square'}
 };
 
 function dashboardCurrentBreakpoint() {
@@ -28,6 +35,23 @@ function dashboardCurrentBreakpoint() {
     if (w >= DASHBOARD_BREAKPOINTS.desktop.minWidth) return 'desktop';
     if (w >= DASHBOARD_BREAKPOINTS.tablet.minWidth)  return 'tablet';
     return 'mobile';
+}
+
+// Dashboard cell-height (px) voor fixed-px breakpoints. Gekoppeld aan body font-size
+// — kleiner font → kleinere cell → 1 regel tekst past in 1 unit.
+function dashboardCellHeightPx() {
+    var fs = (typeof getFontSize === 'function') ? getFontSize() : 'medium';
+    if (fs === 'small')  return 30;
+    if (fs === 'large')  return 40;
+    return 34; // medium
+}
+
+// Body font-size in px (informatief — voor sizing-berekeningen).
+function dashboardBodyFontPx() {
+    var fs = (typeof getFontSize === 'function') ? getFontSize() : 'medium';
+    if (fs === 'small')  return 12;
+    if (fs === 'large')  return 16;
+    return 13.5;
 }
 
 // Storage key per character.
@@ -159,30 +183,35 @@ function dashboardDefaultLayoutForTab(tabId) {
 // wid is a stable per-instance id (generated). Coordinates assume 12-col desktop grid.
 var DASHBOARD_DEFAULT_LAYOUTS = {
     overview: [
-        { type: 'hp-tracker',     x: 0, y: 0, w: 4, h: 3 },
+        { type: 'hp-tracker',     x: 0, y: 0, w: 4, h: 4 },
         { type: 'core-stats',     x: 4, y: 0, w: 8, h: 2 },
-        { type: 'ability-scores', x: 0, y: 3, w: 12, h: 2 },
-        { type: 'quote',          x: 0, y: 5, w: 12, h: 1 }
+        { type: 'xp-tracker',     x: 4, y: 2, w: 8, h: 2 },
+        { type: 'ability-scores', x: 0, y: 4, w: 12, h: 4 },
+        { type: 'quote',          x: 0, y: 8, w: 12, h: 2 }
     ],
     stats: [
-        { type: 'ability-scores', x: 0, y: 0, w: 12, h: 2 },
-        { type: 'saving-throws',  x: 0, y: 2, w: 6, h: 4 },
-        { type: 'skills',         x: 6, y: 2, w: 6, h: 6 }
+        { type: 'ability-scores', x: 0, y: 0, w: 12, h: 4 },
+        { type: 'saving-throws',  x: 0, y: 4, w: 4, h: 4 },
+        { type: 'skills',         x: 4, y: 4, w: 4, h: 5 },
+        { type: 'ability-radar',  x: 8, y: 4, w: 4, h: 4 }
     ],
     combat: [
-        { type: 'hp-tracker',     x: 0, y: 0, w: 4, h: 3 },
+        { type: 'hp-tracker',     x: 0, y: 0, w: 4, h: 4 },
         { type: 'core-stats',     x: 4, y: 0, w: 8, h: 2 },
-        { type: 'spell-slots',    x: 4, y: 2, w: 4, h: 1 },
-        { type: 'weapons',        x: 0, y: 3, w: 12, h: 3 }
+        { type: 'death-saves',    x: 4, y: 2, w: 4, h: 2 },
+        { type: 'inspiration',    x: 8, y: 2, w: 4, h: 2 },
+        { type: 'weapons',        x: 0, y: 4, w: 8, h: 4 },
+        { type: 'combat-log',     x: 8, y: 4, w: 4, h: 4 }
     ],
     spells: [
-        { type: 'spell-slots',     x: 0, y: 0, w: 12, h: 1 },
-        { type: 'spells-prepared', x: 0, y: 1, w: 12, h: 6 }
+        { type: 'spell-slots',     x: 0, y: 0, w: 6, h: 4 },
+        { type: 'spells-prepared', x: 6, y: 0, w: 6, h: 5 },
+        { type: 'metamagic',       x: 0, y: 4, w: 6, h: 4 }
     ],
     story: [
-        { type: 'quote',     x: 0, y: 0, w: 12, h: 1 },
-        { type: 'text',      x: 0, y: 1, w: 8, h: 6, config: { title: 'Background', body: '' } },
-        { type: 'image',     x: 8, y: 1, w: 4, h: 6 }
+        { type: 'quote',     x: 0, y: 0, w: 12, h: 2 },
+        { type: 'text',      x: 0, y: 2, w: 8, h: 6, config: { title: 'Background', body: '' } },
+        { type: 'image',     x: 8, y: 2, w: 4, h: 6 }
     ],
     inventory: [
         { type: 'inventory', x: 0, y: 0, w: 8, h: 6 },
@@ -191,11 +220,11 @@ var DASHBOARD_DEFAULT_LAYOUTS = {
     social: [
         { type: 'text',  x: 0, y: 0, w: 6, h: 4, config: { title: 'Allies', body: '' } },
         { type: 'text',  x: 6, y: 0, w: 6, h: 4, config: { title: 'Enemies', body: '' } },
-        { type: 'image', x: 0, y: 4, w: 12, h: 3 }
+        { type: 'image', x: 0, y: 4, w: 12, h: 4 }
     ],
     exploring: [
         { type: 'image', x: 0, y: 0, w: 12, h: 5 },
-        { type: 'text',  x: 0, y: 5, w: 12, h: 3, config: { title: 'Locations', body: '' } }
+        { type: 'text',  x: 0, y: 5, w: 12, h: 4, config: { title: 'Locations', body: '' } }
     ],
     family: [
         { type: 'family-diagram', x: 0, y: 0, w: 12, h: 8 }

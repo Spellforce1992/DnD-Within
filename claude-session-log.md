@@ -552,3 +552,27 @@ Massive feature sprint — ~40 features gebouwd in één sessie:
 - ren.html en saya.html verwijderd (SPA verwerkt alles)
 
 ---
+
+### Recap — 2026-05-10 14:40
+**What was done:** Dashboard grid herzien voor compactheid. CellHeight is nu vast in px op desktop/tablet (30/34/40 voor small/medium/large font), gekoppeld aan dashboard font-size token zodat "1 regel tekst = 1 grid unit". Mobile heeft 6 cols + auto-square cells. CSS-vars `--dash-cell-h`, `--widget-font-size`, `--widget-header-h` reageren op `data-font-size`-attribuut. Widget-header is gecomprimeerd (vaste 22px hoog, 0.72em font), widget-body padding nu via vars. Alle 22 widgets in registry hebben nieuwe `minSize`/`defaultSize`/`maxSize` op basis van regel-counts (formule `minH = 1 header + ceil(content_lines/2)`). HP-tracker minH=4 (display+bar+ctrls), Ability Scores minH=4 (6 abilities × name+score+mod). DASHBOARD_DEFAULT_LAYOUTS bijgewerkt met nieuwe sizes en rijkere overview/stats/combat/spells layouts. Compact CSS-overrides voor `.ability` in widget-context (kleinere padding/font, verbergt edit-overhead).
+
+Nieuwe `#/widget-demo` route toont elke widget in min/default/max naast elkaar met font-toggle, gebruikt seed-data per widget-type (ren=rogue/sneak-attack, saya=sorcerer/metamagic, varragoth=wizard/spells).
+
+⚒-knop toegevoegd aan dashboard-toolbar die naar de externe Widget Editor opent (URL via `WIDGET_EDITOR_URL`, default localhost:8766) met `?back=<huidige URL>` zodat de editor terug kan navigeren.
+
+**Files modified:**
+- `dashboard.js` (cellHeight uit dashboardCellHeightPx, ⚒-knop)
+- `dashboard.css` (CSS-vars, grid-overlay schaalt mee, widget-header compact, widget demo styles, compact ability cells)
+- `dashboard-data.js` (cellMode in BREAKPOINTS, dashboardCellHeightPx + dashboardBodyFontPx, mobile 6 cols, defaults bijgewerkt, WIDGET_EDITOR_URL constant)
+- `widgets.js` (alle 22 widget min/default/max sizes herrekend)
+- `widget-demo.js` (new — demo route renderer)
+- `app.js` (route /widget-demo)
+- `index.html` (script-tag voor widget-demo.js)
+
+**Current state:** Werkend op localhost. Visueel geverifieerd via playwright op character/ren/overview en widget-demo route. Alle widgets renderen, alle data zichtbaar.
+
+**Next steps:**
+- Mobile auto-square geeft loze ruimte voor wide widgets (HP h=4 wordt 252px) — overweeg fixed-px ook op mobile
+- Save widget definitions vanuit Widget Editor naar Firebase
+- Cloudflare Pages deploy + custom domain voor editor
+---

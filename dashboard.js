@@ -81,6 +81,7 @@ function renderDashboardTab(charId, tabId) {
     // Quick-action knoppen: notes panel + dice panel (FAB-equivalenten in toolbar)
     html += '<button class="dash-tool-btn" data-action="toggle-notes-panel" title="Notities">📝</button>';
     html += '<button class="dash-tool-btn" data-action="toggle-dice-panel" title="Dice roller">🎲</button>';
+    html += '<a class="dash-tool-btn" href="' + (typeof WIDGET_EDITOR_URL !== 'undefined' ? WIDGET_EDITOR_URL : 'http://localhost:8766/') + '?back=' + encodeURIComponent(window.location.href) + '" target="_blank" rel="noopener" title="Open Widget Editor">⚒</a>';
 
     if (editable) {
         html += '<button class="dash-tool-btn' + (dashboardGridVisible ? ' active' : '') + '" data-action="dashboard-toggle-grid" title="Grid lijnen tonen">⊞</button>';
@@ -187,10 +188,12 @@ function dashboardInitGridstack() {
         return;
     }
 
+    var bpCfg = DASHBOARD_BREAKPOINTS[bp];
+    var cellHeight = (bpCfg.cellMode === 'fixed-px') ? dashboardCellHeightPx() : 'auto';
+
     dashGridInstance = GridStack.init({
         column: cols,
-        // 'auto' makes each cell square: cellHeight equals (gridWidth/columns).
-        cellHeight: 'auto',
+        cellHeight: cellHeight,
         margin: 4,
         float: false,
         animate: true,

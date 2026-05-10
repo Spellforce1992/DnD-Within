@@ -18,84 +18,98 @@ var WIDGET_CATEGORIES = [
 var WIDGET_REGISTRY = {
 
     // ---- Core ----
+    // Sizing rule: minH = 1 header + ceil(content_lines/2). Met cellH=34px,
+    // body ≈ (34-22)/cell → 2 lines per +1H. minW = aantal kolommen voor het
+    // breedste sub-element (bv 5 stats × ~50px = ~5 cols op desktop).
     'hp-tracker': {
+        // 4 lines: HP-display(big) + HP-bar + controls-row1 + controls-row2.
         label: 'HP Tracker',
         category: 'combat',
         icon: '♥',
-        description: 'Current/max HP with damage and heal controls.',
-        defaultSize: [4, 3],
-        minSize: [3, 2],
-        maxSize: [12, 4],
+        description: 'Current/max HP + damage/heal controls.',
+        defaultSize: [4, 4],
+        minSize: [3, 4],
+        maxSize: [12, 6],
         render: function(ctx) { return renderWidgetHP(ctx); }
     },
     'core-stats': {
+        // 5 stats horizontaal, val(big) + label = 2 lines.
         label: 'Core Stats',
         category: 'combat',
         icon: '◈',
-        description: 'AC / Speed / Initiative / Prof. Bonus / Hit Dice.',
-        defaultSize: [8, 2],
-        minSize: [4, 2],
-        maxSize: [12, 2],
+        description: 'AC / Speed / Init / Prof / Hit Dice.',
+        defaultSize: [6, 2],
+        minSize: [5, 2],
+        maxSize: [12, 3],
         render: function(ctx) { return renderWidgetCoreStats(ctx); }
     },
     'ability-scores': {
+        // 6 abilities horizontaal, elk verticaal: name + score(big) + mod = 3 lines.
+        // Plus edit-toggle-row + widget-header. Body bij H=4 ≈ 116px past inhoud
+        // (95px) ruim, en de 6 cells houden visuele consistentie. Bij H=3 wordt
+        // de mod-regel afgekapt (#abil_min4_required).
         label: 'Ability Scores',
         category: 'core',
         icon: '◇',
-        description: 'STR / DEX / CON / INT / WIS / CHA grid.',
-        defaultSize: [12, 2],
-        minSize: [6, 2],
-        maxSize: [12, 4],
+        description: 'STR / DEX / CON / INT / WIS / CHA.',
+        defaultSize: [9, 4],
+        minSize: [6, 4],
+        maxSize: [12, 6],
         render: function(ctx) { return renderWidgetAbilityScores(ctx); }
     },
     'saving-throws': {
+        // 6 saves vertical list = 6 lines; 2-col layout halveert.
         label: 'Saving Throws',
         category: 'combat',
         icon: '⛨',
-        description: 'Saving throw proficiencies and modifiers.',
-        defaultSize: [6, 4],
-        minSize: [3, 3],
-        maxSize: [12, 6],
+        description: 'Saving throw proficiencies + modifiers.',
+        defaultSize: [4, 4],
+        minSize: [3, 4],
+        maxSize: [12, 7],
         render: function(ctx) { return renderWidgetSavingThrows(ctx); }
     },
     'skills': {
+        // 18 skills list. Default 5H = ~8 lines visible, scrollt voor rest.
         label: 'Skills',
         category: 'core',
         icon: '✓',
-        description: 'All skills with proficiency and modifiers.',
-        defaultSize: [6, 6],
+        description: 'All skills + proficiency + modifiers.',
+        defaultSize: [4, 5],
         minSize: [3, 4],
         maxSize: [12, 10],
         render: function(ctx) { return renderWidgetSkills(ctx); }
     },
     'xp-tracker': {
+        // bar + label = 2 lines; controls +1.
         label: 'XP Tracker',
         category: 'core',
         icon: '⚡',
         description: 'Current XP, progress bar, level controls.',
-        defaultSize: [6, 1],
-        minSize: [3, 1],
-        maxSize: [12, 2],
+        defaultSize: [6, 2],
+        minSize: [4, 2],
+        maxSize: [12, 3],
         render: function(ctx) { return renderWidgetXP(ctx); }
     },
 
     // ---- Spells ----
     'spell-slots': {
+        // 1-9 levels, 1 row per level. Min H=2 (header+1 row); typical wizard 5-6 levels.
         label: 'Spell Slots',
         category: 'spells',
         icon: '◉',
         description: 'Per-level spell slot tracker.',
-        defaultSize: [6, 2],
-        minSize: [3, 1],
-        maxSize: [12, 4],
+        defaultSize: [6, 4],
+        minSize: [4, 2],
+        maxSize: [12, 6],
         render: function(ctx) { return renderWidgetSpellSlots(ctx); }
     },
     'spells-prepared': {
+        // List, scrollable. Default 6 lines content visible.
         label: 'Prepared Spells',
         category: 'spells',
         icon: '✦',
-        description: 'List of prepared spells with quick-cast.',
-        defaultSize: [12, 6],
+        description: 'List of prepared spells.',
+        defaultSize: [6, 5],
         minSize: [4, 3],
         maxSize: [12, 12],
         render: function(ctx) { return renderWidgetSpellsPrepared(ctx); }
@@ -103,135 +117,148 @@ var WIDGET_REGISTRY = {
 
     // ---- Combat ----
     'weapons': {
+        // ~2 lines per weapon. Default 3H ≈ 1-2 weapons visible.
         label: 'Weapons',
         category: 'combat',
         icon: '⚔',
-        description: 'Equipped weapons with attack and damage rolls.',
-        defaultSize: [6, 3],
-        minSize: [4, 2],
-        maxSize: [12, 6],
+        description: 'Equipped weapons + attack/damage rolls.',
+        defaultSize: [6, 4],
+        minSize: [4, 3],
+        maxSize: [12, 8],
         render: function(ctx) { return renderWidgetWeapons(ctx); }
     },
     'class-resources': {
+        // 1-3 trackers, ~1 line each.
         label: 'Class Resources',
         category: 'combat',
         icon: '◆',
-        description: 'Class-specific trackers (rage, ki, sorcery points, etc.).',
-        defaultSize: [4, 2],
-        minSize: [2, 1],
-        maxSize: [12, 4],
+        description: 'Rage, ki, sorcery points, etc.',
+        defaultSize: [4, 3],
+        minSize: [3, 2],
+        maxSize: [12, 5],
         render: function(ctx) { return renderWidgetClassResources(ctx); }
     },
     'death-saves': {
+        // 2 rows (success+failure), 1 line each.
         label: 'Death Saves',
         category: 'combat',
         icon: '☠',
-        description: '3 successes / 3 failures tracker (visible when HP ≤ 0).',
-        defaultSize: [4, 2],
+        description: '3 successes / 3 failures tracker.',
+        defaultSize: [4, 3],
         minSize: [3, 2],
-        maxSize: [12, 3],
+        maxSize: [8, 3],
         render: function(ctx) { return renderWidgetDeathSaves(ctx); }
     },
     'inspiration': {
+        // Single star + label, 1 line.
         label: 'Inspiration',
         category: 'combat',
         icon: '★',
         description: 'Heroic Inspiration toggle.',
-        defaultSize: [3, 1],
-        minSize: [2, 1],
-        maxSize: [6, 2],
+        defaultSize: [3, 2],
+        minSize: [2, 2],
+        maxSize: [6, 3],
         render: function(ctx) { return renderWidgetInspiration(ctx); }
     },
     'exhaustion': {
+        // Label + 6 dots + penalty, 1 line.
         label: 'Exhaustion',
         category: 'combat',
         icon: '⚠',
-        description: 'Exhaustion level tracker (0–6).',
-        defaultSize: [4, 1],
-        minSize: [3, 1],
-        maxSize: [8, 2],
+        description: 'Exhaustion level (0–6).',
+        defaultSize: [4, 2],
+        minSize: [4, 2],
+        maxSize: [8, 3],
         render: function(ctx) { return renderWidgetExhaustion(ctx); }
     },
     'combat-log': {
+        // 1 line per entry, scrollable. Default 4H ≈ 4-5 entries.
         label: 'Combat Log',
         category: 'combat',
         icon: '⌬',
         description: 'Recent damage/heal/rest events.',
-        defaultSize: [6, 4],
-        minSize: [4, 2],
-        maxSize: [12, 8],
+        defaultSize: [5, 4],
+        minSize: [4, 3],
+        maxSize: [12, 10],
         render: function(ctx) { return renderWidgetCombatLog(ctx); }
     },
     'ability-radar': {
+        // SVG aspect-vast (vierkant beste). Min 3x3 voor leesbaarheid.
         label: 'Ability Radar',
         category: 'core',
         icon: '⬡',
-        description: '6-axis radar chart of ability scores.',
+        description: '6-axis radar chart of abilities.',
         defaultSize: [4, 4],
         minSize: [3, 3],
         maxSize: [8, 8],
         render: function(ctx) { return renderWidgetAbilityRadar(ctx); }
     },
     'sneak-attack': {
+        // Big damage value + label = 2 lines.
         label: 'Sneak Attack',
         category: 'combat',
         icon: '🗡',
-        description: 'Sneak attack damage by level (rogue).',
-        defaultSize: [3, 1],
-        minSize: [2, 1],
-        maxSize: [6, 2],
+        description: 'Sneak attack damage (rogue).',
+        defaultSize: [2, 2],
+        minSize: [2, 2],
+        maxSize: [6, 3],
         render: function(ctx) { return renderWidgetSneakAttack(ctx); }
     },
     'metamagic': {
+        // List of options.
         label: 'Metamagic',
         category: 'spells',
         icon: '◈',
         description: 'Sorcerer metamagic options.',
-        defaultSize: [6, 3],
-        minSize: [4, 2],
+        defaultSize: [5, 4],
+        minSize: [4, 3],
         maxSize: [12, 6],
         render: function(ctx) { return renderWidgetMetamagic(ctx); }
     },
 
     // ---- Custom / generic ----
     'text': {
+        // Title (1) + body (variable). Min 2H = title + 1 regel body.
         label: 'Text Block',
         category: 'custom',
         icon: '✎',
-        description: 'Editable rich text with optional title.',
+        description: 'Editable text with optional title.',
         defaultSize: [4, 4],
-        minSize: [2, 2],
+        minSize: [3, 3],
         maxSize: [12, 12],
         render: function(ctx) { return renderWidgetText(ctx); }
     },
     'image': {
+        // Visueel; aspect bepaalt grootte. Min 3x3 zodat content niet té klein wordt.
         label: 'Image',
         category: 'custom',
         icon: '▣',
-        description: 'Custom image (uploaded base64 or character portrait).',
+        description: 'Custom image or character portrait.',
         defaultSize: [4, 4],
-        minSize: [2, 2],
-        maxSize: [12, 8],
+        minSize: [3, 3],
+        maxSize: [12, 10],
         render: function(ctx) { return renderWidgetImage(ctx); }
     },
     'quote': {
+        // 1-2 regels italic tekst.
         label: 'Quote',
         category: 'story',
         icon: '❝',
-        description: 'Random rotating character quote.',
-        defaultSize: [12, 1],
-        minSize: [4, 1],
-        maxSize: [12, 2],
+        description: 'Random character quote.',
+        defaultSize: [8, 2],
+        minSize: [5, 2],
+        maxSize: [12, 3],
         render: function(ctx) { return renderWidgetQuote(ctx); }
     },
 
     // ---- Inventory / story ----
     'inventory': {
+        // Gold (1 line) + list. Default 5H ≈ 5-6 items + gold.
         label: 'Inventory',
         category: 'core',
         icon: '⛂',
-        description: 'Item list with quantities and gold.',
-        defaultSize: [8, 6],
+        description: 'Item list + gold.',
+        defaultSize: [6, 5],
         minSize: [4, 3],
         maxSize: [12, 12],
         render: function(ctx) { return renderWidgetInventory(ctx); }
@@ -239,12 +266,13 @@ var WIDGET_REGISTRY = {
 
     // ---- Family ----
     'family-diagram': {
+        // Big SVG, needs space.
         label: 'Family Diagram',
         category: 'family',
         icon: '⚶',
-        description: 'Family tree/diagram for this character.',
-        defaultSize: [12, 8],
-        minSize: [6, 4],
+        description: 'Family tree for this character.',
+        defaultSize: [10, 7],
+        minSize: [6, 5],
         maxSize: [12, 12],
         render: function(ctx) { return renderWidgetFamilyDiagram(ctx); }
     }

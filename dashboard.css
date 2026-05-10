@@ -159,7 +159,32 @@ html[data-font-size="large"] { font-size: 18px; }
 /* ====================================================================
    Grid
    ==================================================================== */
-.dashboard { --dash-gap: 0.6rem; }
+/* CSS-vars gekoppeld aan font-size token. JS leest dezelfde tokens uit
+   localStorage en zet de Gridstack cellHeight matchend in dashboardInitGridstack.
+   Pas alle drie waardes samen aan als de font-mapping verandert. */
+.dashboard {
+    --dash-gap: 0.6rem;
+    --dash-cell-h: 34px;
+    --dash-cols: 12;
+    --widget-font-size: 13.5px;
+    --widget-line-h: 1.35;
+    --widget-pad-x: 0.5rem;
+    --widget-pad-y: 0.35rem;
+    --widget-header-h: 22px;
+}
+html[data-font-size="small"] .dashboard {
+    --dash-cell-h: 30px;
+    --widget-font-size: 12px;
+    --widget-header-h: 20px;
+}
+html[data-font-size="large"] .dashboard {
+    --dash-cell-h: 40px;
+    --widget-font-size: 16px;
+    --widget-header-h: 24px;
+}
+.dashboard.bp-desktop { --dash-cols: 12; }
+.dashboard.bp-tablet  { --dash-cols: 8; }
+.dashboard.bp-mobile  { --dash-cols: 6; }
 /* Widget-dashboard binnen tab-content (character pages): geen extra top-spacing,
    verschilt van .dashboard op de home-page die juist navbar-clearance nodig heeft. */
 .tab-content > .dashboard {
@@ -215,14 +240,18 @@ html[data-font-size="large"] { font-size: 18px; }
 .dashboard.show-grid .grid-stack,
 .dashboard.is-editing .grid-stack {
     background-image:
-        linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px);
-    background-size: 8.333% 40px;
+        linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
+    /* Cell-grid overlay schaalt mee met --dash-cols × --dash-cell-h.
+       Mobile (auto-square) houdt cellHeight uit de grid-stack inline-style; we
+       gebruiken dezelfde waarde als cell-width (relatief op basis van cols). */
+    background-size: calc(100% / var(--dash-cols)) var(--dash-cell-h);
 }
-.dashboard.bp-tablet.show-grid .grid-stack,
-.dashboard.bp-tablet.is-editing .grid-stack { background-size: 12.5% 40px; }
 .dashboard.bp-mobile.show-grid .grid-stack,
-.dashboard.bp-mobile.is-editing .grid-stack { background-size: 25% 40px; }
+.dashboard.bp-mobile.is-editing .grid-stack {
+    /* Bij auto-square = cell h ≈ cell w → overlay volgt cell-width. */
+    background-size: calc(100% / var(--dash-cols)) calc(100% / var(--dash-cols));
+}
 
 .dashboard-empty {
     text-align: center;
@@ -284,11 +313,12 @@ html[data-font-size="large"] { font-size: 18px; }
 .widget-header {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
-    padding: 0.35rem 0.6rem;
-    background: rgba(0,0,0,0.2);
+    gap: 0.35rem;
+    padding: 0 0.45rem;
+    height: var(--widget-header-h, 22px);
+    background: rgba(0,0,0,0.22);
     border-bottom: 1px solid var(--border, rgba(255,255,255,0.06));
-    font-size: 0.75rem;
+    font-size: 0.72em;
     color: var(--text-dim, #aaa);
     flex-shrink: 0;
 }
@@ -317,15 +347,15 @@ html[data-font-size="large"] { font-size: 18px; }
 
 .widget-body {
     flex: 1 1 auto;
-    padding: 0.6rem 0.75rem;
+    padding: var(--widget-pad-y, 0.35rem) var(--widget-pad-x, 0.5rem);
     overflow: auto;
     min-height: 0;
     /* Uniform widget font: every value, label, button, list item inside a
        widget body shares the same size so the dashboard reads as one
        coherent surface (#lqSMbCN2). Per-widget rules below are normalised
        through this variable and `font-size: inherit` overrides. */
-    font-size: var(--widget-font-size, 0.95rem);
-    line-height: 1.35;
+    font-size: var(--widget-font-size, 13.5px);
+    line-height: var(--widget-line-h, 1.35);
 }
 .widget-body, .widget-body * { font-size: inherit; }
 .widget-body button, .widget-body input, .widget-body select, .widget-body textarea {
@@ -648,6 +678,34 @@ html[data-font-size="large"] { font-size: 18px; }
 .widget .combat-stat .stat-value { font-size: 1.3rem; font-weight: 700; display: block; }
 .widget .combat-stat .stat-label { font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; }
 
+/* Ability scores inside widget — strip the legacy padding/margins from
+   style.css so 6 abilities + edit-header passen in een H=3 widget. */
+.widget .ability-edit-header { margin-bottom: 0.2rem; }
+.widget .ability-edit-header .edit-toggle-btn {
+    width: 20px; height: 20px; padding: 0; font-size: 0.7em;
+}
+.widget .ability-scores {
+    gap: 0.25rem;
+    grid-template-columns: repeat(6, 1fr);
+}
+.widget .ability {
+    padding: 0.2rem 0.15rem;
+    border-radius: 6px;
+}
+.widget .ability-name {
+    font-size: 0.65em;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.1rem;
+}
+.widget .ability-score {
+    font-size: 1.25em;
+    line-height: 1.1;
+}
+.widget .ability-mod {
+    font-size: 0.85em;
+    line-height: 1.1;
+}
+
 /* Slot tracker inside widget */
 .widget .slot-tracker { display: flex; flex-direction: column; gap: 0.4rem; }
 .widget .slot-level { display: flex; align-items: center; gap: 0.5rem; }
@@ -701,6 +759,114 @@ html[data-font-size="large"] { font-size: 18px; }
 .widget .xp-tracker .xp-bar-fill { height: 100%; background: linear-gradient(90deg, var(--char-accent, var(--accent, #22d3ee)), var(--warning, #fbbf24)); }
 .widget .xp-tracker .xp-label { font-size: 0.75rem; color: var(--text-dim); display: block; margin-top: 0.25rem; }
 .widget .xp-tracker .xp-controls { display: flex; gap: 0.25rem; margin-top: 0.4rem; }
+
+/* ====================================================================
+   Widget Demo Page
+   ==================================================================== */
+.widget-demo-page {
+    padding: 1.25rem 1.5rem 4rem;
+    max-width: 1500px;
+    margin: 0 auto;
+}
+.widget-demo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1rem;
+}
+.widget-demo-header h1 { margin: 0 0 0.25rem; font-size: 1.4rem; }
+.widget-demo-sub { margin: 0; color: var(--text-dim); font-size: 0.85rem; }
+.widget-demo-actions { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+.widget-demo-fs { display: flex; gap: 0.25rem; }
+
+.widget-demo-cat { margin-bottom: 2rem; }
+.widget-demo-cat h2 {
+    margin: 0 0 0.75rem;
+    font-size: 1rem;
+    color: var(--char-accent, var(--accent, #22d3ee));
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.4rem;
+}
+
+.widget-demo-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+.widget-demo-card {
+    background: var(--bg-elevated, rgba(255,255,255,0.02));
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.85rem 1rem 1rem;
+}
+.widget-demo-card-head h3 {
+    margin: 0 0 0.2rem;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+.widget-demo-desc {
+    margin: 0;
+    color: var(--text-dim);
+    font-size: 0.8rem;
+}
+.widget-demo-meta {
+    margin: 0.25rem 0 0.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    font-family: monospace;
+}
+.widget-demo-meta-char {
+    margin-left: auto;
+    color: var(--char-accent, var(--accent));
+}
+
+.widget-demo-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: flex-start;
+}
+.widget-demo-instance {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+.widget-demo-instance-label {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    font-family: monospace;
+    text-align: center;
+}
+
+/* Widget-frame in demo: zelfde stijl als grid-stack-item-content. */
+.widget-demo-frame {
+    background: var(--bg-card, rgba(255,255,255,0.03));
+    border: 1px solid var(--border, rgba(255,255,255,0.08));
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+.widget-demo-frame .widget-body {
+    flex: 1 1 auto;
+    overflow: auto;
+}
+
+.widget-demo-error {
+    color: var(--danger, #f87171);
+    font-size: 0.85rem;
+    padding: 0.5rem;
+}
 
 /* ====================================================================
    Mobile adjustments
