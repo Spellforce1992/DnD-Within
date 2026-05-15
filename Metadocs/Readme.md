@@ -21,7 +21,7 @@ Interactive D&D 5.5e (2024 PHB) character sheet + campaign management SPA voor 8
 - **Frontend:** Vanilla JS (ES6+), geen build tools, hash-based SPA router
 - **Backend:** Firebase Realtime Database via REST API (geen SDK), shared `nexus-12fc7` voor bugs
 - **Hosting:** GitHub Pages (`JoshuaNierop/DnD-Within`) — migratie naar Cloudflare Pages P1 open
-- **CSS:** ~3500 regels custom, CSS custom properties, responsive + touch + dark/light
+- **CSS:** ~8600 regels in `style.css` + ~900 in `dashboard.css`, custom properties, dark-mode (hardcoded — light-dark() nog niet), responsive + touch
 - **Hardware:** Geen build/test pipeline, draait direct in browser
 
 ## Key files
@@ -29,7 +29,7 @@ Interactive D&D 5.5e (2024 PHB) character sheet + campaign management SPA voor 8
 - `app.js` (~2800 LOC) — router, auth, page handlers, modal flow
 - `engine.js` — pure 5.5e mechanics (ability score calc, HP, AC, spell slots, prepared count)
 - `data.js` (~3000+ LOC) — classes, subclasses, species, backgrounds, feats, spells, items
-- `style.css` (~3500 LOC) — alle UI styles
+- `style.css` (~8600 LOC) — alle UI styles
 - `dashboard.js` + `dashboard.css` + `dashboard-data.js` + `widgets.js` + `dashboard-edit.js` — widget grid systeem
 - `ui-character.js` (~2500 LOC) — character sheet rendering
 - `ui-pages.js`, `ui-modals.js`, `ui-world.js`, `ui-settings.js` — overige views
