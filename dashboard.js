@@ -101,6 +101,7 @@ function renderDashboardToolbar(charId, tabId, editable) {
         html += '<button class="dash-tool-btn' + (dashboardEditMode ? ' active' : '') + '" data-action="dashboard-toggle-edit" title="Edit dashboard">' + (dashboardEditMode ? '✓' : '✎') + '</button>';
         if (dashboardEditMode) {
             html += '<button class="dash-tool-btn" data-action="dashboard-save-as-template" title="Save as template">⎘</button>';
+            html += '<button class="dash-tool-btn dash-tool-danger" data-action="dashboard-reset-tab" title="Reset this tab to defaults">↺</button>';
         }
     }
     html += '</div>';

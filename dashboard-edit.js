@@ -130,6 +130,14 @@ function dashboardHandleAction(action, target, event) {
         }
         return true;
     }
+    if (action === 'dashboard-reset-tab') {
+        if (!dashboardEditingCharId || !dashboardEditingTabId) return true;
+        if (!confirm('Reset "' + dashboardEditingTabId + '" tab to default layout? This wipes your customisations for this tab.')) return true;
+        var defaults = dashboardDefaultWidgetsForTab(dashboardEditingTabId);
+        saveTabWidgets(dashboardEditingCharId, dashboardEditingTabId, defaults);
+        if (typeof renderApp === 'function') renderApp();
+        return true;
+    }
     if (action === 'widget-cycle-w' || action === 'widget-cycle-h') {
         var charPage1 = document.querySelector('.character-page');
         var dash1 = target.closest('.dashboard');
