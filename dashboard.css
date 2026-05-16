@@ -163,11 +163,28 @@ html[data-font-size="large"] { font-size: 18px; }
     padding-inline-end: var(--dash-toolbar-gutter);
 }
 
-/* Responsive column counts scoped to character dashboards only. */
+/* Responsive column counts scoped to character dashboards only. Mobile keeps
+   a 3rem gutter on the trailing edge so widgets never slide under the
+   fixed-right toolbar (which is ~2.6rem wide). */
 @media (max-width: 1100px) { .tab-content > .dashboard { --dash-cols: 10; } }
 @media (max-width: 900px)  { .tab-content > .dashboard { --dash-cols: 8;  --dash-row-h: 3rem; } }
-@media (max-width: 640px)  { .tab-content > .dashboard { --dash-cols: 6;  padding-inline-end: 1rem; --dash-toolbar-gutter: 1rem; } }
-@media (max-width: 480px)  { .tab-content > .dashboard { --dash-cols: 4; } }
+@media (max-width: 640px)  { .tab-content > .dashboard { --dash-cols: 6;  --dash-toolbar-gutter: 3rem; --dash-gap: 0.45rem; } }
+@media (max-width: 480px) {
+    .tab-content > .dashboard { --dash-cols: 4; --dash-row-h: 2.7rem; }
+    /* Tighter widget interior on phones — content has less breathing room
+       to fight for. Tokens live on .widget so override there directly. */
+    .tab-content > .dashboard .widget {
+        --widget-pad-block: 0.4rem;
+        --widget-pad-inline: 0.5rem;
+        --widget-row-gap: 0.3rem;
+        --widget-body-size: 0.8rem;
+    }
+    .tab-content > .dashboard .widget-header {
+        padding-block: 0.25rem;
+        padding-inline: 0.45rem;
+        font-size: 0.65rem;
+    }
+}
 
 html[data-font-size="small"] .tab-content > .dashboard {
     --dash-min: 15rem;
@@ -258,6 +275,15 @@ html[data-font-size="large"] .tab-content > .dashboard {
     block-size: 8px;
     cursor: ns-resize;
 }
+/* On touch devices the 8px strip is too thin for a finger — bump to 14px
+   and add a subtle visual marker so the affordance is discoverable. */
+@media (hover: none) and (pointer: coarse) {
+    .widget-resize-e { inline-size: 14px; }
+    .widget-resize-s { block-size: 14px; }
+    .dashboard.is-editing .widget-resize-handle {
+        background: color-mix(in srgb, var(--accent-warm) 18%, transparent);
+    }
+}
 .widget-resize-handle:hover,
 .widget-resize-handle.is-dragging {
     background: color-mix(in srgb, var(--accent-warm) 35%, transparent);
@@ -323,11 +349,12 @@ html[data-font-size="large"] .tab-content > .dashboard {
     opacity: 0;
 }
 .widget:hover .widget-action,
-.widget:focus-within .widget-action {
+.widget:focus-within .widget-action,
+.dashboard.is-editing .widget-action {
     opacity: 1;
 }
 @media (hover: none) {
-    .widget-action { opacity: 0.7; }
+    .widget-action { opacity: 0.85; }
 }
 .widget-action:hover {
     background: color-mix(in srgb, var(--accent-warm) 15%, transparent);
