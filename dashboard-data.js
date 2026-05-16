@@ -280,10 +280,10 @@ var DASHBOARD_DEFAULT_WIDGETS = {
         { type: 'text',          w: 6,  h: 4, config: { title: 'Allies / Enemies', body: '' } }
     ],
     exploring: [
-        { type: 'senses',        w: 8, h: 3 },
-        { type: 'proficiencies', w: 4, h: 4 },
-        { type: 'image',         w: 12, h: 5 },
-        { type: 'text',          w: 12, h: 4, config: { title: 'Locations', body: '' } }
+        { type: 'senses',        w: 8,  h: 3 },
+        { type: 'proficiencies', w: 4,  h: 4 },
+        { type: 'image',         w: 6,  h: 5, config: { title: 'Region map' } },
+        { type: 'text',          w: 6,  h: 5, config: { title: 'Locations', body: '' } }
     ],
     family: [
         { type: 'family-diagram', w: 12, h: 7 }
