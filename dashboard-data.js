@@ -271,8 +271,8 @@ var DASHBOARD_DEFAULT_WIDGETS = {
     inventory: [
         { type: 'currency',      w: 8, h: 2 },
         { type: 'attuned-items', w: 4, h: 3 },
-        { type: 'inventory',     w: 8, h: 5 },
-        { type: 'text',          w: 4, h: 5, config: { title: 'Notes', body: '' } }
+        { type: 'inventory',     w: 8, h: 7 },
+        { type: 'text',          w: 4, h: 7, config: { title: 'Notes', body: '' } }
     ],
     social: [
         { type: 'tibf',          w: 12, h: 6 },
