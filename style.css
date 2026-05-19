@@ -8956,3 +8956,43 @@ body.bug-selecting .bug-fab { cursor: pointer !important; }
     .famdiag-pill-name { font-size: 0.8rem; }
     .famdiag-pill-count { font-size: 0.65rem; }
 }
+
+/* ============================================================
+   Mobile bottom-bar layout — sidebar FABs (dice, notes, chat, bug)
+   span the bottom edge instead of stacking right.
+   Order links → rechts: dice → notes → chat → bug.
+   ============================================================ */
+@media (max-width: 700px) {
+    .dice-fab,
+    .notes-fab,
+    .bug-fab,
+    #social-chat-widget {
+        bottom: 0.6rem !important;
+        right: auto !important;
+        top: auto !important;
+    }
+    .dice-fab           { left: calc(12.5% - 26px) !important; }
+    .notes-fab          { left: calc(37.5% - 26px) !important; }
+    #social-chat-widget { left: calc(62.5% - 26px) !important; }
+    .bug-fab            { left: calc(87.5% - 26px) !important; }
+
+    /* Panels open full-width above the bar */
+    .dice-panel,
+    .notes-panel {
+        bottom: calc(0.6rem + 62px) !important;
+        right: 0.5rem !important;
+        left: 0.5rem !important;
+        width: auto !important;
+        max-width: none !important;
+    }
+
+    /* Social chat widget panel: same treatment if visible */
+    #social-chat-widget .scw-panel {
+        position: fixed !important;
+        bottom: calc(0.6rem + 62px) !important;
+        left: 0.5rem !important;
+        right: 0.5rem !important;
+        width: auto !important;
+        max-width: none !important;
+    }
+}
